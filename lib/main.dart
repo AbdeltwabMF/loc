@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
           title: const Text('Loc'),
         ),
         body: const Text(
-          'Hi, there',
+          'done',
         ),
       ),
     );
