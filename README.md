@@ -5,6 +5,9 @@
 <h1 align="center">Loc</h1>
 <h3 align="center">A location-based reminder for android and IOS.</h3>
 
+## Screenshots
+
+![Home screen](assets/images/home-screen.png)
 
 ## Development
 

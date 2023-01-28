@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
 
@@ -49,6 +50,8 @@ void cancelLocationUpdate(BuildContext context) {
   provider.setListening(false);
   provider.setCurrLatitude(null);
   provider.setCurrLongitude(null);
+
+  FlutterRingtonePlayer.stop();
 }
 
 double calcDistance(BuildContext context) {

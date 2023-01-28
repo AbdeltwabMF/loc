@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/style/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
