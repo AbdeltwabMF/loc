@@ -3,7 +3,7 @@
 </div>
 
 <h1 align="center">Loc</h1>
-<h3 align="center">A location-based reminder for android and IOS.</h3>
+<h3 align="center">A location-based reminder for Android and iOS.</h3>
 
 ## Screenshots
 
