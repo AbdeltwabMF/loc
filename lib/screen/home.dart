@@ -13,6 +13,7 @@ class HomeScreen extends StatelessWidget {
     final provider = Provider.of<AppStates>(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Container(
           child: Column(
@@ -27,7 +28,7 @@ class HomeScreen extends StatelessWidget {
                       bottom: 8,
                     ),
                     child: TextFormField(
-                      controller: provider.latitudeText,
+                      controller: provider.destLatitudeText,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(
                           borderSide: BorderSide(
@@ -60,7 +61,7 @@ class HomeScreen extends StatelessWidget {
                       bottom: 8,
                     ),
                     child: TextFormField(
-                      controller: provider.longitudeText,
+                      controller: provider.destLongitudeText,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(
                           borderSide: BorderSide(
@@ -123,36 +124,121 @@ class HomeScreen extends StatelessWidget {
                   top: 64,
                   left: 8,
                   right: 8,
-                  bottom: 8,
                 ),
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
-                    debugPrint('Run Pressed');
-                    debugPrint('Latitude: ${provider.latitudeText.text}');
-                    debugPrint('Longitude: ${provider.longitudeText.text}');
-                    debugPrint('Radius: ${provider.radiusText.text}');
+                    if (provider.isListening) {
+                      cancelLocationUpdate(context);
+                      return;
+                    }
                     getCurrentLocation().then((value) {
-                      print(value.latitude);
-                      print(value.longitude);
+                      provider.setCurrLatitude(value.latitude);
+                      provider.setCurrLongitude(value.longitude);
                     }).onError((error, stackTrace) {
-                      print(error.toString());
+                      debugPrint(error.toString());
+                      debugPrint(stackTrace.toString());
                     });
+                    listenToLocationUpdate(context);
                   },
                   style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(
+                      provider.isListening
+                          ? Colors.red.withOpacity(0.5)
+                          : Colors.blue.withOpacity(0.5),
+                    ),
                     elevation: MaterialStateProperty.all(0),
                     shape: MaterialStateProperty.all(const CircleBorder()),
                     padding:
                         MaterialStateProperty.all(const EdgeInsets.all(80)),
                   ),
-                  child: const Text(
-                    'Run',
-                    style: TextStyle(
+                  child: Text(
+                    provider.isListening ? 'Stop' : 'Start',
+                    style: const TextStyle(
                       fontSize: 32,
                     ),
                   ),
                 ),
               ),
+              Container(
+                padding: const EdgeInsets.only(
+                  top: 64,
+                  left: 8,
+                  right: 8,
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.only(
+                        top: 8,
+                        left: 8,
+                        right: 8,
+                        bottom: 16,
+                      ),
+                      child: const Text(
+                        'Current Location',
+                        style: TextStyle(
+                          color: AppColors.fg,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ),
+                    Row(children: [
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.only(
+                            top: 8,
+                            left: 8,
+                            right: 8,
+                            bottom: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: AppColors.fg,
+                              strokeAlign: BorderSide.strokeAlignOutside,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            provider.currLatitude != null
+                                ? provider.currLatitude.toString()
+                                : 'Latitude',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.only(
+                            top: 8,
+                            left: 8,
+                            right: 8,
+                            bottom: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: AppColors.fg,
+                              strokeAlign: BorderSide.strokeAlignOutside,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            provider.currLongitude != null
+                                ? provider.currLongitude.toString()
+                                : 'Longitude',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ]),
+                  ],
+                ),
+              )
             ],
           ),
         ),
