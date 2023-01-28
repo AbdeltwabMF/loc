@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:loc/screen/home.dart';
+import 'package:loc/style/colors.dart';
+import 'package:loc/utils/states.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const App());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Loc - Location-based reminder',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Loc'),
+    return ChangeNotifierProvider<AppStates>(
+      create: (context) => AppStates(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          fontFamily: 'Fantasque',
+          splashColor: AppColors.fg,
         ),
-        body: const Text(
-          'done',
-        ),
+        home: const HomeScreen(),
       ),
     );
   }

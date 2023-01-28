@@ -21,3 +21,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+      - family: Fantasque
+        fonts:
+          - asset: assets\fonts\Fantasque Sans Mono Regular Nerd Font.ttf
+          - asset: assets\fonts\Fantasque Sans Mono Bold Nerd Font.ttf
+          - asset: assets\fonts\Fantasque Sans Mono Italic Nerd Font.ttf
+            style: italic
