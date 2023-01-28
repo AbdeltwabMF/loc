@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loc/style/colors.dart';
+import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
 
@@ -126,11 +127,17 @@ class HomeScreen extends StatelessWidget {
                 ),
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     debugPrint('Run Pressed');
                     debugPrint('Latitude: ${provider.latitudeText.text}');
                     debugPrint('Longitude: ${provider.longitudeText.text}');
                     debugPrint('Radius: ${provider.radiusText.text}');
+                    getCurrentLocation().then((value) {
+                      print(value.latitude);
+                      print(value.longitude);
+                    }).onError((error, stackTrace) {
+                      print(error.toString());
+                    });
                   },
                   style: ButtonStyle(
                     elevation: MaterialStateProperty.all(0),
