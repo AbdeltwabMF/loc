@@ -1,6 +1,10 @@
-# Loc
+<div align="center">
+  <img src="assets/images/app_icon.png" width="200px" height="200px"></img>
+</div>
 
-A location-based reminder for android and IOS.
+<h1 align="center">Loc</h1>
+<h3 align="center">A location-based reminder for android and IOS.</h3>
+
 
 ## Development
 
