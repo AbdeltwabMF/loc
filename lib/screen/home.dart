@@ -132,6 +132,12 @@ class HomeScreen extends StatelessWidget {
                       cancelLocationUpdate(context);
                       return;
                     }
+                    if (provider.destLatitudeText.text == '' ||
+                        provider.destLongitudeText.text == '') {
+                      debugPrint('Latitude and Longitude are required!');
+                      return;
+                    }
+
                     getCurrentLocation().then((value) {
                       provider.setCurrLatitude(value.latitude);
                       provider.setCurrLongitude(value.longitude);
@@ -160,85 +166,138 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.only(
-                  top: 64,
-                  left: 8,
-                  right: 8,
-                ),
-                child: Column(
-                  children: [
-                    Container(
+              provider.isListening && provider.isLocValid()
+                  ? Container(
+                      padding: const EdgeInsets.only(
+                        top: 64,
+                        left: 8,
+                        right: 8,
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(
+                              top: 8,
+                              left: 8,
+                              right: 8,
+                              bottom: 16,
+                            ),
+                            child: const Text(
+                              'Current Location',
+                              style: TextStyle(
+                                color: AppColors.fg,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ),
+                          Row(children: [
+                            Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 8,
+                                  right: 8,
+                                  bottom: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColors.fg,
+                                    strokeAlign: BorderSide.strokeAlignOutside,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  provider.currLatitude != null
+                                      ? provider.currLatitude.toString()
+                                      : '',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 8,
+                            ),
+                            Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 8,
+                                  right: 8,
+                                  bottom: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColors.fg,
+                                    strokeAlign: BorderSide.strokeAlignOutside,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  provider.currLongitude != null
+                                      ? provider.currLongitude.toString()
+                                      : '',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ]),
+                        ],
+                      ),
+                    )
+                  : const SizedBox(),
+              provider.isListening && provider.isLocValid()
+                  ? Container(
                       padding: const EdgeInsets.only(
                         top: 8,
                         left: 8,
                         right: 8,
-                        bottom: 16,
+                        bottom: 8,
                       ),
-                      child: const Text(
-                        'Current Location',
-                        style: TextStyle(
-                          color: AppColors.fg,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    Row(children: [
-                      Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.only(
-                            top: 8,
-                            left: 8,
-                            right: 8,
-                            bottom: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: AppColors.fg,
-                              strokeAlign: BorderSide.strokeAlignOutside,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(
+                              top: 8,
+                              left: 8,
+                              right: 8,
+                              bottom: 16,
                             ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            provider.currLatitude != null
-                                ? provider.currLatitude.toString()
-                                : 'Latitude',
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.only(
-                            top: 8,
-                            left: 8,
-                            right: 8,
-                            bottom: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: AppColors.fg,
-                              strokeAlign: BorderSide.strokeAlignOutside,
+                            child: const Text(
+                              'Distance',
+                              style: TextStyle(
+                                color: AppColors.fg,
+                                fontSize: 20,
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            provider.currLongitude != null
-                                ? provider.currLongitude.toString()
-                                : 'Longitude',
-                            textAlign: TextAlign.center,
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.only(
+                              top: 8,
+                              left: 8,
+                              right: 8,
+                              bottom: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColors.fg,
+                                strokeAlign: BorderSide.strokeAlignOutside,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              provider.isListening
+                                  ? '${calcDistance(context).toString()} KM'
+                                  : '',
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    ]),
-                  ],
-                ),
-              )
+                    )
+                  : const SizedBox(),
             ],
           ),
         ),

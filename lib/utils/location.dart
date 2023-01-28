@@ -50,3 +50,23 @@ void cancelLocationUpdate(BuildContext context) {
   provider.setCurrLatitude(null);
   provider.setCurrLongitude(null);
 }
+
+double calcDistance(BuildContext context) {
+  final provider = Provider.of<AppStates>(context, listen: false);
+  if (provider.isLocValid() == false) return 0.0;
+
+  final currentLatitude = provider.currLatitude!;
+  final currentLongitude = provider.currLongitude!;
+  final destLatitude = double.parse(provider.destLatitudeText.text);
+  final destLongitude = double.parse(provider.destLongitudeText.text);
+
+  final inMeters = geo.Geolocator.distanceBetween(
+      destLatitude, destLongitude, currentLatitude, currentLongitude);
+
+  return toKiloMeter(inMeters);
+}
+
+double toKiloMeter(double distanceInMeters) {
+  distanceInMeters /= 1000;
+  return double.parse(distanceInMeters.toStringAsFixed(2));
+}

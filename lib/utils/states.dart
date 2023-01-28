@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 
 class AppStates extends ChangeNotifier {
-  TextEditingController destLatitudeText = TextEditingController();
-  TextEditingController destLongitudeText = TextEditingController();
+  TextEditingController destLatitudeText = TextEditingController(text: '');
+  TextEditingController destLongitudeText = TextEditingController(text: '');
   TextEditingController radiusText = TextEditingController(text: '100');
 
   double? currLatitude;
@@ -48,5 +48,9 @@ class AppStates extends ChangeNotifier {
   void setListening(bool listen) {
     isListening = listen;
     notifyListeners();
+  }
+
+  bool isLocValid() {
+    return currLatitude != null && currLongitude != null;
   }
 }
