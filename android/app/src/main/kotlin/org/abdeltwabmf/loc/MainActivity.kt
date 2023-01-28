@@ -1,4 +1,4 @@
-package com.example.loc
+package org.abdeltwabmf.loc
 
 import io.flutter.embedding.android.FlutterActivity
 

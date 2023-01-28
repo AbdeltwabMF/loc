@@ -162,16 +162,21 @@ class HomeScreen extends StatelessWidget {
                       return;
                     }
 
-                    FlutterRingtonePlayer.playNotification();
+                    FlutterRingtonePlayer.playNotification(
+                      looping: true,
+                      volume: 0.1,
+                      asAlarm: true,
+                    );
 
                     getCurrentLocation().then((value) {
                       provider.setCurrLatitude(value.latitude);
                       provider.setCurrLongitude(value.longitude);
+
+                      listenToLocationUpdate(context);
                     }).onError((error, stackTrace) {
                       debugPrint(error.toString());
                       debugPrint(stackTrace.toString());
                     });
-                    listenToLocationUpdate(context);
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(
