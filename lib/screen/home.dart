@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/style/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
@@ -12,7 +11,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AppStates>(context);
-    final providerNoListening = Provider.of<AppStates>(context, listen: false);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -161,12 +159,7 @@ class HomeScreen extends StatelessWidget {
                           'Latitude, Longitude, and Radius are required!');
                       return;
                     }
-
-                    FlutterRingtonePlayer.playNotification(
-                      looping: true,
-                      volume: 0.1,
-                      asAlarm: true,
-                    );
+                    provider.setListening(true);
 
                     getCurrentLocation().then((value) {
                       provider.setCurrLatitude(value.latitude);
@@ -201,14 +194,14 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              provider.isListening && providerNoListening.isLocValid() == false
+              provider.isListening && provider.isLocValid() == false
                   ? Container(
                       padding: const EdgeInsets.only(
                         top: 16,
                         left: 16,
                         right: 16,
                       ),
-                      child: LinearProgressIndicator(
+                      child: const LinearProgressIndicator(
                         value: null,
                       ),
                     )
@@ -336,7 +329,7 @@ class HomeScreen extends StatelessWidget {
                             ),
                             child: Text(
                               provider.isListening
-                                  ? '${calcDistance(context).toString()} KM'
+                                  ? '${toKiloMeter(calcDistance(context))} KM'
                                   : '',
                               textAlign: TextAlign.center,
                             ),

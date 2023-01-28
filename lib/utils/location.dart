@@ -29,9 +29,9 @@ Future<geo.Position> getCurrentLocation() async {
 void listenToLocationUpdate(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
 
-  geo.LocationSettings settings = geo.LocationSettings(
+  geo.LocationSettings settings = const geo.LocationSettings(
     accuracy: geo.LocationAccuracy.high,
-    distanceFilter: double.parse(provider.radiusText.text).toInt(),
+    distanceFilter: 50,
   );
 
   final subscription =
@@ -39,9 +39,17 @@ void listenToLocationUpdate(BuildContext context) {
           .listen((position) {
     provider.setCurrLatitude(position.latitude);
     provider.setCurrLongitude(position.longitude);
+
+    if (calcDistance(context) <= double.parse(provider.radiusText.text)) {
+      FlutterRingtonePlayer.playAlarm(
+        looping: true,
+        volume: 0.1,
+        asAlarm: true,
+      );
+    }
   });
+
   provider.setPositionStream(subscription);
-  provider.setListening(true);
 }
 
 void cancelLocationUpdate(BuildContext context) {
@@ -56,7 +64,7 @@ void cancelLocationUpdate(BuildContext context) {
 
 double calcDistance(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
-  if (provider.isLocValid() == false) return 0.0;
+  if (provider.isLocValid() == false) return 0;
 
   final currentLatitude = provider.currLatitude!;
   final currentLongitude = provider.currLongitude!;
@@ -66,10 +74,14 @@ double calcDistance(BuildContext context) {
   final inMeters = geo.Geolocator.distanceBetween(
       destLatitude, destLongitude, currentLatitude, currentLongitude);
 
-  return toKiloMeter(inMeters);
+  return inMeters;
 }
 
 double toKiloMeter(double distanceInMeters) {
+  if (distanceInMeters <= 1000) {
+    return distanceInMeters;
+  }
   distanceInMeters /= 1000;
-  return double.parse(distanceInMeters.toStringAsFixed(2));
+
+  return double.parse(distanceInMeters.toStringAsPrecision(3));
 }
