@@ -4,6 +4,7 @@ import 'package:loc/style/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -11,6 +12,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AppStates>(context);
+    final providerNoListening = Provider.of<AppStates>(context, listen: false);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -43,10 +45,17 @@ class HomeScreen extends StatelessWidget {
                       ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
-                            RegExp(r'[0-9]+[.]?[0-9]*')),
+                            RegExp(r'^([+-]?[0-9]+.?[0-9]*)')),
+                        FilteringTextInputFormatter.deny(
+                            RegExp(r'(^[0]{1}[0-9]+)')),
                       ],
                       onChanged: (value) {
-                        provider.setLatitude(value);
+                        // Solution to cursor out of position
+                        // https://github.com/flutter/flutter/blob/2d2a1ffec95cc70a3218872a2cd3f8de4933c42f/packages/flutter/lib/src/widgets/editable_text.dart#L143
+                        provider.destLatitudeText.value =
+                            provider.destLatitudeText.value.copyWith(
+                          text: value,
+                        );
                       },
                       keyboardType: const TextInputType.numberWithOptions(
                         signed: true,
@@ -76,9 +85,16 @@ class HomeScreen extends StatelessWidget {
                       ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
-                            RegExp(r'[0-9]+[.]?[0-9]*')),
+                            RegExp(r'^([+-]?[0-9]+.?[0-9]*)')),
+                        FilteringTextInputFormatter.deny(
+                            RegExp(r'(^[0]{1}[0-9]+)')),
                       ],
-                      onChanged: (value) => {provider.setLongitude(value)},
+                      onChanged: (value) {
+                        provider.destLongitudeText.value =
+                            provider.destLongitudeText.value.copyWith(
+                          text: value,
+                        );
+                      },
                       keyboardType: const TextInputType.numberWithOptions(
                         signed: true,
                         decimal: true,
@@ -107,10 +123,16 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(
-                            RegExp(r'[0-9]+[.]?[0-9]*')),
+                        FilteringTextInputFormatter.allow(RegExp(r'(^[0-9]+)')),
+                        FilteringTextInputFormatter.deny(
+                            RegExp(r'(^[0]{1}[0-9]+)')),
                       ],
-                      onChanged: (value) => {provider.setRadius(value)},
+                      onChanged: (value) {
+                        provider.radiusText.value =
+                            provider.radiusText.value.copyWith(
+                          text: value,
+                        );
+                      },
                       keyboardType: const TextInputType.numberWithOptions(
                         signed: true,
                         decimal: true,
@@ -121,7 +143,7 @@ class HomeScreen extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.only(
-                  top: 64,
+                  top: 16,
                   left: 8,
                   right: 8,
                 ),
@@ -133,10 +155,14 @@ class HomeScreen extends StatelessWidget {
                       return;
                     }
                     if (provider.destLatitudeText.text == '' ||
-                        provider.destLongitudeText.text == '') {
-                      debugPrint('Latitude and Longitude are required!');
+                        provider.destLongitudeText.text == '' ||
+                        provider.radiusText.text == '') {
+                      debugPrint(
+                          'Latitude, Longitude, and Radius are required!');
                       return;
                     }
+
+                    FlutterRingtonePlayer.playNotification();
 
                     getCurrentLocation().then((value) {
                       provider.setCurrLatitude(value.latitude);
@@ -159,17 +185,33 @@ class HomeScreen extends StatelessWidget {
                         MaterialStateProperty.all(const EdgeInsets.all(80)),
                   ),
                   child: Text(
-                    provider.isListening ? 'Stop' : 'Start',
+                    provider.isListening
+                        ? provider.isLocValid()
+                            ? 'Stop'
+                            : 'Calculating'
+                        : 'Start',
                     style: const TextStyle(
                       fontSize: 32,
                     ),
                   ),
                 ),
               ),
+              provider.isListening && providerNoListening.isLocValid() == false
+                  ? Container(
+                      padding: const EdgeInsets.only(
+                        top: 16,
+                        left: 16,
+                        right: 16,
+                      ),
+                      child: LinearProgressIndicator(
+                        value: null,
+                      ),
+                    )
+                  : const SizedBox(),
               provider.isListening && provider.isLocValid()
                   ? Container(
                       padding: const EdgeInsets.only(
-                        top: 64,
+                        top: 16,
                         left: 8,
                         right: 8,
                       ),

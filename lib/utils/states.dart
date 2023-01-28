@@ -15,16 +15,6 @@ class AppStates extends ChangeNotifier {
 
   bool isListening = false;
 
-  void setLatitude(String latitude) {
-    destLatitudeText.text = latitude;
-    notifyListeners();
-  }
-
-  void setLongitude(String longitude) {
-    destLongitudeText.text = longitude;
-    notifyListeners();
-  }
-
   void setRadius(String radius) {
     radiusText.text = radius;
     notifyListeners();
