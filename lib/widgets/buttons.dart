@@ -13,8 +13,8 @@ class PickLocationButton extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.only(
         top: 8,
-        left: 8,
-        right: 8,
+        left: 4,
+        right: 4,
         bottom: 0,
       ),
       child: ElevatedButton(
@@ -48,8 +48,8 @@ class MapPickLocationButton extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.only(
         top: 8,
-        left: 8,
-        right: 8,
+        left: 4,
+        right: 4,
         bottom: 8,
       ),
       child: ElevatedButton(

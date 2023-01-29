@@ -9,6 +9,7 @@ class AppStates extends ChangeNotifier {
   TextEditingController destLongitudeController =
       TextEditingController(text: '');
   TextEditingController radiusController = TextEditingController(text: '100');
+  TextEditingController addressController = TextEditingController(text: '');
 
   double? currLatitude;
   double? currLongitude;

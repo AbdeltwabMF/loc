@@ -3,7 +3,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -33,65 +32,33 @@ class _OpenStreetMapSearchAndPickState
   final FocusNode _focusNode = FocusNode();
   List<OSMdata> _options = <OSMdata>[];
   Timer? _debounce;
-  var client = http.Client();
+  final client = http.Client();
 
   void setNameCurrentPos() async {
     double latitude = _mapController.center.latitude;
     double longitude = _mapController.center.longitude;
-    if (kDebugMode) {
-      print(latitude);
-    }
-    if (kDebugMode) {
-      print(longitude);
-    }
-    String url =
-        'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
 
-    var response = await client.post(Uri.parse(url));
-    var decodedResponse =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
-
-    _searchController.text = decodedResponse['display_name'] ?? "";
+    _searchController.text = await getAddress(latitude, longitude);
     setState(() {});
   }
 
   void setNameCurrentPosAtInit() async {
     double latitude = widget.center.latitude;
     double longitude = widget.center.longitude;
-    if (kDebugMode) {
-      print(latitude);
-    }
-    if (kDebugMode) {
-      print(longitude);
-    }
-    String url =
-        'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
 
-    var response = await client.post(Uri.parse(url));
-    var decodedResponse =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
-
-    _searchController.text = decodedResponse['display_name'] ?? "";
+    _searchController.text = await getAddress(latitude, longitude);
     setState(() {});
   }
 
   @override
   void initState() {
     _mapController = MapController();
-
     setNameCurrentPosAtInit();
 
     _mapController.mapEventStream.listen((event) async {
       if (event is MapEventMoveEnd) {
-        var client = http.Client();
-        String url =
-            'https://nominatim.openstreetmap.org/reverse?format=json&lat=${event.center.latitude}&lon=${event.center.longitude}&zoom=18&addressdetails=1';
-
-        var response = await client.post(Uri.parse(url));
-        var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes))
-            as Map<dynamic, dynamic>;
-
-        _searchController.text = decodedResponse['display_name'];
+        _searchController.text =
+            await getAddress(event.center.latitude, event.center.longitude);
         setState(() {});
       }
     });
@@ -108,13 +75,19 @@ class _OpenStreetMapSearchAndPickState
   @override
   Widget build(BuildContext context) {
     OutlineInputBorder inputBorder = const OutlineInputBorder(
-      borderSide: BorderSide(color: AppColors.darkBlue),
+      borderSide: BorderSide(
+        color: AppColors.darkBlue,
+        width: 2,
+      ),
       borderRadius: BorderRadius.all(
         Radius.circular(8),
       ),
     );
     OutlineInputBorder inputFocusBorder = const OutlineInputBorder(
-      borderSide: BorderSide(color: AppColors.darkBlue, width: 3.0),
+      borderSide: BorderSide(
+        color: AppColors.darkBlue,
+        width: 2,
+      ),
       borderRadius: BorderRadius.all(
         Radius.circular(8),
       ),
@@ -229,16 +202,13 @@ class _OpenStreetMapSearchAndPickState
                 children: [
                   TextFormField(
                     controller: _searchController,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontFamily: 'NotoArabic',
-                    ),
                     focusNode: _focusNode,
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      hintText: 'Search Location',
                       border: inputBorder,
+                      contentPadding: const EdgeInsets.all(12),
                       focusedBorder: inputFocusBorder,
+                      hintText: 'Search Location',
+                      prefixIcon: const Icon(Icons.search),
                     ),
                     onChanged: (String value) {
                       if (_debounce?.isActive ?? false) _debounce?.cancel();
@@ -246,38 +216,26 @@ class _OpenStreetMapSearchAndPickState
                       _debounce = Timer(
                         const Duration(milliseconds: 2000),
                         () async {
-                          if (kDebugMode) {
-                            print(value);
-                          }
-                          var client = http.Client();
                           try {
-                            String url =
-                                'https://nominatim.openstreetmap.org/search?q=$value&format=json&polygon_geojson=1&addressdetails=1';
-                            if (kDebugMode) {
-                              print(url);
-                            }
-                            var response = await client.post(Uri.parse(url));
-                            var decodedResponse =
-                                jsonDecode(utf8.decode(response.bodyBytes))
-                                    as List<dynamic>;
-                            if (kDebugMode) {
-                              print(decodedResponse);
-                            }
+                            final decodedResponse = await searchPhrase(value)
+                                .onError((error, stackTrace) =>
+                                    Future.error(error!, stackTrace));
                             _options = decodedResponse
                                 .map((e) => OSMdata(
                                     displayname: e['display_name'],
                                     lat: double.parse(e['lat']),
                                     lon: double.parse(e['lon'])))
                                 .toList();
-                            setState(() {});
                           } finally {
-                            client.close();
+                            setState(() {});
                           }
-
-                          setState(() {});
                         },
                       );
                     },
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'NotoArabic',
+                    ),
                   ),
                   StatefulBuilder(builder: ((context, setState) {
                     return ListView.builder(
@@ -329,12 +287,12 @@ class _OpenStreetMapSearchAndPickState
   Future<PickedData> pickData() async {
     LatLong center = LatLong(
         _mapController.center.latitude, _mapController.center.longitude);
-    var client = http.Client();
+    final client = http.Client();
     String url =
         'https://nominatim.openstreetmap.org/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=1';
 
-    var response = await client.post(Uri.parse(url));
-    var decodedResponse =
+    final response = await client.post(Uri.parse(url));
+    final decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
     String displayName = decodedResponse['display_name'];
     return PickedData(center, displayName);
@@ -374,4 +332,38 @@ class PickedData {
   final String address;
 
   PickedData(this.latLong, this.address);
+}
+
+Future<String> getAddress(double latitude, double longitude) async {
+  final client = http.Client();
+  try {
+    String url =
+        'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
+
+    final response = await client.post(Uri.parse(url));
+    final decodedResponse =
+        jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
+
+    return decodedResponse['display_name'] ?? "";
+  } catch (error, stackTrace) {
+    return Future.error(error, stackTrace);
+  } finally {
+    client.close();
+  }
+}
+
+Future<List<dynamic>> searchPhrase(String phrase) async {
+  final client = http.Client();
+  try {
+    String url =
+        'https://nominatim.openstreetmap.org/search?q=$phrase&format=json&polygon_geojson=1&addressdetails=1';
+    final response = await client.post(Uri.parse(url));
+    final decodedResponse =
+        jsonDecode(utf8.decode(response.bodyBytes)) as List<dynamic>;
+    return decodedResponse;
+  } catch (error, stackTrace) {
+    return Future.error(error, stackTrace);
+  } finally {
+    client.close();
+  }
 }

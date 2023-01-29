@@ -4,7 +4,8 @@ import 'package:loc/screens/location_picker.dart';
 import 'package:loc/styles/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
-import 'package:loc/utils/open_street_map_picker.dart' show PickedData;
+import 'package:loc/utils/open_street_map_picker.dart'
+    show PickedData, getAddress;
 import 'package:provider/provider.dart';
 import 'package:loc/widgets/buttons.dart';
 
@@ -57,7 +58,6 @@ class HomeScreen extends StatelessWidget {
                     if (pickedData != null) {
                       debugPrint(pickedData.latLong.latitude.toString());
                       debugPrint(pickedData.latLong.longitude.toString());
-                      debugPrint(pickedData.address);
 
                       provider.destLatitudeController.value =
                           provider.destLatitudeController.value.copyWith(
@@ -69,8 +69,12 @@ class HomeScreen extends StatelessWidget {
                         text: pickedData.latLong.longitude.toString(),
                       );
 
-                      provider.setDistance(calcDistance(context));
-                      shouldPlaySound(context);
+                      provider.addressController.value =
+                          provider.addressController.value.copyWith(
+                        text: pickedData.address,
+                      );
+
+                      debugPrint(provider.addressController.text);
                     }
                   },
                 ),
@@ -82,7 +86,33 @@ class HomeScreen extends StatelessWidget {
                     ),
                     child: Column(children: [
                       Container(
-                        child: Text('Address'),
+                        padding: const EdgeInsets.only(
+                          top: 8,
+                          left: 4,
+                          right: 4,
+                          bottom: 8,
+                        ),
+                        child: TextFormField(
+                          textAlign: TextAlign.right,
+                          controller: provider.addressController,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: AppColors.fg,
+                              ),
+                            ),
+                            contentPadding: EdgeInsets.all(12),
+                            labelText: 'Address',
+                            prefixIcon: Icon(
+                              Icons.location_city,
+                            ),
+                          ),
+                          readOnly: true,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'NotoArabic',
+                          ),
+                        ),
                       ),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,8 +121,8 @@ class HomeScreen extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.only(
                                 top: 8,
-                                left: 8,
-                                right: 4,
+                                left: 4,
+                                right: 2,
                                 bottom: 8,
                               ),
                               child: TextFormField(
@@ -137,6 +167,7 @@ class HomeScreen extends StatelessWidget {
                                   signed: true,
                                   decimal: true,
                                 ),
+                                readOnly: provider.isListening == true,
                                 validator: (value) {
                                   if (value == null || value == '') {
                                     return 'Latitude is required';
@@ -153,8 +184,8 @@ class HomeScreen extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.only(
                                 top: 8,
-                                left: 4,
-                                right: 8,
+                                left: 2,
+                                right: 4,
                                 bottom: 8,
                               ),
                               child: TextFormField(
@@ -198,6 +229,7 @@ class HomeScreen extends StatelessWidget {
                                   signed: true,
                                   decimal: true,
                                 ),
+                                readOnly: provider.isListening == true,
                                 validator: (value) {
                                   if (value == null || value == '') {
                                     return 'Longitude is required';
@@ -215,8 +247,8 @@ class HomeScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.only(
                           top: 8,
-                          left: 8,
-                          right: 8,
+                          left: 4,
+                          right: 4,
                           bottom: 8,
                         ),
                         child: TextFormField(
@@ -253,6 +285,7 @@ class HomeScreen extends StatelessWidget {
                             signed: true,
                             decimal: true,
                           ),
+                          readOnly: provider.isListening == true,
                           validator: (value) {
                             if (value == null || value == '') {
                               return 'Radius is required';
@@ -271,8 +304,8 @@ class HomeScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.only(
                       top: 16,
-                      left: 8,
-                      right: 8,
+                      left: 4,
+                      right: 4,
                       bottom: 8,
                     ),
                     width: double.infinity,
@@ -291,13 +324,31 @@ class HomeScreen extends StatelessWidget {
                         }
 
                         provider.setListening(true);
-                        getCurrentLocation().then((value) {
+                        getCurrentLocation().then((value) async {
                           provider.setCurrLatitude(value.latitude);
                           provider.setCurrLongitude(value.longitude);
                           provider.setDistance(calcDistance(context));
-                          shouldPlaySound(context);
 
+                          shouldPlaySound(context);
                           listenLocationUpdate(context);
+
+                          final address = await getAddress(
+                                  double.parse(
+                                      provider.destLatitudeController.text),
+                                  double.parse(
+                                      provider.destLongitudeController.text))
+                              .onError((error, stackTrace) {
+                            debugPrint(error.toString());
+                            debugPrint(stackTrace.toString());
+                            return '';
+                          });
+
+                          if (address.isNotEmpty) {
+                            provider.addressController.value =
+                                provider.addressController.value.copyWith(
+                              text: address,
+                            );
+                          }
                         }).onError((error, stackTrace) {
                           debugPrint(error.toString());
                           debugPrint(stackTrace.toString());
