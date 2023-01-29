@@ -90,11 +90,11 @@ void shouldPlaySound(BuildContext context) {
   }
 
   if (provider.distance <= double.parse(provider.radiusController.text)) {
-    FlutterRingtonePlayer.play(
-      fromAsset: "assets/sounds/serious-strike.mp3",
-      looping: true,
+    debugPrint(provider.distance.toString());
+    debugPrint(provider.radiusController.text);
+
+    FlutterRingtonePlayer.playAlarm(
       volume: 0.1,
-      asAlarm: true,
     );
   } else {
     FlutterRingtonePlayer.stop();

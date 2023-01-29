@@ -21,7 +21,7 @@ class App extends StatelessWidget {
           fontFamily: 'Fantasque',
           splashColor: AppColors.fg,
         ),
-        home: const HomeScreen(),
+        home: HomeScreen(),
       ),
     );
   }
