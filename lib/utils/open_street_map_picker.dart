@@ -3,12 +3,22 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:loc/styles/colors.dart';
 import 'package:loc/widgets/buttons.dart';
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+  }
+}
 
 class OpenStreetMapSearchAndPick extends StatefulWidget {
   const OpenStreetMapSearchAndPick({
@@ -328,6 +338,8 @@ class PickedData {
 }
 
 Future<String> getAddress(double latitude, double longitude) async {
+  HttpOverrides.global = MyHttpOverrides();
+
   try {
     String url =
         'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';

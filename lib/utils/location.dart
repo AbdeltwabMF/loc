@@ -104,3 +104,16 @@ void shouldPlaySound(BuildContext context) {
     FlutterRingtonePlayer.stop();
   }
 }
+
+String? validateNumber(String? value,
+    {String? message = 'Not a number', double limit = 1000000000.0}) {
+  if (value == null || value == '') {
+    return message;
+  } else {
+    final validNumber = double.tryParse(value);
+    if (validNumber == null || validNumber > limit || validNumber < -limit) {
+      return message;
+    }
+  }
+  return null;
+}

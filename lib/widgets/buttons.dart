@@ -28,7 +28,7 @@ class PickLocationButton extends StatelessWidget {
         child: const Text(
           'Pick a location',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 20,
           ),
         ),
       ),
@@ -63,7 +63,7 @@ class MapPickLocationButton extends StatelessWidget {
         child: const Text(
           'Set destination',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 20,
           ),
         ),
       ),

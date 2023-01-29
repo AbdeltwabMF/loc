@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
+import 'package:loc/utils/location.dart';
 
 class AppStates extends ChangeNotifier {
   TextEditingController destLatitudeController =
@@ -53,9 +54,9 @@ class AppStates extends ChangeNotifier {
 
   bool isInputValid() {
     bool flag = true;
-    flag &= destLatitudeController.text != '';
-    flag &= destLongitudeController.text != '';
     flag &= radiusController.text != '';
+    flag &= validateNumber(destLatitudeController.text, limit: 190) == null;
+    flag &= validateNumber(destLongitudeController.text, limit: 100) == null;
 
     return flag;
   }

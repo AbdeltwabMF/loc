@@ -139,16 +139,8 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.allow(RegExp(
-                                      r'^[+\-]?[0-9]{1,3}.?[0-9]{0,12}')),
                                   FilteringTextInputFormatter.deny(
-                                      RegExp(r'^[+\-]?[0-9]{4,}')),
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'^[+\-]?[0-9]{1,3}.?[0-9]{13,}')),
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'^[+\-]?[0-9]+[^.0-9]')),
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'[^.0-9+\-]')),
+                                      RegExp(r'^[+\-]?[0]{1}[^.]')),
                                 ],
                                 onChanged: (value) {
                                   // The solution to cursor out of position problem
@@ -169,13 +161,11 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 readOnly: provider.isListening == true,
                                 validator: (value) {
-                                  if (value == null || value == '') {
-                                    return 'Latitude is required';
-                                  } else if (double.tryParse(value) == null) {
-                                    return 'Invalid latitude value';
-                                  } else {
-                                    return null;
-                                  }
+                                  return validateNumber(
+                                    value,
+                                    message: 'Invalid latitude value',
+                                    limit: 100,
+                                  );
                                 },
                               ),
                             ),
@@ -202,18 +192,8 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.allow(RegExp(
-                                      r'^[+\-]?[0-9]{1,3}.?[0-9]{0,12}')),
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'^[+\-]?[0-9]{4,}')),
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'^[+\-]?[0-9]{1,3}.?[0-9]{13,}')),
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'^[+\-]?[0-9]+[^.0-9]')),
                                   FilteringTextInputFormatter.deny(
                                       RegExp(r'^[+\-]?[0]{1}[^.]')),
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'[^.0-9+\-]')),
                                 ],
                                 onChanged: (value) {
                                   provider.destLongitudeController.value =
@@ -231,13 +211,11 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 readOnly: provider.isListening == true,
                                 validator: (value) {
-                                  if (value == null || value == '') {
-                                    return 'Longitude is required';
-                                  } else if (double.tryParse(value) == null) {
-                                    return 'Invalid longitude value';
-                                  } else {
-                                    return null;
-                                  }
+                                  return validateNumber(
+                                    value,
+                                    message: 'Invalid longitude value',
+                                    limit: 190,
+                                  );
                                 },
                               ),
                             ),
@@ -266,9 +244,9 @@ class HomeScreen extends StatelessWidget {
                           ),
                           inputFormatters: [
                             FilteringTextInputFormatter.allow(
-                                RegExp(r'(^[0-9]{1,5})')),
+                                RegExp(r'(^[0-9]{1,7})')),
                             FilteringTextInputFormatter.deny(
-                                RegExp(r'(^[0-9]{6,})')),
+                                RegExp(r'(^[0-9]{8,})')),
                             FilteringTextInputFormatter.deny(
                                 RegExp(r'(^[0]{1}[0-9]+)')),
                           ],
@@ -361,7 +339,7 @@ class HomeScreen extends StatelessWidget {
                         provider.isListening == true
                             ? provider.isLocationValid() == true
                                 ? AppColors.darkRed
-                                : AppColors.lightBlue
+                                : AppColors.darkBlue
                             : AppColors.darkGreen,
                       ),
                       elevation: MaterialStateProperty.all(0),
@@ -375,7 +353,7 @@ class HomeScreen extends StatelessWidget {
                               : 'Calculating'
                           : 'Start',
                       style: const TextStyle(
-                        fontSize: 32,
+                        fontSize: 20,
                       ),
                     ),
                   ),
