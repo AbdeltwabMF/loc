@@ -11,15 +11,6 @@ import 'package:http/http.dart' as http;
 import 'package:loc/styles/colors.dart';
 import 'package:loc/widgets/buttons.dart';
 
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-  }
-}
-
 class OpenStreetMapSearchAndPick extends StatefulWidget {
   const OpenStreetMapSearchAndPick({
     Key? key,
@@ -338,16 +329,15 @@ class PickedData {
 }
 
 Future<String> getAddress(double latitude, double longitude) async {
-  HttpOverrides.global = MyHttpOverrides();
-
   try {
     String url =
         'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
-
-    final response = await http.post(Uri.parse(url));
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode != 200) {
+      return Future.error('Failed to get address');
+    }
     final decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
-
     return decodedResponse['display_name'] ?? "";
   } catch (error, stackTrace) {
     return Future.error(error, stackTrace);
@@ -358,7 +348,10 @@ Future<List<dynamic>> searchPhrase(String phrase) async {
   try {
     String url =
         'https://nominatim.openstreetmap.org/search?q=$phrase&format=json&polygon_geojson=1&addressdetails=1';
-    final response = await http.post(Uri.parse(url));
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode != 200) {
+      return Future.error('Failed to search the $phrase');
+    }
     final decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as List<dynamic>;
     return decodedResponse;
