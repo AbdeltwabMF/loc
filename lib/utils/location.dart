@@ -4,7 +4,7 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
 
-Future<geo.Position> getCurrentLocation() async {
+Future<bool> checkLocationPermission() async {
   bool isServiceEnabled = await geo.Geolocator.isLocationServiceEnabled();
   if (isServiceEnabled == false) {
     return Future.error('Location services are disabled.');
@@ -16,38 +16,47 @@ Future<geo.Position> getCurrentLocation() async {
   }
 
   if (permission == geo.LocationPermission.denied) {
-    return Future.error('Location permission is denied');
+    return Future.error('Location services permission is denied');
   }
 
   if (permission == geo.LocationPermission.deniedForever) {
-    return Future.error('Location permission is permanently denied');
+    return Future.error('Location services permission is permanently denied');
   }
-
-  return await geo.Geolocator.getCurrentPosition();
+  return true;
 }
 
-void listenToLocationUpdate(BuildContext context) {
+Future<geo.Position> getCurrentLocation() async {
+  final result = await checkLocationPermission().then((value) async {
+    return await geo.Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.high);
+  }).onError((error, stackTrace) {
+    return Future.error(error!, stackTrace);
+  });
+
+  return result;
+}
+
+void listenLocationUpdate(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
 
   geo.LocationSettings settings = const geo.LocationSettings(
     accuracy: geo.LocationAccuracy.high,
-    distanceFilter: 50,
+    distanceFilter: 8,
   );
 
   final subscription =
-      geo.Geolocator.getPositionStream(locationSettings: settings)
-          .listen((position) {
-    provider.setCurrLatitude(position.latitude);
-    provider.setCurrLongitude(position.longitude);
-
-    if (calcDistance(context) <= double.parse(provider.radiusText.text)) {
-      FlutterRingtonePlayer.playAlarm(
-        looping: true,
-        volume: 0.1,
-        asAlarm: true,
-      );
-    }
-  });
+      geo.Geolocator.getPositionStream(locationSettings: settings).listen(
+          (position) {
+            provider.setCurrLatitude(position.latitude);
+            provider.setCurrLongitude(position.longitude);
+            provider.setDistance(calcDistance(context));
+            shouldPlaySound(context);
+          },
+          cancelOnError: true,
+          onError: (error, stackTrace) {
+            debugPrint(error.toString());
+            debugPrint(stackTrace.toString());
+          });
 
   provider.setPositionStream(subscription);
 }
@@ -55,21 +64,17 @@ void listenToLocationUpdate(BuildContext context) {
 void cancelLocationUpdate(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
   provider.positionStream.cancel();
-  provider.setListening(false);
-  provider.setCurrLatitude(null);
-  provider.setCurrLongitude(null);
-
-  FlutterRingtonePlayer.stop();
 }
 
 double calcDistance(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
-  if (provider.isLocValid() == false) return 0;
+  if (provider.isLocationValid() == false) return -1.0;
+  if (provider.isInputValid() == false) return -1.0;
 
   final currentLatitude = provider.currLatitude!;
   final currentLongitude = provider.currLongitude!;
-  final destLatitude = double.parse(provider.destLatitudeText.text);
-  final destLongitude = double.parse(provider.destLongitudeText.text);
+  final destLatitude = double.parse(provider.destLatitudeController.text);
+  final destLongitude = double.parse(provider.destLongitudeController.text);
 
   final inMeters = geo.Geolocator.distanceBetween(
       destLatitude, destLongitude, currentLatitude, currentLongitude);
@@ -77,11 +82,21 @@ double calcDistance(BuildContext context) {
   return inMeters;
 }
 
-double toKiloMeter(double distanceInMeters) {
-  if (distanceInMeters <= 1000) {
-    return distanceInMeters;
+void shouldPlaySound(BuildContext context) {
+  final provider = Provider.of<AppStates>(context, listen: false);
+  if (provider.isInputValid() == false || provider.isDistanceValid() == false) {
+    FlutterRingtonePlayer.stop();
+    return;
   }
-  distanceInMeters /= 1000;
 
-  return double.parse(distanceInMeters.toStringAsPrecision(3));
+  if (provider.distance <= double.parse(provider.radiusController.text)) {
+    FlutterRingtonePlayer.play(
+      fromAsset: "assets/sounds/serious-strike.mp3",
+      looping: true,
+      volume: 0.1,
+      asAlarm: true,
+    );
+  } else {
+    FlutterRingtonePlayer.stop();
+  }
 }

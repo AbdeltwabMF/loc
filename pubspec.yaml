@@ -31,6 +31,8 @@ flutter:
           - asset: assets\fonts\Fantasque Sans Mono Bold Nerd Font.ttf
           - asset: assets\fonts\Fantasque Sans Mono Italic Nerd Font.ttf
             style: italic
+  assets:
+    - assets/sounds/
 
 flutter_icons:
   android: launcher_icon

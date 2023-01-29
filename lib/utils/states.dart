@@ -4,19 +4,21 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 
 class AppStates extends ChangeNotifier {
-  TextEditingController destLatitudeText = TextEditingController(text: '');
-  TextEditingController destLongitudeText = TextEditingController(text: '');
-  TextEditingController radiusText = TextEditingController(text: '100');
+  TextEditingController destLatitudeController =
+      TextEditingController(text: '');
+  TextEditingController destLongitudeController =
+      TextEditingController(text: '');
+  TextEditingController radiusController = TextEditingController(text: '100');
 
   double? currLatitude;
   double? currLongitude;
 
+  bool isListening = false;
+  double distance = -1.0;
   late StreamSubscription<geo.Position> positionStream;
 
-  bool isListening = false;
-
   void setRadius(String radius) {
-    radiusText.text = radius;
+    radiusController.text = radius;
     notifyListeners();
   }
 
@@ -40,7 +42,29 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool isLocValid() {
-    return currLatitude != null && currLongitude != null;
+  bool isLocationValid() {
+    bool flag = true;
+    flag &= currLatitude != null;
+    flag &= currLongitude != null;
+
+    return flag;
+  }
+
+  bool isInputValid() {
+    bool flag = true;
+    flag &= destLatitudeController.text != '';
+    flag &= destLongitudeController.text != '';
+    flag &= radiusController.text != '';
+
+    return flag;
+  }
+
+  bool isDistanceValid() {
+    return distance >= 0.0;
+  }
+
+  void setDistance(double distance) {
+    this.distance = distance;
+    notifyListeners();
   }
 }
