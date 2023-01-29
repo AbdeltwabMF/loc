@@ -300,84 +300,82 @@ class HomeScreen extends StatelessWidget {
                     ]),
                   ),
                 ),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 16,
-                      left: 4,
-                      right: 4,
-                      bottom: 8,
-                    ),
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        // Act as stop button
-                        if (provider.isListening == true) {
-                          provider.setListening(false);
-                          cancelLocationUpdate(context);
-                          return;
-                        }
+                Container(
+                  padding: const EdgeInsets.only(
+                    top: 16,
+                    left: 4,
+                    right: 4,
+                    bottom: 8,
+                  ),
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      // Act as stop button
+                      if (provider.isListening == true) {
+                        provider.setListening(false);
+                        cancelLocationUpdate(context);
+                        shouldPlaySound(context);
+                        return;
+                      }
 
-                        if (provider.isInputValid() == false) {
-                          _formKey.currentState!.validate();
-                          return;
-                        }
+                      if (provider.isInputValid() == false) {
+                        _formKey.currentState!.validate();
+                        return;
+                      }
 
-                        provider.setListening(true);
-                        getCurrentLocation().then((value) async {
-                          provider.setCurrLatitude(value.latitude);
-                          provider.setCurrLongitude(value.longitude);
-                          provider.setDistance(calcDistance(context));
+                      provider.setListening(true);
+                      getCurrentLocation().then((value) async {
+                        provider.setCurrLatitude(value.latitude);
+                        provider.setCurrLongitude(value.longitude);
+                        provider.setDistance(calcDistance(context));
 
-                          shouldPlaySound(context);
-                          listenLocationUpdate(context);
+                        shouldPlaySound(context);
+                        listenLocationUpdate(context);
 
-                          final address = await getAddress(
-                                  double.parse(
-                                      provider.destLatitudeController.text),
-                                  double.parse(
-                                      provider.destLongitudeController.text))
-                              .onError((error, stackTrace) {
-                            debugPrint(error.toString());
-                            debugPrint(stackTrace.toString());
-                            return '';
-                          });
-
-                          if (address.isNotEmpty) {
-                            provider.addressController.value =
-                                provider.addressController.value.copyWith(
-                              text: address,
-                            );
-                          }
-                        }).onError((error, stackTrace) {
+                        final address = await getAddress(
+                                double.parse(
+                                    provider.destLatitudeController.text),
+                                double.parse(
+                                    provider.destLongitudeController.text))
+                            .onError((error, stackTrace) {
                           debugPrint(error.toString());
                           debugPrint(stackTrace.toString());
-
-                          provider.setListening(false);
+                          return '';
                         });
-                      },
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                          provider.isListening == true
-                              ? provider.isLocationValid() == true
-                                  ? AppColors.darkRed
-                                  : AppColors.lightBlue
-                              : AppColors.darkGreen,
-                        ),
-                        elevation: MaterialStateProperty.all(0),
-                        shape: MaterialStateProperty.all(const CircleBorder()),
-                        padding:
-                            MaterialStateProperty.all(const EdgeInsets.all(80)),
-                      ),
-                      child: Text(
+
+                        if (address.isNotEmpty) {
+                          provider.addressController.value =
+                              provider.addressController.value.copyWith(
+                            text: address,
+                          );
+                        }
+                      }).onError((error, stackTrace) {
+                        debugPrint(error.toString());
+                        debugPrint(stackTrace.toString());
+
+                        provider.setListening(false);
+                      });
+                    },
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(
                         provider.isListening == true
                             ? provider.isLocationValid() == true
-                                ? 'Stop'
-                                : 'Calculating'
-                            : 'Start',
-                        style: const TextStyle(
-                          fontSize: 32,
-                        ),
+                                ? AppColors.darkRed
+                                : AppColors.lightBlue
+                            : AppColors.darkGreen,
+                      ),
+                      elevation: MaterialStateProperty.all(0),
+                      padding: MaterialStateProperty.all(
+                          const EdgeInsets.symmetric(vertical: 12)),
+                    ),
+                    child: Text(
+                      provider.isListening == true
+                          ? provider.isLocationValid() == true
+                              ? 'Stop'
+                              : 'Calculating'
+                          : 'Start',
+                      style: const TextStyle(
+                        fontSize: 32,
                       ),
                     ),
                   ),

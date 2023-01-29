@@ -84,7 +84,9 @@ double calcDistance(BuildContext context) {
 
 void shouldPlaySound(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
-  if (provider.isInputValid() == false || provider.isDistanceValid() == false) {
+  if (provider.isListening == false ||
+      provider.isInputValid() == false ||
+      provider.isDistanceValid() == false) {
     FlutterRingtonePlayer.stop();
     return;
   }
@@ -94,7 +96,9 @@ void shouldPlaySound(BuildContext context) {
     debugPrint(provider.radiusController.text);
 
     FlutterRingtonePlayer.playAlarm(
+      looping: true,
       volume: 0.1,
+      asAlarm: true,
     );
   } else {
     FlutterRingtonePlayer.stop();

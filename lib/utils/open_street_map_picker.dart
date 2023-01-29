@@ -32,7 +32,6 @@ class _OpenStreetMapSearchAndPickState
   final FocusNode _focusNode = FocusNode();
   List<OSMdata> _options = <OSMdata>[];
   Timer? _debounce;
-  final client = http.Client();
 
   void setNameCurrentPos() async {
     double latitude = _mapController.center.latitude;
@@ -287,14 +286,8 @@ class _OpenStreetMapSearchAndPickState
   Future<PickedData> pickData() async {
     LatLong center = LatLong(
         _mapController.center.latitude, _mapController.center.longitude);
-    final client = http.Client();
-    String url =
-        'https://nominatim.openstreetmap.org/reverse?format=json&lat=${_mapController.center.latitude}&lon=${_mapController.center.longitude}&zoom=18&addressdetails=1';
-
-    final response = await client.post(Uri.parse(url));
-    final decodedResponse =
-        jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
-    String displayName = decodedResponse['display_name'];
+    String displayName = await getAddress(
+        _mapController.center.latitude, _mapController.center.longitude);
     return PickedData(center, displayName);
   }
 }
@@ -335,35 +328,29 @@ class PickedData {
 }
 
 Future<String> getAddress(double latitude, double longitude) async {
-  final client = http.Client();
   try {
     String url =
         'https://nominatim.openstreetmap.org/reverse?format=json&lat=$latitude&lon=$longitude&zoom=18&addressdetails=1';
 
-    final response = await client.post(Uri.parse(url));
+    final response = await http.post(Uri.parse(url));
     final decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<dynamic, dynamic>;
 
     return decodedResponse['display_name'] ?? "";
   } catch (error, stackTrace) {
     return Future.error(error, stackTrace);
-  } finally {
-    client.close();
   }
 }
 
 Future<List<dynamic>> searchPhrase(String phrase) async {
-  final client = http.Client();
   try {
     String url =
         'https://nominatim.openstreetmap.org/search?q=$phrase&format=json&polygon_geojson=1&addressdetails=1';
-    final response = await client.post(Uri.parse(url));
+    final response = await http.post(Uri.parse(url));
     final decodedResponse =
         jsonDecode(utf8.decode(response.bodyBytes)) as List<dynamic>;
     return decodedResponse;
   } catch (error, stackTrace) {
     return Future.error(error, stackTrace);
-  } finally {
-    client.close();
   }
 }
