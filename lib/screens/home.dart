@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:loc/style/colors.dart';
+import 'package:loc/screens/location_picker.dart';
+import 'package:loc/styles/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
+import 'package:loc/utils/open_street_map_picker.dart' show PickedData;
 import 'package:provider/provider.dart';
+import 'package:loc/widgets/buttons.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -40,6 +43,37 @@ class HomeScreen extends StatelessWidget {
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               children: [
+                PickLocationButton(
+                  onPressed: () async {
+                    final pickedData =
+                        await Navigator.of(context).push<PickedData>(
+                      MaterialPageRoute<PickedData>(
+                        builder: (context) {
+                          return const AppLocationPicker();
+                        },
+                      ),
+                    );
+
+                    if (pickedData != null) {
+                      debugPrint(pickedData.latLong.latitude.toString());
+                      debugPrint(pickedData.latLong.longitude.toString());
+                      debugPrint(pickedData.address);
+
+                      provider.destLatitudeController.value =
+                          provider.destLatitudeController.value.copyWith(
+                        text: pickedData.latLong.latitude.toString(),
+                      );
+
+                      provider.destLongitudeController.value =
+                          provider.destLongitudeController.value.copyWith(
+                        text: pickedData.latLong.longitude.toString(),
+                      );
+
+                      provider.setDistance(calcDistance(context));
+                      shouldPlaySound(context);
+                    }
+                  },
+                ),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.only(
@@ -47,6 +81,9 @@ class HomeScreen extends StatelessWidget {
                       bottom: 8,
                     ),
                     child: Column(children: [
+                      Container(
+                        child: Text('Address'),
+                      ),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

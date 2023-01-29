@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:loc/screen/home.dart';
-import 'package:loc/style/colors.dart';
+import 'package:loc/screens/home.dart';
+import 'package:loc/styles/colors.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
 

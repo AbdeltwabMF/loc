@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.abdeltwabmf.loc">
    <application
-        android:label="loc"
+        android:label="Loc"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

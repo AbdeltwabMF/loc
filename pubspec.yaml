@@ -15,6 +15,9 @@ dependencies:
   provider: ^6.0.5
   geolocator: ^9.0.2
   flutter_ringtone_player: ^3.2.0
+  flutter_map: ^3.1.0
+  latlong2: ^0.8.1
+  http: ^0.13.5
 
 dev_dependencies:
   flutter_test:
@@ -27,12 +30,13 @@ flutter:
   fonts:
       - family: Fantasque
         fonts:
-          - asset: assets\fonts\Fantasque Sans Mono Regular Nerd Font.ttf
-          - asset: assets\fonts\Fantasque Sans Mono Bold Nerd Font.ttf
-          - asset: assets\fonts\Fantasque Sans Mono Italic Nerd Font.ttf
+          - asset: assets/fonts/Fantasque Sans Mono Regular Nerd Font.ttf
+          - asset: assets/fonts/Fantasque Sans Mono Bold Nerd Font.ttf
+          - asset: assets/fonts/Fantasque Sans Mono Italic Nerd Font.ttf
             style: italic
-  assets:
-    - assets/sounds/
+      - family: NotoArabic
+        fonts:
+          - asset: assets/fonts/NotoSansArabic-Regular.ttf
 
 flutter_icons:
   android: launcher_icon
