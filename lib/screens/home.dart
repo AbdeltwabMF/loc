@@ -209,6 +209,10 @@ class HomeScreen extends StatelessWidget {
                                       ),
                                     ),
                                     labelText: 'Radius',
+                                    suffixText: 'Meters',
+                                    suffixStyle: TextStyle(
+                                      fontFamily: 'Fantasque',
+                                    ),
                                     prefixIcon: Icon(
                                       Icons.radar,
                                     ),
@@ -246,7 +250,6 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              flex: 2,
                               child: Container(
                                 padding: const EdgeInsets.only(
                                   top: 8,
@@ -266,6 +269,9 @@ class HomeScreen extends StatelessWidget {
                                     ),
                                     labelText: 'Distance',
                                     suffixText: 'Meters',
+                                    suffixStyle: TextStyle(
+                                      fontFamily: 'Fantasque',
+                                    ),
                                     prefixIcon: Icon(
                                       Icons.line_axis,
                                     ),
@@ -307,24 +313,6 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                provider.isListening == true &&
-                        provider.isLocationValid() == false &&
-                        provider.isDistanceValid() == false
-                    ? Container(
-                        padding: const EdgeInsets.only(
-                          top: 24,
-                          left: 64,
-                          right: 64,
-                        ),
-                        child: const LinearProgressIndicator(
-                          value: null,
-                          color: AppColors.ashGray,
-                          backgroundColor: AppColors.rose,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.yellowRed),
-                        ),
-                      )
-                    : const SizedBox(),
                 Row(
                   children: [
                     Expanded(
@@ -354,58 +342,63 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     Expanded(
-                        child: StartButton(
-                      isListening: provider.isListening,
-                      isLocationValid: provider.isLocationValid(),
-                      onPressed: () async {
-                        // Act as stop button
-                        if (provider.isListening == true) {
-                          provider.setListening(false);
-                          cancelLocationUpdate(context);
-                          provider.setDistanceController(null);
-                          shouldPlaySound(context);
-                          return;
-                        }
+                      child: StartButton(
+                        isListening: provider.isListening,
+                        isLocationValid: provider.isLocationValid(),
+                        onPressed: () async {
+                          // Act as stop button
+                          if (provider.isListening == true) {
+                            provider.setListening(false);
+                            cancelLocationUpdate(context);
+                            provider.setDistanceController(null);
+                            shouldPlaySound(context);
+                            return;
+                          }
 
-                        if (provider.isInputValid() == false) {
-                          _formKey.currentState!.validate();
-                          return;
-                        }
+                          if (provider.isInputValid() == false) {
+                            _formKey.currentState!.validate();
+                            return;
+                          }
 
-                        provider.setDistanceController(calcDistance(context));
-                        shouldPlaySound(context);
-                        listenLocationUpdate(context);
+                          provider.setDistanceController(calcDistance(context));
+                          listenLocationUpdate(context);
 
-                        provider.setListening(true);
-                        getCurrentLocation().then((value) async {
-                          provider.setCurrLatitude(value.latitude);
-                          provider.setCurrLongitude(value.longitude);
+                          provider.setListening(true);
+                          getCurrentLocation().then((value) async {
+                            provider.setCurrLatitude(value.latitude);
+                            provider.setCurrLongitude(value.longitude);
 
-                          LocationData locationData = LocationData(
-                            latitude: double.parse(
-                                provider.destLatitudeController.text),
-                            longitude: double.parse(
-                                provider.destLongitudeController.text),
+                            LocationData locationData = LocationData(
+                              latitude: double.parse(
+                                  provider.destLatitudeController.text),
+                              longitude: double.parse(
+                                  provider.destLongitudeController.text),
+                            );
+
+                            final decodedResponse =
+                                await osmReverse(locationData)
+                                    .onError((error, stackTrace) {
+                              debugPrint(error.toString());
+                              debugPrint(stackTrace.toString());
+                              return <String, dynamic>{};
+                            });
+
+                            if (decodedResponse.isNotEmpty) {
+                              provider.setDestDisplayNameController(
+                                  decodedResponse['display_name'] ?? '');
+                            }
+                          }).onError(
+                            (error, stackTrace) {
+                              debugPrint(error.toString());
+                              debugPrint(stackTrace.toString());
+                              provider.setListening(false);
+                            },
                           );
 
-                          final decodedResponse = await osmReverse(locationData)
-                              .onError((error, stackTrace) {
-                            debugPrint(error.toString());
-                            debugPrint(stackTrace.toString());
-                            return <String, dynamic>{};
-                          });
-
-                          if (decodedResponse.isNotEmpty) {
-                            provider.setDestDisplayNameController(
-                                decodedResponse['display_name'] ?? '');
-                          }
-                        }).onError((error, stackTrace) {
-                          debugPrint(error.toString());
-                          debugPrint(stackTrace.toString());
-                          provider.setListening(false);
-                        });
-                      },
-                    )),
+                          shouldPlaySound(context);
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ],
