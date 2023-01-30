@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 class AppColors {
   const AppColors._();
 
-  static const bg = Color(0xFFD8E2DC);
-  static const fg = Color(0xFF9D8189);
-  static const darkBlue = Color(0xFF0AC6FF);
-  static const lightBlue = Color(0xFF99E7FF);
-  static const darkRed = Color(0xFFFF5C7A);
-  static const lightRed = Color(0xFFFFCAD4);
-  static const darkGreen = Color(0xFF40916c);
-  static const lightGreen = Color(0xFF95d5b2);
-  static const darkYellow = Color(0xFFFFC7AD);
-  static const lightYellow = Color(0xFFFFE5D9);
+  static const bg = Color(0xFFE9ECEF);
+  static const fg = Color(0xFF495057);
+  static const ashGray = Color(0xFFC4D4D0);
+  static const coral = Color(0xFFF28482);
+  static const rose = Color(0xFFF9DEDC);
+  static const pink = Color(0xFFF5CAC3);
+  static const desertSand = Color(0xFFE9CDAF);
+  static const linen = Color(0xFFF7EDE2);
+  static const yellowRed = Color(0xFFF6BD60);
+  static const navajo = Color(0xFFFBDFB1);
 }

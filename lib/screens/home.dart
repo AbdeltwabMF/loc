@@ -29,9 +29,9 @@ class HomeScreen extends StatelessWidget {
                 AppColors.bg,
                 provider.isListening == true
                     ? provider.isLocationValid() == true
-                        ? AppColors.lightRed.withOpacity(0.1)
-                        : AppColors.lightBlue.withOpacity(0.1)
-                    : AppColors.lightGreen.withOpacity(0.1),
+                        ? AppColors.ashGray.withOpacity(0.1)
+                        : AppColors.ashGray.withOpacity(0.1)
+                    : AppColors.ashGray.withOpacity(0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(8),
@@ -42,317 +42,241 @@ class HomeScreen extends StatelessWidget {
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               children: [
-                PickLocationButton(
-                  onPressed: () async {
-                    final pickedLocationData =
-                        await Navigator.of(context).push<LocationData>(
-                      MaterialPageRoute<LocationData>(
-                        builder: (context) {
-                          return OsmMapViewScreen();
-                        },
-                      ),
-                    );
-
-                    if (pickedLocationData != null) {
-                      debugPrint(pickedLocationData.latitude.toString());
-                      debugPrint(pickedLocationData.longitude.toString());
-
-                      provider.destLatitudeController.value =
-                          provider.destLatitudeController.value.copyWith(
-                        text: pickedLocationData.latitude.toString(),
-                      );
-
-                      provider.destLongitudeController.value =
-                          provider.destLongitudeController.value.copyWith(
-                        text: pickedLocationData.longitude.toString(),
-                      );
-
-                      provider.addressController.value =
-                          provider.addressController.value.copyWith(
-                        text: pickedLocationData.displayName,
-                      );
-                    }
-                  },
-                ),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.only(
                       top: 16,
                       bottom: 8,
                     ),
-                    child: Column(children: [
-                      Container(
-                        padding: const EdgeInsets.only(
-                          top: 8,
-                          left: 4,
-                          right: 4,
-                          bottom: 8,
-                        ),
-                        child: TextFormField(
-                          textAlign: TextAlign.right,
-                          controller: provider.addressController,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppColors.fg,
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.only(
+                            top: 8,
+                            left: 4,
+                            right: 4,
+                            bottom: 8,
+                          ),
+                          child: TextFormField(
+                            textAlign: TextAlign.right,
+                            controller: provider.destDisplayNameController,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: AppColors.ashGray,
+                                  width: 2,
+                                  strokeAlign: BorderSide.strokeAlignOutside,
+                                ),
+                              ),
+                              contentPadding: EdgeInsets.all(12),
+                              labelText: 'Address',
+                              labelStyle: TextStyle(fontFamily: 'Fantasque'),
+                              prefixIcon: Icon(
+                                Icons.location_city,
                               ),
                             ),
-                            contentPadding: EdgeInsets.all(12),
-                            labelText: 'Address',
-                            prefixIcon: Icon(
-                              Icons.location_city,
+                            readOnly: true,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontFamily: 'NotoArabic',
                             ),
                           ),
-                          readOnly: true,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontFamily: 'NotoArabic',
-                          ),
                         ),
-                      ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.only(
-                                top: 8,
-                                left: 4,
-                                right: 2,
-                                bottom: 8,
-                              ),
-                              child: TextFormField(
-                                controller: provider.destLatitudeController,
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: AppColors.fg,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 4,
+                                  right: 2,
+                                  bottom: 8,
+                                ),
+                                child: TextFormField(
+                                  controller: provider.destLatitudeController,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: AppColors.ashGray,
+                                        width: 2,
+                                        strokeAlign:
+                                            BorderSide.strokeAlignOutside,
+                                      ),
+                                    ),
+                                    labelText: 'Latitude',
+                                    prefixIcon: Icon(
+                                      Icons.near_me,
                                     ),
                                   ),
-                                  labelText: 'Latitude',
-                                  prefixIcon: Icon(
-                                    Icons.location_pin,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.deny(
+                                        RegExp(r'^[+\-]?[0]{1}[^.]')),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != '' &&
+                                        double.tryParse(value) != null) {
+                                      provider.setDestLatitudeController(
+                                          double.parse(value));
+                                    }
+                                  },
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                    signed: true,
+                                    decimal: true,
                                   ),
+                                  readOnly: provider.isListening == true,
+                                  validator: (value) {
+                                    return validateNumber(
+                                      value,
+                                      message: 'Invalid latitude value',
+                                      limit: 100,
+                                    );
+                                  },
                                 ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'^[+\-]?[0]{1}[^.]')),
-                                ],
-                                onChanged: (value) {
-                                  // The solution to cursor out of position problem
-                                  // https://github.com/flutter/flutter/blob/2d2a1ffec95cc70a3218872a2cd3f8de4933c42f/packages/flutter/lib/src/widgets/editable_text.dart#L143
-                                  provider.destLatitudeController.value =
-                                      provider.destLatitudeController.value
-                                          .copyWith(
-                                    text: value,
-                                  );
-
-                                  provider.setDistance(calcDistance(context));
-                                  shouldPlaySound(context);
-                                },
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  signed: true,
-                                  decimal: true,
-                                ),
-                                readOnly: provider.isListening == true,
-                                validator: (value) {
-                                  return validateNumber(
-                                    value,
-                                    message: 'Invalid latitude value',
-                                    limit: 100,
-                                  );
-                                },
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: Container(
-                              padding: const EdgeInsets.only(
-                                top: 8,
-                                left: 2,
-                                right: 4,
-                                bottom: 8,
-                              ),
-                              child: TextFormField(
-                                controller: provider.destLongitudeController,
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                      color: AppColors.fg,
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 2,
+                                  right: 4,
+                                  bottom: 8,
+                                ),
+                                child: TextFormField(
+                                  controller: provider.destLongitudeController,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: AppColors.ashGray,
+                                        width: 2,
+                                        strokeAlign:
+                                            BorderSide.strokeAlignOutside,
+                                      ),
+                                    ),
+                                    labelText: 'Longitude',
+                                    prefixIcon: Icon(
+                                      Icons.near_me,
                                     ),
                                   ),
-                                  labelText: 'Longitude',
-                                  prefixIcon: Icon(
-                                    Icons.location_pin,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.deny(
+                                        RegExp(r'^[+\-]?[0]{1}[^.]')),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != '' &&
+                                        double.tryParse(value) != null) {
+                                      provider.setDestLongitudeController(
+                                          double.parse(value));
+                                    }
+                                  },
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                    signed: true,
+                                    decimal: true,
                                   ),
+                                  readOnly: provider.isListening == true,
+                                  validator: (value) {
+                                    return validateNumber(
+                                      value,
+                                      message: 'Invalid longitude value',
+                                      limit: 190,
+                                    );
+                                  },
                                 ),
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.deny(
-                                      RegExp(r'^[+\-]?[0]{1}[^.]')),
-                                ],
-                                onChanged: (value) {
-                                  provider.destLongitudeController.value =
-                                      provider.destLongitudeController.value
-                                          .copyWith(
-                                    text: value,
-                                  );
-                                  provider.setDistance(calcDistance(context));
-                                  shouldPlaySound(context);
-                                },
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                  signed: true,
-                                  decimal: true,
-                                ),
-                                readOnly: provider.isListening == true,
-                                validator: (value) {
-                                  return validateNumber(
-                                    value,
-                                    message: 'Invalid longitude value',
-                                    limit: 190,
-                                  );
-                                },
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.only(
-                          top: 8,
-                          left: 4,
-                          right: 4,
-                          bottom: 8,
-                        ),
-                        child: TextFormField(
-                          controller: provider.radiusController,
-                          decoration: const InputDecoration(
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: AppColors.fg,
-                              ),
-                            ),
-                            labelText: 'Radius',
-                            prefixIcon: Icon(
-                              Icons.radar,
-                            ),
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                                RegExp(r'(^[0-9]{1,7})')),
-                            FilteringTextInputFormatter.deny(
-                                RegExp(r'(^[0-9]{8,})')),
-                            FilteringTextInputFormatter.deny(
-                                RegExp(r'(^[0]{1}[0-9]+)')),
                           ],
-                          onChanged: (value) {
-                            provider.radiusController.value =
-                                provider.radiusController.value.copyWith(
-                              text: value,
-                            );
-
-                            provider.setDistance(calcDistance(context));
-                            shouldPlaySound(context);
-                          },
-                          keyboardType: const TextInputType.numberWithOptions(
-                            signed: true,
-                            decimal: true,
-                          ),
-                          readOnly: provider.isListening == true,
-                          validator: (value) {
-                            if (value == null || value == '') {
-                              return 'Radius is required';
-                            } else if (double.tryParse(value) == null) {
-                              return 'Invalid radius value';
-                            } else {
-                              return null;
-                            }
-                          },
                         ),
-                      ),
-                    ]),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.only(
-                    top: 16,
-                    left: 4,
-                    right: 4,
-                    bottom: 8,
-                  ),
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      // Act as stop button
-                      if (provider.isListening == true) {
-                        provider.setListening(false);
-                        cancelLocationUpdate(context);
-                        shouldPlaySound(context);
-                        return;
-                      }
-
-                      if (provider.isInputValid() == false) {
-                        _formKey.currentState!.validate();
-                        return;
-                      }
-
-                      provider.setListening(true);
-                      getCurrentLocation().then((value) async {
-                        provider.setCurrLatitude(value.latitude);
-                        provider.setCurrLongitude(value.longitude);
-                        provider.setDistance(calcDistance(context));
-
-                        shouldPlaySound(context);
-                        listenLocationUpdate(context);
-
-                        LocationData locationData = LocationData(
-                          latitude: double.parse(
-                              provider.destLatitudeController.text),
-                          longitude: double.parse(
-                              provider.destLongitudeController.text),
-                        );
-
-                        final decodedResponse = await osmReverse(locationData)
-                            .onError((error, stackTrace) {
-                          debugPrint(error.toString());
-                          debugPrint(stackTrace.toString());
-                          return <String, dynamic>{};
-                        });
-
-                        if (decodedResponse.isNotEmpty) {
-                          provider.addressController.value =
-                              provider.addressController.value.copyWith(
-                            text: decodedResponse['display_name'] ?? '',
-                          );
-                        }
-                      }).onError((error, stackTrace) {
-                        debugPrint(error.toString());
-                        debugPrint(stackTrace.toString());
-                        provider.setListening(false);
-                      });
-                    },
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(
-                        provider.isListening == true
-                            ? provider.isLocationValid() == true
-                                ? AppColors.darkRed
-                                : AppColors.darkBlue
-                            : AppColors.darkGreen,
-                      ),
-                      elevation: MaterialStateProperty.all(0),
-                      padding: MaterialStateProperty.all(
-                          const EdgeInsets.symmetric(vertical: 12)),
-                    ),
-                    child: Text(
-                      provider.isListening == true
-                          ? provider.isLocationValid() == true
-                              ? 'Stop'
-                              : 'Calculating'
-                          : 'Start',
-                      style: const TextStyle(
-                        fontSize: 20,
-                      ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 2,
+                                  right: 2,
+                                  bottom: 8,
+                                ),
+                                child: TextFormField(
+                                  controller: provider.radiusController,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: AppColors.fg,
+                                      ),
+                                    ),
+                                    labelText: 'Radius',
+                                    prefixIcon: Icon(
+                                      Icons.radar,
+                                    ),
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                        RegExp(r'(^[0-9]{1,7})')),
+                                    FilteringTextInputFormatter.deny(
+                                        RegExp(r'(^[0-9]{8,})')),
+                                    FilteringTextInputFormatter.deny(
+                                        RegExp(r'(^[0]{1}[0-9]+)')),
+                                  ],
+                                  onChanged: (value) {
+                                    if (value != '') {
+                                      provider.setRadiusController(
+                                          int.parse(value));
+                                    }
+                                  },
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                    signed: true,
+                                    decimal: true,
+                                  ),
+                                  readOnly: provider.isListening == true,
+                                  validator: (value) {
+                                    if (value == null || value == '') {
+                                      return 'Radius is required';
+                                    } else if (int.tryParse(value) == null) {
+                                      return 'Invalid radius value';
+                                    } else {
+                                      return null;
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 2,
+                                  right: 2,
+                                  bottom: 8,
+                                ),
+                                child: TextFormField(
+                                  controller: provider.distanceController,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: AppColors.fg,
+                                        strokeAlign:
+                                            BorderSide.strokeAlignOutside,
+                                      ),
+                                    ),
+                                    labelText: 'Distance',
+                                    suffixText: 'Meters',
+                                    prefixIcon: Icon(
+                                      Icons.line_axis,
+                                    ),
+                                  ),
+                                  readOnly: true,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
                     ),
                   ),
                 ),
@@ -367,10 +291,10 @@ class HomeScreen extends StatelessWidget {
                         ),
                         child: const LinearProgressIndicator(
                           value: null,
-                          color: AppColors.darkYellow,
-                          backgroundColor: AppColors.lightRed,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(AppColors.darkRed),
+                          color: AppColors.ashGray,
+                          backgroundColor: AppColors.rose,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.yellowRed),
                         ),
                       )
                     : const SizedBox(),
@@ -458,56 +382,89 @@ class HomeScreen extends StatelessWidget {
                         ),
                       )
                     : const SizedBox(),
-                provider.isListening == true &&
-                        provider.isDistanceValid() == true
-                    ? Container(
-                        padding: const EdgeInsets.only(
-                          top: 8,
-                          left: 8,
-                          right: 8,
-                          bottom: 8,
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.only(
-                                top: 8,
-                                left: 8,
-                                right: 8,
-                                bottom: 16,
-                              ),
-                              child: const Text(
-                                'Distance',
-                                style: TextStyle(
-                                  color: AppColors.fg,
-                                  fontSize: 20,
-                                ),
-                              ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OpenMapButton(
+                        isListening: provider.isListening,
+                        onPressed: () async {
+                          final pickedLocationData =
+                              await Navigator.of(context).push<LocationData>(
+                            MaterialPageRoute<LocationData>(
+                              builder: (context) {
+                                return OsmMapViewScreen();
+                              },
                             ),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.only(
-                                top: 8,
-                                left: 8,
-                                right: 8,
-                                bottom: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: AppColors.fg,
-                                  strokeAlign: BorderSide.strokeAlignOutside,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '${provider.distance.round().toString()} Meters',
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox(),
+                          );
+
+                          if (pickedLocationData != null) {
+                            debugPrint(pickedLocationData.latitude.toString());
+                            debugPrint(pickedLocationData.longitude.toString());
+                            provider.setDestLatitudeController(
+                                pickedLocationData.latitude);
+                            provider.setDestLongitudeController(
+                                pickedLocationData.longitude);
+                            provider.setDestDisplayNameController(
+                                pickedLocationData.displayName ?? '');
+                          }
+                        },
+                      ),
+                    ),
+                    Expanded(
+                        child: StartButton(
+                      isListening: provider.isListening,
+                      isLocationValid: provider.isLocationValid(),
+                      onPressed: () async {
+                        // Act as stop button
+                        if (provider.isListening == true) {
+                          provider.setListening(false);
+                          cancelLocationUpdate(context);
+                          provider.setDistanceController(null);
+                          shouldPlaySound(context);
+                          return;
+                        }
+
+                        if (provider.isInputValid() == false) {
+                          _formKey.currentState!.validate();
+                          return;
+                        }
+
+                        provider.setDistanceController(calcDistance(context));
+                        shouldPlaySound(context);
+                        listenLocationUpdate(context);
+
+                        provider.setListening(true);
+                        getCurrentLocation().then((value) async {
+                          provider.setCurrLatitude(value.latitude);
+                          provider.setCurrLongitude(value.longitude);
+
+                          LocationData locationData = LocationData(
+                            latitude: double.parse(
+                                provider.destLatitudeController.text),
+                            longitude: double.parse(
+                                provider.destLongitudeController.text),
+                          );
+
+                          final decodedResponse = await osmReverse(locationData)
+                              .onError((error, stackTrace) {
+                            debugPrint(error.toString());
+                            debugPrint(stackTrace.toString());
+                            return <String, dynamic>{};
+                          });
+
+                          if (decodedResponse.isNotEmpty) {
+                            provider.setDestDisplayNameController(
+                                decodedResponse['display_name'] ?? '');
+                          }
+                        }).onError((error, stackTrace) {
+                          debugPrint(error.toString());
+                          debugPrint(stackTrace.toString());
+                          provider.setListening(false);
+                        });
+                      },
+                    )),
+                  ],
+                ),
               ],
             ),
           ),

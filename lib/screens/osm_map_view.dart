@@ -8,6 +8,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'package:loc/styles/colors.dart';
+import 'package:loc/utils/location.dart';
 import 'package:loc/widgets/buttons.dart';
 
 const String osmBaseUrl = 'https://nominatim.openstreetmap.org';
@@ -76,7 +77,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               ],
             )),
             Positioned(
-              top: MediaQuery.of(context).size.height * 0.5,
+              top: MediaQuery.of(context).size.height * 0.5 + 12,
               left: 0,
               right: 0,
               child: IgnorePointer(
@@ -86,17 +87,23 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                       return Text(
                         _searchController.text,
                         textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color.fromARGB(255, 62, 23, 129),
+                        ),
                       );
                     },
                   ),
                 ),
               ),
             ),
-            const Positioned.fill(
+            Positioned.fill(
               child: IgnorePointer(
                 child: Center(
-                  child: Icon(Icons.location_pin,
-                      size: 50, color: AppColors.darkBlue),
+                  child: Icon(
+                    Icons.location_pin,
+                    size: 56,
+                    color: AppColors.fg.withOpacity(0.9),
+                  ),
                 ),
               ),
             ),
@@ -104,7 +111,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               bottom: 224,
               right: 8,
               child: FloatingActionButton(
-                backgroundColor: AppColors.darkGreen,
+                backgroundColor: AppColors.fg.withOpacity(0.9),
                 elevation: 0,
                 heroTag: 'btn1',
                 onPressed: () {
@@ -112,14 +119,17 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                       _mapController.center, _mapController.zoom + 1);
                 },
                 tooltip: 'Zoom in',
-                child: const Icon(Icons.zoom_in_map),
+                child: const Icon(
+                  Icons.zoom_in_map,
+                  color: AppColors.linen,
+                ),
               ),
             ),
             Positioned(
               bottom: 152,
               right: 8,
               child: FloatingActionButton(
-                backgroundColor: AppColors.darkGreen,
+                backgroundColor: AppColors.fg.withOpacity(0.9),
                 elevation: 0,
                 heroTag: 'btn2',
                 onPressed: () {
@@ -127,23 +137,38 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                       _mapController.center, _mapController.zoom - 1);
                 },
                 tooltip: 'Zoom out',
-                child: const Icon(Icons.zoom_out_map),
+                child: const Icon(
+                  Icons.zoom_out_map,
+                  color: AppColors.linen,
+                ),
               ),
             ),
             Positioned(
               bottom: 80,
               right: 8,
               child: FloatingActionButton(
-                backgroundColor: AppColors.darkGreen,
+                backgroundColor: AppColors.fg.withOpacity(0.9),
                 elevation: 0,
                 heroTag: 'btn3',
                 onPressed: () {
-                  _mapController.move(
-                      LatLng(widget.center.latitude, widget.center.longitude),
-                      _mapController.zoom);
+                  // Move to the current location if can not move to the initial position
+                  getCurrentLocation().then((value) {
+                    _mapController.move(LatLng(value.latitude, value.longitude),
+                        _mapController.zoom);
+                  }).onError((error, stackTrace) {
+                    debugPrint(error.toString());
+                    debugPrint(stackTrace.toString());
+
+                    _mapController.move(
+                        LatLng(widget.center.latitude, widget.center.longitude),
+                        _mapController.zoom);
+                  });
                 },
                 tooltip: 'My location',
-                child: const Icon(Icons.my_location),
+                child: const Icon(
+                  Icons.my_location,
+                  color: AppColors.linen,
+                ),
               ),
             ),
             Positioned(
@@ -151,38 +176,44 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               left: 0,
               right: 0,
               child: Container(
-                margin: const EdgeInsets.all(15),
+                margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(5),
+                  color: AppColors.linen,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   children: [
                     TextFormField(
                       controller: _searchController,
                       focusNode: _focusNode,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: AppColors.darkBlue,
+                            color: AppColors.rose,
                             width: 2,
+                            strokeAlign: BorderSide.strokeAlignOutside,
                           ),
                           borderRadius: BorderRadius.all(
                             Radius.circular(8),
                           ),
                         ),
-                        contentPadding: EdgeInsets.all(12),
+                        contentPadding: const EdgeInsets.all(8),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
-                            color: AppColors.darkBlue,
+                            color: AppColors.fg.withOpacity(0.6),
                             width: 2,
+                            strokeAlign: BorderSide.strokeAlignOutside,
                           ),
-                          borderRadius: BorderRadius.all(
+                          borderRadius: const BorderRadius.all(
                             Radius.circular(8),
                           ),
                         ),
                         hintText: 'Search Location',
-                        prefixIcon: Icon(Icons.search),
+                        hintStyle: const TextStyle(
+                          fontFamily: 'Fantasque',
+                          fontSize: 18,
+                        ),
+                        prefixIcon: const Icon(Icons.search),
                       ),
                       onChanged: (String value) {
                         if (_debounce?.isActive ?? false) _debounce?.cancel();
@@ -213,7 +244,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                         );
                       },
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontFamily: 'NotoArabic',
                       ),
                     ),
@@ -259,7 +290,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: MapPickLocationButton(onPressed: () async {
+                  child: PickLocationButton(onPressed: () async {
                     pickLocationData().then((value) {
                       Navigator.of(context).pop<LocationData>(value);
                     });

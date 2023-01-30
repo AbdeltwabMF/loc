@@ -30,6 +30,7 @@ class App extends StatelessWidget {
         theme: ThemeData(
           fontFamily: 'Fantasque',
           splashColor: AppColors.fg,
+          hintColor: AppColors.fg,
         ),
         home: HomeScreen(),
       ),

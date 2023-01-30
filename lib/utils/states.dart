@@ -5,19 +5,58 @@ import 'package:geolocator/geolocator.dart' as geo;
 import 'package:loc/utils/location.dart';
 
 class AppStates extends ChangeNotifier {
-  TextEditingController destLatitudeController =
-      TextEditingController(text: '');
-  TextEditingController destLongitudeController =
-      TextEditingController(text: '');
+  TextEditingController destDisplayNameController = TextEditingController();
+  TextEditingController destLatitudeController = TextEditingController();
+  TextEditingController destLongitudeController = TextEditingController();
   TextEditingController radiusController = TextEditingController(text: '100');
-  TextEditingController addressController = TextEditingController(text: '');
+  TextEditingController distanceController = TextEditingController(text: null);
 
   double? currLatitude;
   double? currLongitude;
 
   bool isListening = false;
-  double distance = -1.0;
   late StreamSubscription<geo.Position> positionStream;
+
+  void setDestDisplayNameController(String displayName) {
+    destDisplayNameController.value = destDisplayNameController.value.copyWith(
+      text: displayName,
+    );
+    notifyListeners();
+  }
+
+  void setDestLatitudeController(double latitude) {
+    int intVal = latitude.round();
+    final latText =
+        latitude - intVal > 0 ? latitude.toString() : intVal.toString();
+    destLatitudeController.value = destLatitudeController.value.copyWith(
+      text: latText,
+    );
+    notifyListeners();
+  }
+
+  void setDestLongitudeController(double longitude) {
+    int intVal = longitude.round();
+    final longText =
+        longitude - intVal > 0 ? longitude.toString() : intVal.toString();
+    destLongitudeController.value = destLongitudeController.value.copyWith(
+      text: longText,
+    );
+    notifyListeners();
+  }
+
+  void setRadiusController(int radius) {
+    radiusController.value = radiusController.value.copyWith(
+      text: radius.toString(),
+    );
+    notifyListeners();
+  }
+
+  void setDistanceController(double? distance) {
+    distanceController.value = distanceController.value.copyWith(
+      text: distance?.round().toString(),
+    );
+    notifyListeners();
+  }
 
   void setRadius(String radius) {
     radiusController.text = radius;
@@ -62,11 +101,6 @@ class AppStates extends ChangeNotifier {
   }
 
   bool isDistanceValid() {
-    return distance >= 0.0;
-  }
-
-  void setDistance(double distance) {
-    this.distance = distance;
-    notifyListeners();
+    return distanceController.text != 'null';
   }
 }

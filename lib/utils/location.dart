@@ -49,7 +49,7 @@ void listenLocationUpdate(BuildContext context) {
           (position) {
             provider.setCurrLatitude(position.latitude);
             provider.setCurrLongitude(position.longitude);
-            provider.setDistance(calcDistance(context));
+            provider.setDistanceController(calcDistance(context));
             shouldPlaySound(context);
           },
           cancelOnError: true,
@@ -91,8 +91,9 @@ void shouldPlaySound(BuildContext context) {
     return;
   }
 
-  if (provider.distance <= double.parse(provider.radiusController.text)) {
-    debugPrint(provider.distance.toString());
+  final distance = double.parse(provider.distanceController.text);
+  if (distance <= double.parse(provider.radiusController.text)) {
+    debugPrint(distance.toString());
     debugPrint(provider.radiusController.text);
 
     FlutterRingtonePlayer.playAlarm(
