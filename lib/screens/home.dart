@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:loc/screens/location_picker.dart';
 import 'package:loc/styles/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
-import 'package:loc/utils/open_street_map_picker.dart'
-    show PickedData, getAddress;
+import 'package:loc/screens/osm_map_view.dart';
 import 'package:provider/provider.dart';
 import 'package:loc/widgets/buttons.dart';
 
@@ -46,35 +44,33 @@ class HomeScreen extends StatelessWidget {
               children: [
                 PickLocationButton(
                   onPressed: () async {
-                    final pickedData =
-                        await Navigator.of(context).push<PickedData>(
-                      MaterialPageRoute<PickedData>(
+                    final pickedLocationData =
+                        await Navigator.of(context).push<LocationData>(
+                      MaterialPageRoute<LocationData>(
                         builder: (context) {
-                          return const AppLocationPicker();
+                          return OsmMapViewScreen();
                         },
                       ),
                     );
 
-                    if (pickedData != null) {
-                      debugPrint(pickedData.latLong.latitude.toString());
-                      debugPrint(pickedData.latLong.longitude.toString());
+                    if (pickedLocationData != null) {
+                      debugPrint(pickedLocationData.latitude.toString());
+                      debugPrint(pickedLocationData.longitude.toString());
 
                       provider.destLatitudeController.value =
                           provider.destLatitudeController.value.copyWith(
-                        text: pickedData.latLong.latitude.toString(),
+                        text: pickedLocationData.latitude.toString(),
                       );
 
                       provider.destLongitudeController.value =
                           provider.destLongitudeController.value.copyWith(
-                        text: pickedData.latLong.longitude.toString(),
+                        text: pickedLocationData.longitude.toString(),
                       );
 
                       provider.addressController.value =
                           provider.addressController.value.copyWith(
-                        text: pickedData.address,
+                        text: pickedLocationData.displayName,
                       );
-
-                      debugPrint(provider.addressController.text);
                     }
                   },
                 ),
@@ -310,27 +306,29 @@ class HomeScreen extends StatelessWidget {
                         shouldPlaySound(context);
                         listenLocationUpdate(context);
 
-                        final address = await getAddress(
-                                double.parse(
-                                    provider.destLatitudeController.text),
-                                double.parse(
-                                    provider.destLongitudeController.text))
+                        LocationData locationData = LocationData(
+                          latitude: double.parse(
+                              provider.destLatitudeController.text),
+                          longitude: double.parse(
+                              provider.destLongitudeController.text),
+                        );
+
+                        final decodedResponse = await osmReverse(locationData)
                             .onError((error, stackTrace) {
                           debugPrint(error.toString());
                           debugPrint(stackTrace.toString());
-                          return '';
+                          return <String, dynamic>{};
                         });
 
-                        if (address.isNotEmpty) {
+                        if (decodedResponse.isNotEmpty) {
                           provider.addressController.value =
                               provider.addressController.value.copyWith(
-                            text: address,
+                            text: decodedResponse['display_name'] ?? '',
                           );
                         }
                       }).onError((error, stackTrace) {
                         debugPrint(error.toString());
                         debugPrint(stackTrace.toString());
-
                         provider.setListening(false);
                       });
                     },
