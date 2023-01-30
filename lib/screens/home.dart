@@ -275,7 +275,34 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                           ],
-                        )
+                        ),
+                        Container(
+                          padding: const EdgeInsets.only(
+                            top: 8,
+                            left: 2,
+                            right: 2,
+                            bottom: 8,
+                          ),
+                          child: TextFormField(
+                            controller: TextEditingController(
+                              text: provider.isLocationValid()
+                                  ? '${provider.currLatitude?.toString()}, ${provider.currLongitude?.toString()}'
+                                  : null,
+                            ),
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: AppColors.fg,
+                                ),
+                              ),
+                              labelText: 'Current Location',
+                              prefixIcon: Icon(
+                                Icons.my_location,
+                              ),
+                            ),
+                            readOnly: true,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -295,90 +322,6 @@ class HomeScreen extends StatelessWidget {
                           backgroundColor: AppColors.rose,
                           valueColor: AlwaysStoppedAnimation<Color>(
                               AppColors.yellowRed),
-                        ),
-                      )
-                    : const SizedBox(),
-                provider.isListening == true &&
-                        provider.isLocationValid() == true
-                    ? Container(
-                        padding: const EdgeInsets.only(
-                          top: 16,
-                          left: 8,
-                          right: 8,
-                        ),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.only(
-                                top: 8,
-                                left: 8,
-                                right: 8,
-                                bottom: 16,
-                              ),
-                              child: const Text(
-                                'Current Location',
-                                style: TextStyle(
-                                  color: AppColors.fg,
-                                  fontSize: 20,
-                                ),
-                              ),
-                            ),
-                            Row(children: [
-                              Expanded(
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.only(
-                                    top: 8,
-                                    left: 8,
-                                    right: 8,
-                                    bottom: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: AppColors.fg,
-                                      strokeAlign:
-                                          BorderSide.strokeAlignOutside,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    provider.isLocationValid() == true
-                                        ? provider.currLatitude.toString()
-                                        : '',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(
-                                width: 8,
-                              ),
-                              Expanded(
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.only(
-                                    top: 8,
-                                    left: 8,
-                                    right: 8,
-                                    bottom: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: AppColors.fg,
-                                      strokeAlign:
-                                          BorderSide.strokeAlignOutside,
-                                    ),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    provider.isLocationValid() == true
-                                        ? provider.currLongitude.toString()
-                                        : '',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ),
-                            ]),
-                          ],
                         ),
                       )
                     : const SizedBox(),
