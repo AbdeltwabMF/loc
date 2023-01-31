@@ -58,9 +58,7 @@ class OpenMapButton extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.only(
         top: 8,
-        left: 4,
         right: 4,
-        bottom: 8,
       ),
       child: ElevatedButton(
         onPressed: isListening == true ? null : onPressed,
@@ -105,8 +103,6 @@ class StartButton extends StatelessWidget {
       padding: const EdgeInsets.only(
         top: 8,
         left: 4,
-        right: 4,
-        bottom: 8,
       ),
       width: double.infinity,
       child: ElevatedButton(
