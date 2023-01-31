@@ -508,6 +508,11 @@ class HomeScreen extends StatelessWidget {
                             return;
                           }
 
+                          if (provider.isDestinationLocationValid() == false) {
+                            _formKey.currentState!.validate();
+                            return;
+                          }
+
                           provider.setListening(true);
                           getCurrentLocation().then((value) async {
                             provider.setCurrLatitude(value.latitude);
