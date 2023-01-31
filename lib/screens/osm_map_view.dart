@@ -151,17 +151,20 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                 elevation: 0,
                 heroTag: 'btn3',
                 onPressed: () {
-                  // Move to the current location if can not move to the initial position
+                  // Move to the current location, if can not, move to the initial position
                   getCurrentLocation().then((value) {
                     _mapController.move(LatLng(value.latitude, value.longitude),
                         _mapController.zoom);
-                  }).onError((error, stackTrace) {
-                    debugPrint(error.toString());
-                    debugPrint(stackTrace.toString());
 
+                    debugPrint(value.latitude.toString());
+                    debugPrint(value.longitude.toString());
+                  }).onError((error, stackTrace) {
                     _mapController.move(
                         LatLng(widget.center.latitude, widget.center.longitude),
                         _mapController.zoom);
+
+                    debugPrint(error.toString());
+                    debugPrint(stackTrace.toString());
                   });
                 },
                 tooltip: 'My location',
@@ -187,6 +190,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                       controller: _searchController,
                       focusNode: _focusNode,
                       decoration: InputDecoration(
+                        prefixIconColor: AppColors.coral,
                         border: const OutlineInputBorder(
                           borderSide: BorderSide(
                             color: AppColors.rose,
@@ -197,7 +201,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                             Radius.circular(8),
                           ),
                         ),
-                        contentPadding: const EdgeInsets.all(8),
+                        contentPadding: const EdgeInsets.all(4),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: AppColors.fg.withOpacity(0.6),
@@ -212,6 +216,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                         hintStyle: const TextStyle(
                           fontFamily: 'Fantasque',
                           fontSize: 18,
+                          color: AppColors.fg,
                         ),
                         prefixIcon: const Icon(Icons.search),
                       ),
@@ -238,7 +243,9 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                                   )
                                   .toList();
                             } finally {
-                              setState(() {});
+                              if (mounted) {
+                                setState(() {});
+                              }
                             }
                           },
                         );
@@ -273,7 +280,9 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
 
                                   _focusNode.unfocus();
                                   _options.clear();
-                                  setState(() {});
+                                  if (mounted) {
+                                    setState(() {});
+                                  }
                                 },
                               );
                             });

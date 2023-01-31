@@ -27,11 +27,7 @@ class HomeScreen extends StatelessWidget {
               begin: Alignment.topCenter,
               colors: [
                 AppColors.bg,
-                provider.isListening == true
-                    ? provider.isLocationValid() == true
-                        ? AppColors.ashGray.withOpacity(0.1)
-                        : AppColors.ashGray.withOpacity(0.1)
-                    : AppColors.ashGray.withOpacity(0.1),
+                AppColors.ashGray.withOpacity(0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(8),
@@ -68,7 +64,12 @@ class HomeScreen extends StatelessWidget {
                                   strokeAlign: BorderSide.strokeAlignOutside,
                                 ),
                               ),
-                              contentPadding: EdgeInsets.all(12),
+                              contentPadding: EdgeInsets.only(
+                                top: 4,
+                                bottom: 4,
+                                left: 4,
+                                right: 4,
+                              ),
                               labelText: 'Destination Location',
                               labelStyle: TextStyle(fontFamily: 'Fantasque'),
                               prefixIcon: Icon(
@@ -104,6 +105,12 @@ class HomeScreen extends StatelessWidget {
                                             BorderSide.strokeAlignOutside,
                                       ),
                                     ),
+                                    contentPadding: EdgeInsets.only(
+                                      top: 4,
+                                      bottom: 4,
+                                      left: 4,
+                                      right: 4,
+                                    ),
                                     labelText: 'Latitude',
                                     prefixIcon: Icon(
                                       Icons.near_me,
@@ -116,8 +123,7 @@ class HomeScreen extends StatelessWidget {
                                   onChanged: (value) {
                                     if (value != '' &&
                                         double.tryParse(value) != null) {
-                                      provider.setDestLatitudeController(
-                                          double.parse(value));
+                                      provider.setDestLatitude(value);
                                     }
                                   },
                                   keyboardType:
@@ -130,7 +136,7 @@ class HomeScreen extends StatelessWidget {
                                     return validateNumber(
                                       value,
                                       message: 'Invalid latitude value',
-                                      limit: 100,
+                                      limit: 90,
                                     );
                                   },
                                 ),
@@ -155,6 +161,12 @@ class HomeScreen extends StatelessWidget {
                                             BorderSide.strokeAlignOutside,
                                       ),
                                     ),
+                                    contentPadding: EdgeInsets.only(
+                                      top: 4,
+                                      bottom: 4,
+                                      left: 4,
+                                      right: 4,
+                                    ),
                                     labelText: 'Longitude',
                                     prefixIcon: Icon(
                                       Icons.near_me,
@@ -167,8 +179,7 @@ class HomeScreen extends StatelessWidget {
                                   onChanged: (value) {
                                     if (value != '' &&
                                         double.tryParse(value) != null) {
-                                      provider.setDestLongitudeController(
-                                          double.parse(value));
+                                      provider.setDestLongitude(value);
                                     }
                                   },
                                   keyboardType:
@@ -181,7 +192,7 @@ class HomeScreen extends StatelessWidget {
                                     return validateNumber(
                                       value,
                                       message: 'Invalid longitude value',
-                                      limit: 190,
+                                      limit: 180,
                                     );
                                   },
                                 ),
@@ -189,72 +200,74 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        Container(
+                          padding: const EdgeInsets.only(
+                            top: 8,
+                            left: 2,
+                            right: 2,
+                            bottom: 8,
+                          ),
+                          child: TextFormField(
+                            controller: provider.radiusController,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: AppColors.fg,
+                                ),
+                              ),
+                              contentPadding: EdgeInsets.only(
+                                top: 4,
+                                bottom: 4,
+                                left: 4,
+                                right: 4,
+                              ),
+                              labelText: 'Radius',
+                              suffixText: 'Meters ',
+                              suffixStyle: TextStyle(
+                                fontFamily: 'Fantasque',
+                              ),
+                              prefixIcon: Icon(
+                                Icons.radar,
+                              ),
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'(^[0-9]{1,7})')),
+                              FilteringTextInputFormatter.deny(
+                                  RegExp(r'(^[0-9]{8,})')),
+                              FilteringTextInputFormatter.deny(
+                                  RegExp(r'(^[0]{1}[0-9]+)')),
+                            ],
+                            onChanged: (value) {
+                              if (value != '' || int.tryParse(value) != null) {
+                                provider.setRadius(value);
+                              }
+                            },
+                            keyboardType: const TextInputType.numberWithOptions(
+                              signed: true,
+                              decimal: true,
+                            ),
+                            readOnly: provider.isListening == true,
+                            validator: (value) {
+                              if (value == null || value == '') {
+                                return 'Radius is required';
+                              } else if (int.tryParse(value) == null) {
+                                return 'Invalid radius value';
+                              } else {
+                                return null;
+                              }
+                            },
+                          ),
+                        ),
                         const Divider(
                           thickness: 2,
-                          color: AppColors.desertSand,
+                          color: AppColors.lavender,
                           indent: 8,
                           endIndent: 8,
                         ),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(
-                                  top: 8,
-                                  left: 2,
-                                  right: 2,
-                                  bottom: 8,
-                                ),
-                                child: TextFormField(
-                                  controller: provider.radiusController,
-                                  decoration: const InputDecoration(
-                                    border: OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                        color: AppColors.fg,
-                                      ),
-                                    ),
-                                    labelText: 'Radius',
-                                    suffixText: 'Meters',
-                                    suffixStyle: TextStyle(
-                                      fontFamily: 'Fantasque',
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.radar,
-                                    ),
-                                  ),
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.allow(
-                                        RegExp(r'(^[0-9]{1,7})')),
-                                    FilteringTextInputFormatter.deny(
-                                        RegExp(r'(^[0-9]{8,})')),
-                                    FilteringTextInputFormatter.deny(
-                                        RegExp(r'(^[0]{1}[0-9]+)')),
-                                  ],
-                                  onChanged: (value) {
-                                    if (value != '') {
-                                      provider.setRadiusController(
-                                          int.parse(value));
-                                    }
-                                  },
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                    signed: true,
-                                    decimal: true,
-                                  ),
-                                  readOnly: provider.isListening == true,
-                                  validator: (value) {
-                                    if (value == null || value == '') {
-                                      return 'Radius is required';
-                                    } else if (int.tryParse(value) == null) {
-                                      return 'Invalid radius value';
-                                    } else {
-                                      return null;
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
                             Expanded(
                               child: Container(
                                 padding: const EdgeInsets.only(
@@ -273,8 +286,51 @@ class HomeScreen extends StatelessWidget {
                                             BorderSide.strokeAlignOutside,
                                       ),
                                     ),
+                                    contentPadding: EdgeInsets.only(
+                                      top: 4,
+                                      bottom: 4,
+                                      left: 4,
+                                      right: 4,
+                                    ),
                                     labelText: 'Distance',
-                                    suffixText: 'Meters',
+                                    suffixText: 'Meters ',
+                                    suffixStyle: TextStyle(
+                                      fontFamily: 'Fantasque',
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.line_axis,
+                                    ),
+                                  ),
+                                  readOnly: true,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 2,
+                                  right: 2,
+                                  bottom: 8,
+                                ),
+                                child: TextFormField(
+                                  controller: provider.bearingController,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: AppColors.fg,
+                                        strokeAlign:
+                                            BorderSide.strokeAlignOutside,
+                                      ),
+                                    ),
+                                    contentPadding: EdgeInsets.only(
+                                      top: 4,
+                                      bottom: 4,
+                                      left: 4,
+                                      right: 4,
+                                    ),
+                                    labelText: 'Bearing',
+                                    suffixText: 'Degrees ',
                                     suffixStyle: TextStyle(
                                       fontFamily: 'Fantasque',
                                     ),
@@ -287,12 +343,6 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                           ],
-                        ),
-                        const Divider(
-                          thickness: 2,
-                          color: AppColors.desertSand,
-                          indent: 8,
-                          endIndent: 8,
                         ),
                         Container(
                           padding: const EdgeInsets.only(
@@ -310,8 +360,16 @@ class HomeScreen extends StatelessWidget {
                                   color: AppColors.fg,
                                 ),
                               ),
-                              contentPadding: EdgeInsets.all(12),
+                              contentPadding: EdgeInsets.only(
+                                top: 4,
+                                bottom: 4,
+                                left: 4,
+                                right: 4,
+                              ),
                               labelText: 'Current Location',
+                              labelStyle: TextStyle(
+                                fontFamily: 'Fantasque',
+                              ),
                               prefixIcon: Icon(
                                 Icons.my_location,
                               ),
@@ -321,6 +379,7 @@ class HomeScreen extends StatelessWidget {
                               fontSize: 16,
                               fontFamily: 'NotoArabic',
                             ),
+                            textAlign: TextAlign.right,
                           ),
                         ),
                         Row(
@@ -336,7 +395,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 child: TextFormField(
                                   controller: TextEditingController(
-                                      text: provider.isLocationValid()
+                                      text: provider.isCurrentLocationValid()
                                           ? provider.currLatitude?.toString()
                                           : null),
                                   decoration: const InputDecoration(
@@ -348,12 +407,18 @@ class HomeScreen extends StatelessWidget {
                                             BorderSide.strokeAlignOutside,
                                       ),
                                     ),
+                                    contentPadding: EdgeInsets.only(
+                                      top: 4,
+                                      bottom: 4,
+                                      left: 4,
+                                      right: 4,
+                                    ),
                                     labelText: 'Latitude',
                                     prefixIcon: Icon(
                                       Icons.near_me,
                                     ),
                                   ),
-                                  readOnly: provider.isListening == true,
+                                  readOnly: true,
                                 ),
                               ),
                             ),
@@ -367,7 +432,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                                 child: TextFormField(
                                   controller: TextEditingController(
-                                      text: provider.isLocationValid()
+                                      text: provider.isCurrentLocationValid()
                                           ? provider.currLongitude?.toString()
                                           : null),
                                   decoration: const InputDecoration(
@@ -379,12 +444,18 @@ class HomeScreen extends StatelessWidget {
                                             BorderSide.strokeAlignOutside,
                                       ),
                                     ),
+                                    contentPadding: EdgeInsets.only(
+                                      top: 4,
+                                      bottom: 4,
+                                      left: 4,
+                                      right: 4,
+                                    ),
                                     labelText: 'Longitude',
                                     prefixIcon: Icon(
                                       Icons.near_me,
                                     ),
                                   ),
-                                  readOnly: provider.isListening == true,
+                                  readOnly: true,
                                 ),
                               ),
                             ),
@@ -412,11 +483,11 @@ class HomeScreen extends StatelessWidget {
                           if (pickedLocationData != null) {
                             debugPrint(pickedLocationData.latitude.toString());
                             debugPrint(pickedLocationData.longitude.toString());
-                            provider.setDestLatitudeController(
-                                pickedLocationData.latitude);
-                            provider.setDestLongitudeController(
-                                pickedLocationData.longitude);
-                            provider.setDestDisplayNameController(
+                            provider.setDestLatitude(
+                                pickedLocationData.latitude.toString());
+                            provider.setDestLongitude(
+                                pickedLocationData.longitude.toString());
+                            provider.setDestDisplayName(
                                 pickedLocationData.displayName ?? '');
                           }
                         },
@@ -425,29 +496,29 @@ class HomeScreen extends StatelessWidget {
                     Expanded(
                       child: StartButton(
                         isListening: provider.isListening,
-                        isLocationValid: provider.isLocationValid(),
+                        isLocationValid: provider.isCurrentLocationValid(),
                         onPressed: () async {
                           // Act as stop button
                           if (provider.isListening == true) {
                             provider.setListening(false);
-                            cancelLocationUpdate(context);
-                            provider.setDistanceController(null);
+                            cancelPositionUpdates(context);
+                            provider.setDistance(null);
+                            provider.setBearing(null);
                             shouldPlaySound(context);
                             return;
                           }
-
-                          if (provider.isInputValid() == false) {
-                            _formKey.currentState!.validate();
-                            return;
-                          }
-
-                          provider.setDistanceController(calcDistance(context));
-                          listenLocationUpdate(context);
 
                           provider.setListening(true);
                           getCurrentLocation().then((value) async {
                             provider.setCurrLatitude(value.latitude);
                             provider.setCurrLongitude(value.longitude);
+
+                            provider.setDistance(
+                                distanceAndBearing(context)?.first);
+                            provider
+                                .setBearing(distanceAndBearing(context)?.last);
+
+                            shouldPlaySound(context);
 
                             LocationData locationData = LocationData(
                               latitude: double.parse(
@@ -456,7 +527,7 @@ class HomeScreen extends StatelessWidget {
                                   provider.destLongitudeController.text),
                             );
 
-                            final decodedResponse =
+                            Map<String, dynamic> decodedResponse =
                                 await osmReverse(locationData)
                                     .onError((error, stackTrace) {
                               debugPrint(error.toString());
@@ -465,7 +536,24 @@ class HomeScreen extends StatelessWidget {
                             });
 
                             if (decodedResponse.isNotEmpty) {
-                              provider.setDestDisplayNameController(
+                              provider.setDestDisplayName(
+                                  decodedResponse['display_name'] ?? '');
+                            }
+
+                            debugPrint(provider.destDisplayNameController.text);
+
+                            locationData = LocationData(
+                                latitude: value.latitude,
+                                longitude: value.longitude);
+                            decodedResponse = await osmReverse(locationData)
+                                .onError((error, stackTrace) {
+                              debugPrint(error.toString());
+                              debugPrint(stackTrace.toString());
+                              return <String, dynamic>{};
+                            });
+
+                            if (decodedResponse.isNotEmpty) {
+                              provider.setCurrDisplayName(
                                   decodedResponse['display_name'] ?? '');
                             }
                           }).onError(
@@ -476,7 +564,7 @@ class HomeScreen extends StatelessWidget {
                             },
                           );
 
-                          shouldPlaySound(context);
+                          handlePositionUpdates(context);
                         },
                       ),
                     ),

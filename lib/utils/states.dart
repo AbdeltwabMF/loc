@@ -11,6 +11,7 @@ class AppStates extends ChangeNotifier {
   TextEditingController currDisplayNameController = TextEditingController();
   TextEditingController radiusController = TextEditingController(text: '100');
   TextEditingController distanceController = TextEditingController(text: null);
+  TextEditingController bearingController = TextEditingController(text: null);
 
   double? currLatitude;
   double? currLongitude;
@@ -18,56 +19,31 @@ class AppStates extends ChangeNotifier {
   bool isListening = false;
   late StreamSubscription<geo.Position> positionStream;
 
-  void setDestDisplayNameController(String displayName) {
+  void setDestDisplayName(String displayName) {
     destDisplayNameController.value = destDisplayNameController.value.copyWith(
       text: displayName,
     );
     notifyListeners();
   }
 
-  void setDestLatitudeController(double latitude) {
-    int intVal = latitude.round();
-    final latText =
-        latitude - intVal > 0 ? latitude.toString() : intVal.toString();
+  void setDestLatitude(String latitude) {
     destLatitudeController.value = destLatitudeController.value.copyWith(
-      text: latText,
+      text: latitude,
     );
     notifyListeners();
   }
 
-  void setDestLongitudeController(double longitude) {
-    int intVal = longitude.round();
-    final longText =
-        longitude - intVal > 0 ? longitude.toString() : intVal.toString();
+  void setDestLongitude(String longitude) {
     destLongitudeController.value = destLongitudeController.value.copyWith(
-      text: longText,
+      text: longitude,
     );
     notifyListeners();
   }
 
-  void setCurrDisplayNameController(String displayName) {
+  void setCurrDisplayName(String displayName) {
     currDisplayNameController.value = currDisplayNameController.value.copyWith(
       text: displayName,
     );
-    notifyListeners();
-  }
-
-  void setRadiusController(int radius) {
-    radiusController.value = radiusController.value.copyWith(
-      text: radius.toString(),
-    );
-    notifyListeners();
-  }
-
-  void setDistanceController(double? distance) {
-    distanceController.value = distanceController.value.copyWith(
-      text: distance?.round().toString(),
-    );
-    notifyListeners();
-  }
-
-  void setRadius(String radius) {
-    radiusController.text = radius;
     notifyListeners();
   }
 
@@ -81,6 +57,27 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setRadius(String radius) {
+    radiusController.value = radiusController.value.copyWith(
+      text: radius,
+    );
+    notifyListeners();
+  }
+
+  void setDistance(double? distance) {
+    distanceController.value = distanceController.value.copyWith(
+      text: distance?.round().toString(),
+    );
+    notifyListeners();
+  }
+
+  void setBearing(double? bearing) {
+    bearingController.value = bearingController.value.copyWith(
+      text: bearing?.round().toString(),
+    );
+    notifyListeners();
+  }
+
   void setPositionStream(StreamSubscription<geo.Position> positionStream) {
     this.positionStream = positionStream;
     notifyListeners();
@@ -91,7 +88,7 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool isLocationValid() {
+  bool isCurrentLocationValid() {
     bool flag = true;
     flag &= currLatitude != null;
     flag &= currLongitude != null;
@@ -99,16 +96,16 @@ class AppStates extends ChangeNotifier {
     return flag;
   }
 
-  bool isInputValid() {
+  bool isDestinationLocationValid() {
     bool flag = true;
     flag &= radiusController.text != '';
-    flag &= validateNumber(destLatitudeController.text, limit: 190) == null;
-    flag &= validateNumber(destLongitudeController.text, limit: 100) == null;
+    flag &= validateNumber(destLatitudeController.text, limit: 180) == null;
+    flag &= validateNumber(destLongitudeController.text, limit: 90) == null;
 
     return flag;
   }
 
   bool isDistanceValid() {
-    return distanceController.text != 'null';
+    return distanceController.text != '';
   }
 }

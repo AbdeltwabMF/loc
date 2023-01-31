@@ -19,14 +19,14 @@ class PickLocationButton extends StatelessWidget {
       ),
       child: ElevatedButton(
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all(AppColors.ashGray),
+          backgroundColor: MaterialStateProperty.all(AppColors.babyBlue),
           elevation: MaterialStateProperty.all(0),
           padding: MaterialStateProperty.all(
               const EdgeInsets.symmetric(vertical: 12)),
           side: MaterialStateProperty.all(
-            BorderSide(
-              color: AppColors.fg.withOpacity(0.6),
-              width: 2,
+            const BorderSide(
+              color: AppColors.lavender,
+              width: 1,
               strokeAlign: BorderSide.strokeAlignOutside,
             ),
           ),
@@ -35,9 +35,9 @@ class PickLocationButton extends StatelessWidget {
         child: Text(
           'Set destination',
           style: TextStyle(
-            color: AppColors.fg.withOpacity(0.9),
-            fontSize: 18,
-          ),
+              color: AppColors.fg.withOpacity(0.9),
+              fontSize: 20,
+              fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -66,19 +66,20 @@ class OpenMapButton extends StatelessWidget {
         onPressed: isListening == true ? null : onPressed,
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all(
-            isListening
-                ? AppColors.desertSand.withOpacity(0.6)
-                : AppColors.yellowRed.withOpacity(0.6),
+            isListening ? AppColors.blue : AppColors.babyBlue,
           ),
           elevation: MaterialStateProperty.all(0),
           padding: MaterialStateProperty.all(
               const EdgeInsets.symmetric(vertical: 12)),
         ),
-        child: const Text(
+        child: Text(
           'Open Map',
           style: TextStyle(
-            fontSize: 18,
-            color: AppColors.fg,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: isListening
+                ? AppColors.fg.withOpacity(0.5)
+                : AppColors.fg.withOpacity(0.8),
           ),
         ),
       ),
@@ -126,15 +127,16 @@ class StartButton extends StatelessWidget {
           isListening == true
               ? isLocationValid == true
                   ? 'Stop'
-                  : 'Calculating ...'
-              : 'Start Tracking',
+                  : 'Calculating...'
+              : 'Start',
           style: TextStyle(
-            fontSize: 18,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
             color: isListening == true
                 ? isLocationValid == true
-                    ? AppColors.bg
+                    ? AppColors.rose
                     : AppColors.fg
-                : AppColors.fg,
+                : AppColors.fg.withOpacity(0.8),
           ),
         ),
       ),
