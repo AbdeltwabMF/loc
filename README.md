@@ -8,7 +8,7 @@
 
 ## Features
 
-- Free and open-data map.
+- Free and open-data embedded map.
 - Search for the destination.
 - Shows Eucliedian distance and bearing angle.
 - Shows Live location.
