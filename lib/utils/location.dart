@@ -1,6 +1,7 @@
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:loc/screens/osm_map_view.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
 
@@ -46,10 +47,18 @@ void listenLocationUpdate(BuildContext context) {
 
   final subscription =
       geo.Geolocator.getPositionStream(locationSettings: settings).listen(
-          (position) {
+          (position) async {
             provider.setCurrLatitude(position.latitude);
             provider.setCurrLongitude(position.longitude);
             provider.setDistanceController(calcDistance(context));
+
+            final LocationData locationData = LocationData(
+                latitude: provider.currLatitude!,
+                longitude: provider.currLongitude!);
+            final decodedResponse = await osmReverse(locationData);
+            provider
+                .setCurrDisplayNameController(decodedResponse['display_name']);
+
             shouldPlaySound(context);
           },
           cancelOnError: true,
@@ -66,10 +75,10 @@ void cancelLocationUpdate(BuildContext context) {
   provider.positionStream.cancel();
 }
 
-double calcDistance(BuildContext context) {
+double? calcDistance(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
-  if (provider.isLocationValid() == false) return -1.0;
-  if (provider.isInputValid() == false) return -1.0;
+  if (provider.isLocationValid() == false) return null;
+  if (provider.isInputValid() == false) return null;
 
   final currentLatitude = provider.currLatitude!;
   final currentLongitude = provider.currLongitude!;
@@ -117,4 +126,9 @@ String? validateNumber(String? value,
     }
   }
   return null;
+}
+
+Future<String?> serializeCurrentLocation(BuildContext context) async {
+  final provider = Provider.of<AppStates>(context, listen: false);
+  if (provider.isLocationValid() == false) return null;
 }

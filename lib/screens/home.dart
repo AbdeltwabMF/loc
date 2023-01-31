@@ -69,7 +69,7 @@ class HomeScreen extends StatelessWidget {
                                 ),
                               ),
                               contentPadding: EdgeInsets.all(12),
-                              labelText: 'Address',
+                              labelText: 'Destination Location',
                               labelStyle: TextStyle(fontFamily: 'Fantasque'),
                               prefixIcon: Icon(
                                 Icons.location_city,
@@ -189,6 +189,12 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        const Divider(
+                          thickness: 2,
+                          color: AppColors.desertSand,
+                          indent: 8,
+                          endIndent: 8,
+                        ),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -282,6 +288,12 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ],
                         ),
+                        const Divider(
+                          thickness: 2,
+                          color: AppColors.desertSand,
+                          indent: 8,
+                          endIndent: 8,
+                        ),
                         Container(
                           padding: const EdgeInsets.only(
                             top: 8,
@@ -291,23 +303,92 @@ class HomeScreen extends StatelessWidget {
                           ),
                           child: TextFormField(
                             controller: TextEditingController(
-                              text: provider.isLocationValid()
-                                  ? '${provider.currLatitude?.toString()}, ${provider.currLongitude?.toString()}'
-                                  : null,
-                            ),
+                                text: provider.currDisplayNameController.text),
                             decoration: const InputDecoration(
                               border: OutlineInputBorder(
                                 borderSide: BorderSide(
                                   color: AppColors.fg,
                                 ),
                               ),
+                              contentPadding: EdgeInsets.all(12),
                               labelText: 'Current Location',
                               prefixIcon: Icon(
                                 Icons.my_location,
                               ),
                             ),
                             readOnly: true,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontFamily: 'NotoArabic',
+                            ),
                           ),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 4,
+                                  right: 2,
+                                  bottom: 8,
+                                ),
+                                child: TextFormField(
+                                  controller: TextEditingController(
+                                      text: provider.isLocationValid()
+                                          ? provider.currLatitude?.toString()
+                                          : null),
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: AppColors.ashGray,
+                                        width: 2,
+                                        strokeAlign:
+                                            BorderSide.strokeAlignOutside,
+                                      ),
+                                    ),
+                                    labelText: 'Latitude',
+                                    prefixIcon: Icon(
+                                      Icons.near_me,
+                                    ),
+                                  ),
+                                  readOnly: provider.isListening == true,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(
+                                  top: 8,
+                                  left: 2,
+                                  right: 4,
+                                  bottom: 8,
+                                ),
+                                child: TextFormField(
+                                  controller: TextEditingController(
+                                      text: provider.isLocationValid()
+                                          ? provider.currLongitude?.toString()
+                                          : null),
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: AppColors.ashGray,
+                                        width: 2,
+                                        strokeAlign:
+                                            BorderSide.strokeAlignOutside,
+                                      ),
+                                    ),
+                                    labelText: 'Longitude',
+                                    prefixIcon: Icon(
+                                      Icons.near_me,
+                                    ),
+                                  ),
+                                  readOnly: provider.isListening == true,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

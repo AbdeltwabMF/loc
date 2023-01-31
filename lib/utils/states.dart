@@ -8,6 +8,7 @@ class AppStates extends ChangeNotifier {
   TextEditingController destDisplayNameController = TextEditingController();
   TextEditingController destLatitudeController = TextEditingController();
   TextEditingController destLongitudeController = TextEditingController();
+  TextEditingController currDisplayNameController = TextEditingController();
   TextEditingController radiusController = TextEditingController(text: '100');
   TextEditingController distanceController = TextEditingController(text: null);
 
@@ -40,6 +41,13 @@ class AppStates extends ChangeNotifier {
         longitude - intVal > 0 ? longitude.toString() : intVal.toString();
     destLongitudeController.value = destLongitudeController.value.copyWith(
       text: longText,
+    );
+    notifyListeners();
+  }
+
+  void setCurrDisplayNameController(String displayName) {
+    currDisplayNameController.value = currDisplayNameController.value.copyWith(
+      text: displayName,
     );
     notifyListeners();
   }
