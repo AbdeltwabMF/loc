@@ -3,7 +3,19 @@
 </div>
 
 <h1 align="center">Loc</h1>
-<h3 align="center">A location-based reminder for Android and iOS.</h3>
+<h3 align="center">Free and open-source location-based reminder for Android.</h3>
+
+
+## Features
+
+- Free and open-data map.
+- Search for the destination.
+- Shows Eucliedian distance and bearing angle.
+- Shows Live location.
+- Customizable radius of a circle around the destination.
+- Remind you with sound when you arrive.
+- Offline/Online usage.
+- Displays location name.
 
 ## Screenshots
 
