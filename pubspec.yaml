@@ -1,9 +1,9 @@
 name: loc
-description: A location-based reminder
+description: Free and open-spurce location-based reminder for Android
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 0.1.0
+version: 0.2.0
 
 environment:
   sdk: '>=2.18.6 <3.0.0'
@@ -12,21 +12,22 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  provider: ^6.0.5
-  geolocator: ^9.0.2
-  flutter_ringtone_player: ^3.2.0
   flutter_map: ^3.1.0
-  latlong2: ^0.8.1
+  flutter_ringtone_player: ^3.2.0
+  geolocator: ^9.0.2
   http: ^0.13.5
+  latlong2: ^0.8.1
+  provider: ^6.0.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
   flutter_launcher_icons: ^0.11.0
+  flutter_lints: ^2.0.0
 
 flutter:
-  uses-material-design: true
+  assets:
+    - assets/ca/
   fonts:
       - family: Fantasque
         fonts:
@@ -37,8 +38,7 @@ flutter:
       - family: NotoArabic
         fonts:
           - asset: assets/fonts/NotoSansArabic-Regular.ttf
-  assets:
-    - assets/ca/
+  uses-material-design: true
 
 flutter_icons:
   android: launcher_icon

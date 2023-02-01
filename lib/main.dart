@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // For older browsers and devices trust Let’s Encrypt certificates.
+  // For more information: https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
   ByteData data =
       await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
   SecurityContext.defaultContext
