@@ -17,6 +17,14 @@
 - Offline/Online usage.
 - Displays location name.
 
+## Download
+
+[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png"
+     alt="Get it on IzzyOnDroid"
+     height="80">](https://apt.izzysoft.de/fdroid/index/apk/org.abdeltwabmf.loc)
+
+Or get the latest APK from the [Releases Section](https://github.com/AbdeltwabMF/Loc/releases/latest).
+
 ## Screenshots
 
 ![Home page](assets/images/home-page.png)
