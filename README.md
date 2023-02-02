@@ -19,7 +19,8 @@
 
 ## Screenshots
 
-![Home screen](assets/images/home-screen.png)
+![Home page](assets/images/home-page.png)
+![Map view](assets/images/map-view.png)
 
 ## Development
 
@@ -49,6 +50,12 @@ flutter pub get
 
 ```shell
 cd lib
+```
+
+## Release
+
+```shell
+flutter build apk --build-name=<vx.y.x> --release
 ```
 
 ## License
