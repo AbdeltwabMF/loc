@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:loc/screens/about.dart';
 import 'package:loc/styles/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
@@ -34,20 +35,20 @@ class HomeScreen extends StatelessWidget {
           ),
           margin: const EdgeInsets.all(8),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Container(
                 padding: const EdgeInsets.only(
-                  top: 16,
-                  right: 8,
-                  left: 8,
-                  bottom: 8,
+                  top: 8,
+                  right: 4,
+                  left: 4,
                 ),
                 child: Text(
-                  'The True Location-based Reminder',
+                  'Loc, Have a nice day',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    fontSize: 24,
                     color: AppColors.fg.withOpacity(0.8),
                   ),
                 ),
@@ -251,6 +252,172 @@ class HomeScreen extends StatelessWidget {
                                         ),
                                       ],
                                     ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 12,
+                              ),
+                              Container(
+                                padding: const EdgeInsets.only(
+                                  left: 4,
+                                  right: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColors.lavender,
+                                    strokeAlign: BorderSide.strokeAlignOutside,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: AppColors.lavender.withOpacity(0.2),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.only(
+                                        top: 8,
+                                        left: 2,
+                                        right: 2,
+                                        bottom: 8,
+                                      ),
+                                      child: TextFormField(
+                                        controller: TextEditingController(
+                                            text: provider
+                                                .currDisplayNameController
+                                                .text),
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: AppColors.fg,
+                                            ),
+                                          ),
+                                          contentPadding: EdgeInsets.only(
+                                            top: 4,
+                                            bottom: 4,
+                                            left: 4,
+                                            right: 4,
+                                          ),
+                                          labelText: 'Current Location',
+                                          labelStyle: TextStyle(
+                                            fontFamily: 'Fantasque',
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.my_location,
+                                          ),
+                                        ),
+                                        readOnly: true,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontFamily: 'NotoArabic',
+                                        ),
+                                        textAlign: TextAlign.right,
+                                      ),
+                                    ),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.only(
+                                              top: 8,
+                                              left: 4,
+                                              right: 2,
+                                              bottom: 8,
+                                            ),
+                                            child: TextFormField(
+                                              controller: TextEditingController(
+                                                  text: provider
+                                                          .isCurrentLocationValid()
+                                                      ? provider.currLatitude
+                                                          ?.toString()
+                                                      : null),
+                                              decoration: const InputDecoration(
+                                                border: OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: AppColors.ashGray,
+                                                    width: 2,
+                                                    strokeAlign: BorderSide
+                                                        .strokeAlignOutside,
+                                                  ),
+                                                ),
+                                                contentPadding: EdgeInsets.only(
+                                                  top: 4,
+                                                  bottom: 4,
+                                                  left: 4,
+                                                  right: 4,
+                                                ),
+                                                labelText: 'Latitude',
+                                                prefixIcon: Icon(
+                                                  Icons.near_me,
+                                                ),
+                                              ),
+                                              readOnly: true,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.only(
+                                              top: 8,
+                                              left: 2,
+                                              right: 4,
+                                              bottom: 8,
+                                            ),
+                                            child: TextFormField(
+                                              controller: TextEditingController(
+                                                  text: provider
+                                                          .isCurrentLocationValid()
+                                                      ? provider.currLongitude
+                                                          ?.toString()
+                                                      : null),
+                                              decoration: const InputDecoration(
+                                                border: OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: AppColors.ashGray,
+                                                    width: 2,
+                                                    strokeAlign: BorderSide
+                                                        .strokeAlignOutside,
+                                                  ),
+                                                ),
+                                                contentPadding: EdgeInsets.only(
+                                                  top: 4,
+                                                  bottom: 4,
+                                                  left: 4,
+                                                  right: 4,
+                                                ),
+                                                labelText: 'Longitude',
+                                                prefixIcon: Icon(
+                                                  Icons.near_me,
+                                                ),
+                                              ),
+                                              readOnly: true,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 12,
+                              ),
+                              Container(
+                                padding: const EdgeInsets.only(
+                                  left: 4,
+                                  right: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: AppColors.linen,
+                                    strokeAlign: BorderSide.strokeAlignOutside,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: AppColors.linen.withOpacity(0.2),
+                                ),
+                                child: Column(
+                                  children: [
                                     Container(
                                       padding: const EdgeInsets.only(
                                         top: 8,
@@ -313,233 +480,127 @@ class HomeScreen extends StatelessWidget {
                                         },
                                       ),
                                     ),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.only(
+                                              top: 8,
+                                              left: 2,
+                                              right: 2,
+                                              bottom: 8,
+                                            ),
+                                            child: TextFormField(
+                                              controller:
+                                                  provider.distanceController,
+                                              decoration: const InputDecoration(
+                                                border: OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: AppColors.fg,
+                                                    strokeAlign: BorderSide
+                                                        .strokeAlignOutside,
+                                                  ),
+                                                ),
+                                                contentPadding: EdgeInsets.only(
+                                                  top: 4,
+                                                  bottom: 4,
+                                                  left: 4,
+                                                  right: 4,
+                                                ),
+                                                labelText: 'Distance',
+                                                suffixText: 'Meters ',
+                                                suffixStyle: TextStyle(
+                                                  fontFamily: 'Fantasque',
+                                                ),
+                                                prefixIcon: Icon(
+                                                  Icons.straighten,
+                                                ),
+                                              ),
+                                              readOnly: true,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: Container(
+                                            padding: const EdgeInsets.only(
+                                              top: 8,
+                                              left: 2,
+                                              right: 2,
+                                              bottom: 8,
+                                            ),
+                                            child: TextFormField(
+                                              controller:
+                                                  provider.bearingController,
+                                              decoration: const InputDecoration(
+                                                border: OutlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: AppColors.fg,
+                                                    strokeAlign: BorderSide
+                                                        .strokeAlignOutside,
+                                                  ),
+                                                ),
+                                                contentPadding: EdgeInsets.only(
+                                                  top: 4,
+                                                  bottom: 4,
+                                                  left: 4,
+                                                  right: 4,
+                                                ),
+                                                labelText: 'Bearing',
+                                                suffixText: 'Degrees ',
+                                                suffixStyle: TextStyle(
+                                                  fontFamily: 'Fantasque',
+                                                ),
+                                                prefixIcon: Icon(
+                                                  Icons.straight,
+                                                ),
+                                              ),
+                                              readOnly: true,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
-                              // here
-                              const SizedBox(
-                                height: 16,
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Divider(
+                                  color: AppColors.fg.withOpacity(0.5),
+                                  height: 4,
+                                  endIndent: 8,
+                                  indent: 8,
+                                ),
                               ),
                               Container(
-                                padding: const EdgeInsets.only(
-                                  left: 4,
-                                  right: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.lavender,
-                                    strokeAlign: BorderSide.strokeAlignOutside,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: AppColors.lavender.withOpacity(0.2),
-                                ),
-                                child: Column(children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.only(
-                                            top: 8,
-                                            left: 2,
-                                            right: 2,
-                                            bottom: 8,
-                                          ),
-                                          child: TextFormField(
-                                            controller:
-                                                provider.distanceController,
-                                            decoration: const InputDecoration(
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: AppColors.fg,
-                                                  strokeAlign: BorderSide
-                                                      .strokeAlignOutside,
-                                                ),
-                                              ),
-                                              contentPadding: EdgeInsets.only(
-                                                top: 4,
-                                                bottom: 4,
-                                                left: 4,
-                                                right: 4,
-                                              ),
-                                              labelText: 'Distance',
-                                              suffixText: 'Meters ',
-                                              suffixStyle: TextStyle(
-                                                fontFamily: 'Fantasque',
-                                              ),
-                                              prefixIcon: Icon(
-                                                Icons.straighten,
-                                              ),
-                                            ),
-                                            readOnly: true,
-                                          ),
-                                        ),
+                                child: TextButton(
+                                  child: Row(
+                                    children: const [
+                                      Icon(
+                                        Icons.info_rounded,
+                                        color: AppColors.fg,
                                       ),
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.only(
-                                            top: 8,
-                                            left: 2,
-                                            right: 2,
-                                            bottom: 8,
-                                          ),
-                                          child: TextFormField(
-                                            controller:
-                                                provider.bearingController,
-                                            decoration: const InputDecoration(
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: AppColors.fg,
-                                                  strokeAlign: BorderSide
-                                                      .strokeAlignOutside,
-                                                ),
-                                              ),
-                                              contentPadding: EdgeInsets.only(
-                                                top: 4,
-                                                bottom: 4,
-                                                left: 4,
-                                                right: 4,
-                                              ),
-                                              labelText: 'Bearing',
-                                              suffixText: 'Degrees ',
-                                              suffixStyle: TextStyle(
-                                                fontFamily: 'Fantasque',
-                                              ),
-                                              prefixIcon: Icon(
-                                                Icons.straight,
-                                              ),
-                                            ),
-                                            readOnly: true,
-                                          ),
+                                      Text(
+                                        ' About',
+                                        style: TextStyle(
+                                          color: AppColors.fg,
+                                          fontSize: 18,
                                         ),
-                                      ),
+                                      )
                                     ],
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.only(
-                                      top: 8,
-                                      left: 2,
-                                      right: 2,
-                                      bottom: 8,
-                                    ),
-                                    child: TextFormField(
-                                      controller: TextEditingController(
-                                          text: provider
-                                              .currDisplayNameController.text),
-                                      decoration: const InputDecoration(
-                                        border: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: AppColors.fg,
-                                          ),
-                                        ),
-                                        contentPadding: EdgeInsets.only(
-                                          top: 4,
-                                          bottom: 4,
-                                          left: 4,
-                                          right: 4,
-                                        ),
-                                        labelText: 'Current Location',
-                                        labelStyle: TextStyle(
-                                          fontFamily: 'Fantasque',
-                                        ),
-                                        prefixIcon: Icon(
-                                          Icons.my_location,
-                                        ),
+                                  onPressed: () async {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) {
+                                          return const About();
+                                        },
                                       ),
-                                      readOnly: true,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontFamily: 'NotoArabic',
-                                      ),
-                                      textAlign: TextAlign.right,
-                                    ),
-                                  ),
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.only(
-                                            top: 8,
-                                            left: 4,
-                                            right: 2,
-                                            bottom: 8,
-                                          ),
-                                          child: TextFormField(
-                                            controller: TextEditingController(
-                                                text: provider
-                                                        .isCurrentLocationValid()
-                                                    ? provider.currLatitude
-                                                        ?.toString()
-                                                    : null),
-                                            decoration: const InputDecoration(
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: AppColors.ashGray,
-                                                  width: 2,
-                                                  strokeAlign: BorderSide
-                                                      .strokeAlignOutside,
-                                                ),
-                                              ),
-                                              contentPadding: EdgeInsets.only(
-                                                top: 4,
-                                                bottom: 4,
-                                                left: 4,
-                                                right: 4,
-                                              ),
-                                              labelText: 'Latitude',
-                                              prefixIcon: Icon(
-                                                Icons.near_me,
-                                              ),
-                                            ),
-                                            readOnly: true,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.only(
-                                            top: 8,
-                                            left: 2,
-                                            right: 4,
-                                            bottom: 8,
-                                          ),
-                                          child: TextFormField(
-                                            controller: TextEditingController(
-                                                text: provider
-                                                        .isCurrentLocationValid()
-                                                    ? provider.currLongitude
-                                                        ?.toString()
-                                                    : null),
-                                            decoration: const InputDecoration(
-                                              border: OutlineInputBorder(
-                                                borderSide: BorderSide(
-                                                  color: AppColors.ashGray,
-                                                  width: 2,
-                                                  strokeAlign: BorderSide
-                                                      .strokeAlignOutside,
-                                                ),
-                                              ),
-                                              contentPadding: EdgeInsets.only(
-                                                top: 4,
-                                                bottom: 4,
-                                                left: 4,
-                                                right: 4,
-                                              ),
-                                              labelText: 'Longitude',
-                                              prefixIcon: Icon(
-                                                Icons.near_me,
-                                              ),
-                                            ),
-                                            readOnly: true,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ]),
+                                    );
+                                  },
+                                ),
                               )
                             ],
                           ),

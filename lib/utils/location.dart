@@ -1,12 +1,9 @@
-import 'package:geolocator/geolocator.dart' as geo;
-import 'package:geolocator_apple/geolocator_apple.dart';
-import 'package:geolocator_android/geolocator_android.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:loc/screens/osm_map_view.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart';
 
 Future<bool> _checkPermissions() async {
   bool isServiceEnabled = await geo.Geolocator.isLocationServiceEnabled();
@@ -34,51 +31,29 @@ Future<bool> _checkPermissions() async {
 void handlePositionUpdates(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
 
-  late LocationSettings locationSettings;
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    locationSettings = AndroidSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 50,
-      forceLocationManager: true,
-      intervalDuration: const Duration(seconds: 10),
-    );
-  } else if (defaultTargetPlatform == TargetPlatform.iOS ||
-      defaultTargetPlatform == TargetPlatform.macOS) {
-    locationSettings = AppleSettings(
-      accuracy: LocationAccuracy.best,
-      activityType: ActivityType.fitness,
-      distanceFilter: 16,
-      pauseLocationUpdatesAutomatically: true,
-      showBackgroundLocationIndicator: false,
-    );
-  } else {
-    locationSettings = const LocationSettings(
-      accuracy: LocationAccuracy.best,
-      distanceFilter: 16,
-    );
-  }
+  final subscription = geo.Geolocator.getPositionStream(
+    distanceFilter: 16,
+    forceAndroidLocationManager: true,
+    intervalDuration: const Duration(seconds: 10),
+  ).listen(
+      (value) async {
+        provider.setCurrLatitude(value.latitude);
+        provider.setCurrLongitude(value.longitude);
 
-  final subscription =
-      geo.Geolocator.getPositionStream(locationSettings: locationSettings)
-          .listen(
-              (value) async {
-                provider.setCurrLatitude(value.latitude);
-                provider.setCurrLongitude(value.longitude);
+        provider.setDistance(distanceAndBearing(context)?.first);
+        provider.setBearing(distanceAndBearing(context)?.last);
+        shouldPlaySound(context);
 
-                provider.setDistance(distanceAndBearing(context)?.first);
-                provider.setBearing(distanceAndBearing(context)?.last);
-                shouldPlaySound(context);
-
-                LocationData locationData = LocationData(
-                    latitude: value.latitude, longitude: value.longitude);
-                final decodedResponse = await osmReverse(locationData);
-                provider.setCurrDisplayName(decodedResponse['display_name']);
-              },
-              cancelOnError: true,
-              onError: (error, stackTrace) {
-                debugPrint(error.toString());
-                debugPrint(stackTrace.toString());
-              });
+        LocationData locationData =
+            LocationData(latitude: value.latitude, longitude: value.longitude);
+        final decodedResponse = await osmReverse(locationData);
+        provider.setCurrDisplayName(decodedResponse['display_name']);
+      },
+      cancelOnError: true,
+      onError: (error, stackTrace) {
+        debugPrint(error.toString());
+        debugPrint(stackTrace.toString());
+      });
 
   provider.setPositionStream(subscription);
 }

@@ -3,7 +3,7 @@ description: Free and open-spurce location-based reminder for Android
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 0.2.0
+version: 0.2.2
 
 environment:
   sdk: '>=2.18.6 <3.0.0'
@@ -18,6 +18,14 @@ dependencies:
   http: ^0.13.5
   latlong2: ^0.8.1
   provider: ^6.0.5
+  url_launcher: ^6.1.8
+
+dependency_overrides:
+  geolocator:
+    git:
+      url: https://gitlab.com/free2pass/flutter-geolocator-floss.git
+      ref: master
+      path: geolocator
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +36,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/ca/
+    - assets/images/app_icon.png
   fonts:
       - family: Fantasque
         fonts:
