@@ -8,7 +8,7 @@
 
 ## Features
 
-- Free and open-data embedded map.
+- Free and open-data embedded map (based on OSM).
 - Search for the destination.
 - Shows Eucliedian distance and bearing angle.
 - Shows Live location.
@@ -60,4 +60,4 @@ flutter build apk --build-name=<vx.y.x> --release
 
 ## License
 
-Licensed under the [GPL-v3+](LICENSE) License.
+Licensed under the [GPL-v3](LICENSE) License.
