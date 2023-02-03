@@ -63,26 +63,39 @@ void cancelPositionUpdates(BuildContext context) {
   provider.positionStream.cancel();
 }
 
-void shouldPlaySound(BuildContext context) {
+bool isInRange(BuildContext context) {
   final provider = Provider.of<AppStates>(context, listen: false);
-  if (provider.isListening == false ||
-      provider.isDestinationLocationValid() == false ||
+
+  if (provider.isDestinationLocationValid() == false ||
       provider.isDistanceValid() == false) {
-    FlutterRingtonePlayer.stop();
-    return;
+    return false;
   }
 
   final distance = double.parse(provider.distanceController.text);
   if (distance <= double.parse(provider.radiusController.text)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool shouldPlaySound(BuildContext context) {
+  final provider = Provider.of<AppStates>(context, listen: false);
+  if (provider.isListening == false) {
+    FlutterRingtonePlayer.stop();
+    return false;
+  }
+
+  if (isInRange(context) == true) {
     FlutterRingtonePlayer.playAlarm(
       looping: true,
       volume: 0.1,
       asAlarm: true,
     );
-    debugPrint(distance.toString());
-    debugPrint(provider.radiusController.text);
+    return true;
   } else {
     FlutterRingtonePlayer.stop();
+    return false;
   }
 }
 
@@ -102,7 +115,8 @@ String? validateNumber(String? value,
 Future<geo.Position> getCurrentLocation() async {
   final result = await _checkPermissions().then((value) async {
     return await geo.Geolocator.getCurrentPosition(
-        desiredAccuracy: geo.LocationAccuracy.best);
+      desiredAccuracy: geo.LocationAccuracy.best,
+    );
   }).onError((error, stackTrace) {
     return Future.error(error!, stackTrace);
   });

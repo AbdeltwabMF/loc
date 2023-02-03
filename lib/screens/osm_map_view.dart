@@ -3,10 +3,11 @@
 
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 import 'package:loc/styles/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/widgets/buttons.dart';
@@ -51,7 +52,6 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Stack(
@@ -59,20 +59,17 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
             Positioned.fill(
                 child: FlutterMap(
               options: MapOptions(
-                  center:
-                      LatLng(widget.center.latitude, widget.center.longitude),
-                  zoom: 15.0,
-                  maxZoom: 18,
-                  minZoom: 6),
+                center: LatLng(widget.center.latitude, widget.center.longitude),
+                zoom: 15.0,
+                maxZoom: 30,
+                minZoom: 6,
+              ),
               mapController: _mapController,
               children: [
                 TileLayer(
                   urlTemplate:
                       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                   subdomains: const ['a', 'b', 'c'],
-                  // attributionBuilder: (_) {
-                  //   return Text("© OpenStreetMap contributors");
-                  // },
                 ),
               ],
             )),
@@ -181,114 +178,134 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               child: Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.linen,
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.fg,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _searchController,
-                      focusNode: _focusNode,
-                      decoration: InputDecoration(
-                        prefixIconColor: AppColors.coral,
-                        border: const OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: AppColors.rose,
-                            width: 2,
-                            strokeAlign: BorderSide.strokeAlignOutside,
-                          ),
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(8),
-                          ),
-                        ),
-                        contentPadding: const EdgeInsets.all(4),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: AppColors.fg.withOpacity(0.6),
-                            width: 2,
-                            strokeAlign: BorderSide.strokeAlignOutside,
-                          ),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(8),
-                          ),
-                        ),
-                        hintText: 'Search Location',
-                        hintStyle: const TextStyle(
-                          fontFamily: 'Fantasque',
-                          fontSize: 18,
-                          color: AppColors.fg,
-                        ),
-                        prefixIcon: const Icon(Icons.search),
+                child: TextFormField(
+                  controller: _searchController,
+                  focusNode: _focusNode,
+                  decoration: const InputDecoration(
+                    prefixIconColor: AppColors.linen,
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: AppColors.linen,
+                        width: 2,
+                        strokeAlign: BorderSide.strokeAlignOutside,
                       ),
-                      onChanged: (String value) {
-                        if (_debounce?.isActive ?? false) _debounce?.cancel();
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.all(4),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: AppColors.yellowRed,
+                        width: 1,
+                        strokeAlign: BorderSide.strokeAlignOutside,
+                      ),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                    ),
+                    hintText: 'Search Location',
+                    hintStyle: TextStyle(
+                      fontFamily: 'Fantasque',
+                      fontSize: 18,
+                      color: AppColors.linen,
+                    ),
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (String value) {
+                    if (_debounce?.isActive ?? false) _debounce?.cancel();
 
-                        _debounce = Timer(
-                          const Duration(milliseconds: 2000),
-                          () async {
-                            try {
-                              final decodedResponse =
-                                  await osmSearch(value).onError(
-                                (error, stackTrace) =>
-                                    Future.error(error!, stackTrace),
-                              );
+                    _debounce = Timer(
+                      const Duration(milliseconds: 1000),
+                      () async {
+                        try {
+                          final decodedResponse =
+                              await osmSearch(value).onError(
+                            (error, stackTrace) =>
+                                Future.error(error!, stackTrace),
+                          );
 
-                              _options = decodedResponse
-                                  .map(
-                                    (e) => LocationData(
-                                      latitude: double.parse(e['lat']),
-                                      longitude: double.parse(e['lon']),
-                                      displayName: e['display_name'],
-                                    ),
-                                  )
-                                  .toList();
-                            } finally {
-                              if (mounted) {
-                                setState(() {});
-                              }
+                          _options = decodedResponse
+                              .map(
+                                (e) => LocationData(
+                                  latitude: double.parse(e['lat']),
+                                  longitude: double.parse(e['lon']),
+                                  displayName: e['display_name'],
+                                ),
+                              )
+                              .toList();
+                        } finally {
+                          if (mounted) {
+                            setState(() {});
+                          }
+                        }
+                      },
+                    );
+                  },
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'NotoArabic',
+                    color: AppColors.linen,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 64,
+              right: 8,
+              left: 8,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.fg,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: StatefulBuilder(
+                  builder: ((context, setState) {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _options.length > 5 ? 5 : _options.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          dense: true,
+                          title: Text(
+                            _options[index].displayName!,
+                            maxLines: 2,
+                            style: const TextStyle(
+                              fontFamily: 'NotoArabic',
+                              fontSize: 14,
+                              color: AppColors.linen,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${_options[index].latitude}, ${_options[index].longitude}',
+                            style: const TextStyle(
+                              fontFamily: 'Fantasque',
+                              fontSize: 14,
+                              color: AppColors.lavender,
+                            ),
+                          ),
+                          onTap: () {
+                            _mapController.move(
+                                LatLng(
+                                  _options[index].latitude,
+                                  _options[index].longitude,
+                                ),
+                                15.0);
+
+                            _focusNode.unfocus();
+                            _options.clear();
+                            if (mounted) {
+                              setState(() {});
                             }
                           },
                         );
                       },
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontFamily: 'NotoArabic',
-                      ),
-                    ),
-                    StatefulBuilder(
-                      builder: ((context, setState) {
-                        return ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount:
-                                _options.length > 10 ? 10 : _options.length,
-                            itemBuilder: (context, index) {
-                              return ListTile(
-                                title: Text(
-                                  _options[index].displayName!,
-                                ),
-                                subtitle: Text(
-                                  '${_options[index].latitude},${_options[index].longitude}',
-                                ),
-                                onTap: () {
-                                  _mapController.move(
-                                      LatLng(
-                                        _options[index].latitude,
-                                        _options[index].longitude,
-                                      ),
-                                      15.0);
-
-                                  _focusNode.unfocus();
-                                  _options.clear();
-                                  if (mounted) {
-                                    setState(() {});
-                                  }
-                                },
-                              );
-                            });
-                      }),
-                    ),
-                  ],
+                    );
+                  }),
                 ),
               ),
             ),

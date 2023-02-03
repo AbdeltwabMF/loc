@@ -30,7 +30,7 @@ class PickLocationButton extends StatelessWidget {
           ),
           side: MaterialStateProperty.all(
             const BorderSide(
-              color: AppColors.blue,
+              color: AppColors.babyBlue,
               width: 1,
               strokeAlign: BorderSide.strokeAlignOutside,
             ),
