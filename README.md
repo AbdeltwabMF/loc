@@ -27,9 +27,10 @@ Or get the latest APK from the [Releases Section](https://github.com/AbdeltwabMF
 
 ## Screenshots
 
-![Home page](assets/images/home-screen-1.png)
-![Map view](assets/images/map-view.png)
-![Home page 2](assets/images/home-screen-2.png)
+![Home page](fastlane\metadata\android\en-US\images\phoneScreenshots\1.png)
+![Map view](fastlane\metadata\android\en-US\images\phoneScreenshots\2.png)
+![Home page 2](fastlane\metadata\android\en-US\images\phoneScreenshots\3.png)
+
 
 ## Development
 
