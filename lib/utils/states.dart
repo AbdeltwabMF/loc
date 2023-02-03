@@ -99,8 +99,8 @@ class AppStates extends ChangeNotifier {
   bool isDestinationLocationValid() {
     bool flag = true;
     flag &= radiusController.text != '';
-    flag &= validateNumber(destLatitudeController.text, limit: 180) == null;
-    flag &= validateNumber(destLongitudeController.text, limit: 90) == null;
+    flag &= validateNumber(destLatitudeController.text, limit: 90) == null;
+    flag &= validateNumber(destLongitudeController.text, limit: 180) == null;
 
     return flag;
   }

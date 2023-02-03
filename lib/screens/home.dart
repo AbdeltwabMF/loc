@@ -44,13 +44,31 @@ class HomeScreen extends StatelessWidget {
                   right: 4,
                   left: 4,
                 ),
-                child: Text(
-                  'Loc, Have a nice day',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    color: AppColors.fg.withOpacity(0.8),
-                  ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Loc -  ',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 24,
+                        color: AppColors.fg.withOpacity(0.8),
+                      ),
+                    ),
+                    Icon(
+                      provider.isListening == true
+                          ? shouldPlaySound(context) == true
+                              ? Icons.circle_notifications_rounded
+                              : Icons.run_circle_rounded
+                          : Icons.circle_rounded,
+                      color: provider.isListening == true
+                          ? isInRange(context) == true
+                              ? AppColors.coral
+                              : Colors.green
+                          : AppColors.fg.withOpacity(0.5),
+                      size: 32,
+                    ),
+                  ],
                 ),
               ),
               Expanded(
@@ -469,14 +487,11 @@ class HomeScreen extends StatelessWidget {
                                         ),
                                         readOnly: provider.isListening == true,
                                         validator: (value) {
-                                          if (value == null || value == '') {
-                                            return 'Radius is required';
-                                          } else if (int.tryParse(value) ==
-                                              null) {
-                                            return 'Invalid radius value';
-                                          } else {
-                                            return null;
-                                          }
+                                          return validateNumber(
+                                            value,
+                                            message: 'Invalid radius value',
+                                            limit: 1000000000,
+                                          );
                                         },
                                       ),
                                     ),
@@ -499,6 +514,7 @@ class HomeScreen extends StatelessWidget {
                                                 border: OutlineInputBorder(
                                                   borderSide: BorderSide(
                                                     color: AppColors.fg,
+                                                    width: 2,
                                                     strokeAlign: BorderSide
                                                         .strokeAlignOutside,
                                                   ),
@@ -519,6 +535,14 @@ class HomeScreen extends StatelessWidget {
                                                 ),
                                               ),
                                               readOnly: true,
+                                              style: TextStyle(
+                                                color: provider.isListening ==
+                                                            true &&
+                                                        isInRange(context) ==
+                                                            true
+                                                    ? AppColors.coral
+                                                    : AppColors.fg,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -574,34 +598,33 @@ class HomeScreen extends StatelessWidget {
                                   indent: 8,
                                 ),
                               ),
-                              Container(
-                                child: TextButton(
-                                  child: Row(
-                                    children: const [
-                                      Icon(
-                                        Icons.info_rounded,
+                              TextButton(
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: const [
+                                    Icon(
+                                      Icons.info_rounded,
+                                      color: AppColors.fg,
+                                    ),
+                                    Text(
+                                      ' About',
+                                      style: TextStyle(
                                         color: AppColors.fg,
+                                        fontSize: 18,
                                       ),
-                                      Text(
-                                        ' About',
-                                        style: TextStyle(
-                                          color: AppColors.fg,
-                                          fontSize: 18,
-                                        ),
-                                      )
-                                    ],
-                                  ),
-                                  onPressed: () async {
-                                    await Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return const About();
-                                        },
-                                      ),
-                                    );
-                                  },
+                                    )
+                                  ],
                                 ),
-                              )
+                                onPressed: () async {
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) {
+                                        return const AboutScreen();
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
                           ),
                         ),
