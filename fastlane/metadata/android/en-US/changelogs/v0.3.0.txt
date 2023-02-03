@@ -1,0 +1,6 @@
+## What's Changed
+
+- Fix bug: app cann't run in some places
+- Add github workflow
+- Add status at the very top
+- Add about page
