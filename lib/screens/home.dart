@@ -83,549 +83,571 @@ class HomeScreen extends StatelessWidget {
                             top: 16,
                             bottom: 8,
                           ),
-                          child: Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.only(
-                                  left: 4,
-                                  right: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.babyBlue,
-                                    strokeAlign: BorderSide.strokeAlignOutside,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.only(
+                                    left: 4,
+                                    right: 4,
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: AppColors.babyBlue.withOpacity(0.2),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.only(
-                                        top: 8,
-                                        left: 4,
-                                        right: 4,
-                                        bottom: 8,
-                                      ),
-                                      child: TextFormField(
-                                        textAlign: TextAlign.right,
-                                        controller:
-                                            provider.destDisplayNameController,
-                                        decoration: const InputDecoration(
-                                          border: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: AppColors.ashGray,
-                                              width: 2,
-                                              strokeAlign:
-                                                  BorderSide.strokeAlignOutside,
-                                            ),
-                                          ),
-                                          contentPadding: EdgeInsets.only(
-                                            top: 4,
-                                            bottom: 4,
-                                            left: 4,
-                                            right: 4,
-                                          ),
-                                          labelText: 'Destination Location',
-                                          labelStyle: TextStyle(
-                                              fontFamily: 'Fantasque'),
-                                          prefixIcon: Icon(
-                                            Icons.location_city,
-                                          ),
-                                        ),
-                                        readOnly: true,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontFamily: 'NotoArabic',
-                                        ),
-                                      ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColors.babyBlue,
+                                      strokeAlign:
+                                          BorderSide.strokeAlignOutside,
                                     ),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            padding: const EdgeInsets.only(
-                                              top: 8,
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: AppColors.babyBlue.withOpacity(0.2),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.only(
+                                          top: 8,
+                                          left: 4,
+                                          right: 4,
+                                          bottom: 8,
+                                        ),
+                                        child: TextFormField(
+                                          textAlign: TextAlign.right,
+                                          controller: provider
+                                              .destDisplayNameController,
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: AppColors.ashGray,
+                                                width: 2,
+                                                strokeAlign: BorderSide
+                                                    .strokeAlignOutside,
+                                              ),
+                                            ),
+                                            contentPadding: EdgeInsets.only(
+                                              top: 4,
+                                              bottom: 4,
                                               left: 4,
-                                              right: 2,
-                                              bottom: 8,
-                                            ),
-                                            child: TextFormField(
-                                              controller: provider
-                                                  .destLatitudeController,
-                                              decoration: const InputDecoration(
-                                                border: OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                    color: AppColors.ashGray,
-                                                    width: 2,
-                                                    strokeAlign: BorderSide
-                                                        .strokeAlignOutside,
-                                                  ),
-                                                ),
-                                                contentPadding: EdgeInsets.only(
-                                                  top: 4,
-                                                  bottom: 4,
-                                                  left: 4,
-                                                  right: 4,
-                                                ),
-                                                labelText: 'Latitude',
-                                                prefixIcon: Icon(
-                                                  Icons.near_me,
-                                                ),
-                                              ),
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .deny(RegExp(
-                                                        r'^[+\-]?[0]{1}[^.]')),
-                                              ],
-                                              onChanged: (value) {
-                                                if (value != '' &&
-                                                    double.tryParse(value) !=
-                                                        null) {
-                                                  provider
-                                                      .setDestLatitude(value);
-                                                }
-                                              },
-                                              keyboardType: const TextInputType
-                                                  .numberWithOptions(
-                                                signed: true,
-                                                decimal: true,
-                                              ),
-                                              readOnly:
-                                                  provider.isListening == true,
-                                              validator: (value) {
-                                                return validateNumber(
-                                                  value,
-                                                  message:
-                                                      'Invalid latitude value',
-                                                  limit: 90,
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Container(
-                                            padding: const EdgeInsets.only(
-                                              top: 8,
-                                              left: 2,
                                               right: 4,
-                                              bottom: 8,
                                             ),
-                                            child: TextFormField(
-                                              controller: provider
-                                                  .destLongitudeController,
-                                              decoration: const InputDecoration(
-                                                border: OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                    color: AppColors.ashGray,
-                                                    width: 2,
-                                                    strokeAlign: BorderSide
-                                                        .strokeAlignOutside,
+                                            labelText: 'Destination Location',
+                                            labelStyle: TextStyle(
+                                                fontFamily: 'Fantasque'),
+                                            prefixIcon: Icon(
+                                              Icons.location_city,
+                                            ),
+                                          ),
+                                          readOnly: true,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontFamily: 'NotoArabic',
+                                          ),
+                                        ),
+                                      ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Container(
+                                              padding: const EdgeInsets.only(
+                                                top: 8,
+                                                left: 4,
+                                                right: 2,
+                                                bottom: 8,
+                                              ),
+                                              child: TextFormField(
+                                                controller: provider
+                                                    .destLatitudeController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                      color: AppColors.ashGray,
+                                                      width: 2,
+                                                      strokeAlign: BorderSide
+                                                          .strokeAlignOutside,
+                                                    ),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.only(
+                                                    top: 4,
+                                                    bottom: 4,
+                                                    left: 4,
+                                                    right: 4,
+                                                  ),
+                                                  labelText: 'Latitude',
+                                                  prefixIcon: Icon(
+                                                    Icons.near_me,
                                                   ),
                                                 ),
-                                                contentPadding: EdgeInsets.only(
-                                                  top: 4,
-                                                  bottom: 4,
-                                                  left: 4,
-                                                  right: 4,
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .deny(RegExp(
+                                                          r'^[+\-]?[0]{1}[^.]')),
+                                                ],
+                                                onChanged: (value) {
+                                                  if (value != '' &&
+                                                      double.tryParse(value) !=
+                                                          null) {
+                                                    provider
+                                                        .setDestLatitude(value);
+                                                  }
+                                                },
+                                                keyboardType:
+                                                    const TextInputType
+                                                        .numberWithOptions(
+                                                  signed: true,
+                                                  decimal: true,
                                                 ),
-                                                labelText: 'Longitude',
-                                                prefixIcon: Icon(
-                                                  Icons.near_me,
-                                                ),
+                                                readOnly:
+                                                    provider.isListening ==
+                                                        true,
+                                                validator: (value) {
+                                                  return validateNumber(
+                                                    value,
+                                                    message:
+                                                        'Invalid latitude value',
+                                                    limit: 90,
+                                                  );
+                                                },
                                               ),
-                                              inputFormatters: [
-                                                FilteringTextInputFormatter
-                                                    .deny(RegExp(
-                                                        r'^[+\-]?[0]{1}[^.]')),
-                                              ],
-                                              onChanged: (value) {
-                                                if (value != '' &&
-                                                    double.tryParse(value) !=
-                                                        null) {
-                                                  provider
-                                                      .setDestLongitude(value);
-                                                }
-                                              },
-                                              keyboardType: const TextInputType
-                                                  .numberWithOptions(
-                                                signed: true,
-                                                decimal: true,
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Container(
+                                              padding: const EdgeInsets.only(
+                                                top: 8,
+                                                left: 2,
+                                                right: 4,
+                                                bottom: 8,
                                               ),
-                                              readOnly:
-                                                  provider.isListening == true,
-                                              validator: (value) {
-                                                return validateNumber(
-                                                  value,
-                                                  message:
-                                                      'Invalid longitude value',
-                                                  limit: 180,
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 12,
-                              ),
-                              Container(
-                                padding: const EdgeInsets.only(
-                                  left: 4,
-                                  right: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.lavender,
-                                    strokeAlign: BorderSide.strokeAlignOutside,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: AppColors.lavender.withOpacity(0.2),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.only(
-                                        top: 8,
-                                        left: 2,
-                                        right: 2,
-                                        bottom: 8,
-                                      ),
-                                      child: TextFormField(
-                                        controller: TextEditingController(
-                                            text: provider
-                                                .currDisplayNameController
-                                                .text),
-                                        decoration: const InputDecoration(
-                                          border: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: AppColors.fg,
-                                            ),
-                                          ),
-                                          contentPadding: EdgeInsets.only(
-                                            top: 4,
-                                            bottom: 4,
-                                            left: 4,
-                                            right: 4,
-                                          ),
-                                          labelText: 'Current Location',
-                                          labelStyle: TextStyle(
-                                            fontFamily: 'Fantasque',
-                                          ),
-                                          prefixIcon: Icon(
-                                            Icons.my_location,
-                                          ),
-                                        ),
-                                        readOnly: true,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontFamily: 'NotoArabic',
-                                        ),
-                                        textAlign: TextAlign.right,
-                                      ),
-                                    ),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            padding: const EdgeInsets.only(
-                                              top: 8,
-                                              left: 4,
-                                              right: 2,
-                                              bottom: 8,
-                                            ),
-                                            child: TextFormField(
-                                              controller: TextEditingController(
-                                                  text: provider
-                                                          .isCurrentLocationValid()
-                                                      ? provider.currLatitude
-                                                          ?.toString()
-                                                      : null),
-                                              decoration: const InputDecoration(
-                                                border: OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                    color: AppColors.ashGray,
-                                                    width: 2,
-                                                    strokeAlign: BorderSide
-                                                        .strokeAlignOutside,
+                                              child: TextFormField(
+                                                controller: provider
+                                                    .destLongitudeController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                      color: AppColors.ashGray,
+                                                      width: 2,
+                                                      strokeAlign: BorderSide
+                                                          .strokeAlignOutside,
+                                                    ),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.only(
+                                                    top: 4,
+                                                    bottom: 4,
+                                                    left: 4,
+                                                    right: 4,
+                                                  ),
+                                                  labelText: 'Longitude',
+                                                  prefixIcon: Icon(
+                                                    Icons.near_me,
                                                   ),
                                                 ),
-                                                contentPadding: EdgeInsets.only(
-                                                  top: 4,
-                                                  bottom: 4,
-                                                  left: 4,
-                                                  right: 4,
+                                                inputFormatters: [
+                                                  FilteringTextInputFormatter
+                                                      .deny(RegExp(
+                                                          r'^[+\-]?[0]{1}[^.]')),
+                                                ],
+                                                onChanged: (value) {
+                                                  if (value != '' &&
+                                                      double.tryParse(value) !=
+                                                          null) {
+                                                    provider.setDestLongitude(
+                                                        value);
+                                                  }
+                                                },
+                                                keyboardType:
+                                                    const TextInputType
+                                                        .numberWithOptions(
+                                                  signed: true,
+                                                  decimal: true,
                                                 ),
-                                                labelText: 'Latitude',
-                                                prefixIcon: Icon(
-                                                  Icons.near_me,
-                                                ),
+                                                readOnly:
+                                                    provider.isListening ==
+                                                        true,
+                                                validator: (value) {
+                                                  return validateNumber(
+                                                    value,
+                                                    message:
+                                                        'Invalid longitude value',
+                                                    limit: 180,
+                                                  );
+                                                },
                                               ),
-                                              readOnly: true,
                                             ),
                                           ),
-                                        ),
-                                        Expanded(
-                                          child: Container(
-                                            padding: const EdgeInsets.only(
-                                              top: 8,
-                                              left: 2,
-                                              right: 4,
-                                              bottom: 8,
-                                            ),
-                                            child: TextFormField(
-                                              controller: TextEditingController(
-                                                  text: provider
-                                                          .isCurrentLocationValid()
-                                                      ? provider.currLongitude
-                                                          ?.toString()
-                                                      : null),
-                                              decoration: const InputDecoration(
-                                                border: OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                    color: AppColors.ashGray,
-                                                    width: 2,
-                                                    strokeAlign: BorderSide
-                                                        .strokeAlignOutside,
-                                                  ),
-                                                ),
-                                                contentPadding: EdgeInsets.only(
-                                                  top: 4,
-                                                  bottom: 4,
-                                                  left: 4,
-                                                  right: 4,
-                                                ),
-                                                labelText: 'Longitude',
-                                                prefixIcon: Icon(
-                                                  Icons.near_me,
-                                                ),
-                                              ),
-                                              readOnly: true,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 12,
-                              ),
-                              Container(
-                                padding: const EdgeInsets.only(
-                                  left: 4,
-                                  right: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.linen,
-                                    strokeAlign: BorderSide.strokeAlignOutside,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  color: AppColors.linen.withOpacity(0.2),
-                                ),
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.only(
-                                        top: 8,
-                                        left: 2,
-                                        right: 2,
-                                        bottom: 8,
-                                      ),
-                                      child: TextFormField(
-                                        controller: provider.radiusController,
-                                        decoration: const InputDecoration(
-                                          border: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: AppColors.fg,
-                                            ),
-                                          ),
-                                          contentPadding: EdgeInsets.only(
-                                            top: 4,
-                                            bottom: 4,
-                                            left: 4,
-                                            right: 4,
-                                          ),
-                                          labelText: 'Radius',
-                                          suffixText: 'Meters ',
-                                          suffixStyle: TextStyle(
-                                            fontFamily: 'Fantasque',
-                                          ),
-                                          prefixIcon: Icon(
-                                            Icons.radar,
-                                          ),
-                                        ),
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter.allow(
-                                              RegExp(r'(^[0-9]{1,7})')),
-                                          FilteringTextInputFormatter.deny(
-                                              RegExp(r'(^[0-9]{8,})')),
-                                          FilteringTextInputFormatter.deny(
-                                              RegExp(r'(^[0]{1}[0-9]+)')),
                                         ],
-                                        onChanged: (value) {
-                                          if (value != '' ||
-                                              int.tryParse(value) != null) {
-                                            provider.setRadius(value);
-                                          }
-                                        },
-                                        keyboardType: const TextInputType
-                                            .numberWithOptions(
-                                          signed: true,
-                                          decimal: true,
-                                        ),
-                                        readOnly: provider.isListening == true,
-                                        validator: (value) {
-                                          return validateNumber(
-                                            value,
-                                            message: 'Invalid radius value',
-                                            limit: 1000000000,
-                                          );
-                                        },
                                       ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 12,
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.only(
+                                    left: 4,
+                                    right: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColors.lavender,
+                                      strokeAlign:
+                                          BorderSide.strokeAlignOutside,
                                     ),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            padding: const EdgeInsets.only(
-                                              top: 8,
-                                              left: 2,
-                                              right: 2,
-                                              bottom: 8,
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: AppColors.lavender.withOpacity(0.2),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.only(
+                                          top: 8,
+                                          left: 2,
+                                          right: 2,
+                                          bottom: 8,
+                                        ),
+                                        child: TextFormField(
+                                          controller: TextEditingController(
+                                              text: provider
+                                                  .currDisplayNameController
+                                                  .text),
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: AppColors.fg,
+                                              ),
                                             ),
-                                            child: TextFormField(
-                                              controller:
-                                                  provider.distanceController,
-                                              decoration: const InputDecoration(
-                                                border: OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                    color: AppColors.fg,
-                                                    width: 2,
-                                                    strokeAlign: BorderSide
-                                                        .strokeAlignOutside,
+                                            contentPadding: EdgeInsets.only(
+                                              top: 4,
+                                              bottom: 4,
+                                              left: 4,
+                                              right: 4,
+                                            ),
+                                            labelText: 'Current Location',
+                                            labelStyle: TextStyle(
+                                              fontFamily: 'Fantasque',
+                                            ),
+                                            prefixIcon: Icon(
+                                              Icons.my_location,
+                                            ),
+                                          ),
+                                          readOnly: true,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontFamily: 'NotoArabic',
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Container(
+                                              padding: const EdgeInsets.only(
+                                                top: 8,
+                                                left: 4,
+                                                right: 2,
+                                                bottom: 8,
+                                              ),
+                                              child: TextFormField(
+                                                controller: TextEditingController(
+                                                    text: provider
+                                                            .isCurrentLocationValid()
+                                                        ? provider.currLatitude
+                                                            ?.toString()
+                                                        : null),
+                                                decoration:
+                                                    const InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                      color: AppColors.ashGray,
+                                                      width: 2,
+                                                      strokeAlign: BorderSide
+                                                          .strokeAlignOutside,
+                                                    ),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.only(
+                                                    top: 4,
+                                                    bottom: 4,
+                                                    left: 4,
+                                                    right: 4,
+                                                  ),
+                                                  labelText: 'Latitude',
+                                                  prefixIcon: Icon(
+                                                    Icons.near_me,
                                                   ),
                                                 ),
-                                                contentPadding: EdgeInsets.only(
-                                                  top: 4,
-                                                  bottom: 4,
-                                                  left: 4,
-                                                  right: 4,
-                                                ),
-                                                labelText: 'Distance',
-                                                suffixText: 'Meters ',
-                                                suffixStyle: TextStyle(
-                                                  fontFamily: 'Fantasque',
-                                                ),
-                                                prefixIcon: Icon(
-                                                  Icons.straighten,
-                                                ),
-                                              ),
-                                              readOnly: true,
-                                              style: TextStyle(
-                                                color: provider.isListening ==
-                                                            true &&
-                                                        isInRange(context) ==
-                                                            true
-                                                    ? AppColors.coral
-                                                    : AppColors.fg,
+                                                readOnly: true,
                                               ),
                                             ),
                                           ),
-                                        ),
-                                        Expanded(
-                                          child: Container(
-                                            padding: const EdgeInsets.only(
-                                              top: 8,
-                                              left: 2,
-                                              right: 2,
-                                              bottom: 8,
-                                            ),
-                                            child: TextFormField(
-                                              controller:
-                                                  provider.bearingController,
-                                              decoration: const InputDecoration(
-                                                border: OutlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                    color: AppColors.fg,
-                                                    strokeAlign: BorderSide
-                                                        .strokeAlignOutside,
+                                          Expanded(
+                                            child: Container(
+                                              padding: const EdgeInsets.only(
+                                                top: 8,
+                                                left: 2,
+                                                right: 4,
+                                                bottom: 8,
+                                              ),
+                                              child: TextFormField(
+                                                controller: TextEditingController(
+                                                    text: provider
+                                                            .isCurrentLocationValid()
+                                                        ? provider.currLongitude
+                                                            ?.toString()
+                                                        : null),
+                                                decoration:
+                                                    const InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                      color: AppColors.ashGray,
+                                                      width: 2,
+                                                      strokeAlign: BorderSide
+                                                          .strokeAlignOutside,
+                                                    ),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.only(
+                                                    top: 4,
+                                                    bottom: 4,
+                                                    left: 4,
+                                                    right: 4,
+                                                  ),
+                                                  labelText: 'Longitude',
+                                                  prefixIcon: Icon(
+                                                    Icons.near_me,
                                                   ),
                                                 ),
-                                                contentPadding: EdgeInsets.only(
-                                                  top: 4,
-                                                  bottom: 4,
-                                                  left: 4,
-                                                  right: 4,
-                                                ),
-                                                labelText: 'Bearing',
-                                                suffixText: 'Degrees ',
-                                                suffixStyle: TextStyle(
-                                                  fontFamily: 'Fantasque',
-                                                ),
-                                                prefixIcon: Icon(
-                                                  Icons.straight,
-                                                ),
+                                                readOnly: true,
                                               ),
-                                              readOnly: true,
                                             ),
                                           ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 12,
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.only(
+                                    left: 4,
+                                    right: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: AppColors.linen,
+                                      strokeAlign:
+                                          BorderSide.strokeAlignOutside,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: AppColors.linen.withOpacity(0.2),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.only(
+                                          top: 8,
+                                          left: 2,
+                                          right: 2,
+                                          bottom: 8,
                                         ),
-                                      ],
-                                    ),
-                                  ],
+                                        child: TextFormField(
+                                          controller: provider.radiusController,
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: AppColors.fg,
+                                              ),
+                                            ),
+                                            contentPadding: EdgeInsets.only(
+                                              top: 4,
+                                              bottom: 4,
+                                              left: 4,
+                                              right: 4,
+                                            ),
+                                            labelText: 'Radius',
+                                            suffixText: 'Meters ',
+                                            suffixStyle: TextStyle(
+                                              fontFamily: 'Fantasque',
+                                            ),
+                                            prefixIcon: Icon(
+                                              Icons.radar,
+                                            ),
+                                          ),
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.allow(
+                                                RegExp(r'(^[0-9]{1,7})')),
+                                            FilteringTextInputFormatter.deny(
+                                                RegExp(r'(^[0-9]{8,})')),
+                                            FilteringTextInputFormatter.deny(
+                                                RegExp(r'(^[0]{1}[0-9]+)')),
+                                          ],
+                                          onChanged: (value) {
+                                            if (value != '' ||
+                                                int.tryParse(value) != null) {
+                                              provider.setRadius(value);
+                                            }
+                                          },
+                                          keyboardType: const TextInputType
+                                              .numberWithOptions(
+                                            signed: true,
+                                            decimal: true,
+                                          ),
+                                          readOnly:
+                                              provider.isListening == true,
+                                          validator: (value) {
+                                            return validateNumber(
+                                              value,
+                                              message: 'Invalid radius value',
+                                              limit: 1000000000,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Container(
+                                              padding: const EdgeInsets.only(
+                                                top: 8,
+                                                left: 2,
+                                                right: 2,
+                                                bottom: 8,
+                                              ),
+                                              child: TextFormField(
+                                                controller:
+                                                    provider.distanceController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                      color: AppColors.fg,
+                                                      width: 2,
+                                                      strokeAlign: BorderSide
+                                                          .strokeAlignOutside,
+                                                    ),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.only(
+                                                    top: 4,
+                                                    bottom: 4,
+                                                    left: 4,
+                                                    right: 4,
+                                                  ),
+                                                  labelText: 'Distance',
+                                                  suffixText: 'Meters ',
+                                                  suffixStyle: TextStyle(
+                                                    fontFamily: 'Fantasque',
+                                                  ),
+                                                  prefixIcon: Icon(
+                                                    Icons.straighten,
+                                                  ),
+                                                ),
+                                                readOnly: true,
+                                                style: TextStyle(
+                                                  color: provider.isListening ==
+                                                              true &&
+                                                          isInRange(context) ==
+                                                              true
+                                                      ? AppColors.coral
+                                                      : AppColors.fg,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Container(
+                                              padding: const EdgeInsets.only(
+                                                top: 8,
+                                                left: 2,
+                                                right: 2,
+                                                bottom: 8,
+                                              ),
+                                              child: TextFormField(
+                                                controller:
+                                                    provider.bearingController,
+                                                decoration:
+                                                    const InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderSide: BorderSide(
+                                                      color: AppColors.fg,
+                                                      strokeAlign: BorderSide
+                                                          .strokeAlignOutside,
+                                                    ),
+                                                  ),
+                                                  contentPadding:
+                                                      EdgeInsets.only(
+                                                    top: 4,
+                                                    bottom: 4,
+                                                    left: 4,
+                                                    right: 4,
+                                                  ),
+                                                  labelText: 'Bearing',
+                                                  suffixText: 'Degrees ',
+                                                  suffixStyle: TextStyle(
+                                                    fontFamily: 'Fantasque',
+                                                  ),
+                                                  prefixIcon: Icon(
+                                                    Icons.straight,
+                                                  ),
+                                                ),
+                                                readOnly: true,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Divider(
-                                  color: AppColors.fg.withOpacity(0.5),
-                                  height: 4,
-                                  endIndent: 8,
-                                  indent: 8,
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Divider(
+                                    color: AppColors.fg.withOpacity(0.5),
+                                    height: 4,
+                                    endIndent: 8,
+                                    indent: 8,
+                                  ),
                                 ),
-                              ),
-                              TextButton(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: const [
-                                    Icon(
-                                      Icons.info_rounded,
-                                      color: AppColors.fg,
-                                    ),
-                                    Text(
-                                      ' About',
-                                      style: TextStyle(
+                                TextButton(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: const [
+                                      Icon(
+                                        Icons.info_rounded,
                                         color: AppColors.fg,
-                                        fontSize: 18,
                                       ),
-                                    )
-                                  ],
+                                      Text(
+                                        ' About',
+                                        style: TextStyle(
+                                          color: AppColors.fg,
+                                          fontSize: 18,
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                  onPressed: () async {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) {
+                                          return const AboutScreen();
+                                        },
+                                      ),
+                                    );
+                                  },
                                 ),
-                                onPressed: () async {
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) {
-                                        return const AboutScreen();
-                                      },
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

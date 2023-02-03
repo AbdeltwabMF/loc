@@ -266,8 +266,8 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                   builder: ((context, setState) {
                     return ListView.builder(
                       shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _options.length > 5 ? 5 : _options.length,
+                      physics: const ScrollPhysics(),
+                      itemCount: _options.length > 6 ? 6 : _options.length,
                       itemBuilder: (context, index) {
                         return ListTile(
                           dense: true,
