@@ -27,8 +27,9 @@ Or get the latest APK from the [Releases Section](https://github.com/AbdeltwabMF
 
 ## Screenshots
 
-![Home page](assets/images/home-page.png)
+![Home page](assets/images/home-screen-1.png)
 ![Map view](assets/images/map-view.png)
+![Home page 2](assets/images/home-screen-2.png)
 
 ## Development
 
