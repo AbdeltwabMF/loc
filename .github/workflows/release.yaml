@@ -27,8 +27,8 @@ jobs:
 
       - name: Build artifacts
         run: |
-          build_number=$(awk -F+ '{print $2}' pubspec.yaml)
-          flutter build apk --build-name=${{github.ref_name}} --build-number=$build_number --release
+          build_number=$(awk -F+ '/version: / {print $2}' pubspec.yaml)
+          flutter build apk --build-name=${{github.ref_name}} --build-number=${build_number} --release
 
       - name: Release artifacts and source code
         uses: ncipollo/release-action@v1
