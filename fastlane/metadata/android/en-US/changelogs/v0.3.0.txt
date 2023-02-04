@@ -1,6 +1,10 @@
-## What's Changed
+v0.3.0
 
-- Fix bug: app cann't run in some places
-- Add github workflow
-- Add status at the very top
+💪 Stronger
+- Fixed app cann't run in some places.
+- Fixed home screen layout
+- Fixed search result layout
+
+🤩 Better
+- Added status at the very top
 - Add about page
