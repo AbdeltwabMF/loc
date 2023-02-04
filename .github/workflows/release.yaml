@@ -18,7 +18,7 @@ jobs:
       - name: Setup Flutter environment
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.7.0'
+          flutter-version: '3.7.1'
           channel: 'stable'
       - run: flutter --version
 
@@ -26,7 +26,9 @@ jobs:
         run: flutter create --platforms=ios,android .
 
       - name: Build artifacts
-        run: flutter build apk --build-name=${{github.ref_name}} --release
+        run: |
+          build_number=$(awk -F+ '{print $2}' pubspec.yaml)
+          flutter build apk --build-name=${{github.ref_name}} --build-number=$build_number --release
 
       - name: Release artifacts and source code
         uses: ncipollo/release-action@v1

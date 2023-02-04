@@ -1,4 +1,4 @@
-v0.3.0
+v0.3.2
 
 💪 Stronger
 - Fixed app cann't run in some places.
@@ -7,4 +7,4 @@ v0.3.0
 
 🤩 Better
 - Added status at the very top
-- Add about page
+- Added about page

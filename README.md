@@ -63,7 +63,7 @@ cd lib
 ## Release
 
 ```shell
-flutter build apk --build-name=<vx.y.x> --release
+flutter build apk --build-name=<vx.y.x> --build-number=<int> --release
 ```
 
 ## License
