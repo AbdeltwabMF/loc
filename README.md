@@ -6,7 +6,20 @@
 <h3 align="center">Free and open-source location-based reminder for Android.</h3>
 
 
-## Features
+<p align='center'>
+    <a href='https://apt.izzysoft.de/fdroid/index/apk/org.abdeltwabmf.loc'>
+        <img height='56' alt='Get it on IzzyOnDroid' src='https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png'/>
+    </a>
+</p>
+
+<p align='center'>
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="256"/>
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="256"/>
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="256"/>
+</p>
+
+
+## ✨ Features
 
 - Free and open-data embedded map (based on OSM).
 - Search for the destination.
@@ -16,21 +29,6 @@
 - Remind you with sound when you arrive.
 - Offline/Online usage.
 - Displays location name.
-
-## Download
-
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png"
-     alt="Get it on IzzyOnDroid"
-     height="80">](https://apt.izzysoft.de/fdroid/index/apk/org.abdeltwabmf.loc)
-
-Or get the latest APK from the [Releases Section](https://github.com/AbdeltwabMF/Loc/releases/latest).
-
-## Screenshots
-
-![Home page](fastlane\metadata\android\en-US\images\phoneScreenshots\1.png)
-![Map view](fastlane\metadata\android\en-US\images\phoneScreenshots\2.png)
-![Home page 2](fastlane\metadata\android\en-US\images\phoneScreenshots\3.png)
-
 
 ## Development
 
