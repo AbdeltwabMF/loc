@@ -11,6 +11,7 @@
 migrate_working_dir/
 .metadata
 pubspec.lock
+.fvm/flutter_sdk
 
 # IntelliJ related
 *.iml
