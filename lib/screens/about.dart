@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:loc/styles/colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const String version = 'v0.3.0';
+const String version = 'v0.3.2';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -23,25 +23,20 @@ class AboutScreen extends StatelessWidget {
         ),
       ),
       body: Container(
-        padding: const EdgeInsets.only(
-          top: 24,
-          left: 16,
-          right: 16,
-          bottom: 16,
-        ),
         alignment: Alignment.topCenter,
         child: ListView(
           physics: const ScrollPhysics(),
           shrinkWrap: true,
           children: <Widget>[
             const Image(
-              image: AssetImage('assets/images/app_icon.png'),
+              image: AssetImage('assets/images/featureGraphic.png'),
               width: 100,
-              height: 100,
             ),
             Container(
               margin: const EdgeInsets.only(
-                top: 24,
+                top: 16,
+                left: 8,
+                right: 8,
               ),
               decoration: const BoxDecoration(
                 color: AppColors.ashGray,
@@ -62,6 +57,8 @@ class AboutScreen extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(
                 top: 8,
+                left: 8,
+                right: 8,
               ),
               decoration: const BoxDecoration(
                 color: AppColors.ashGray,
@@ -82,6 +79,38 @@ class AboutScreen extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(
                 top: 8,
+                left: 8,
+                right: 8,
+              ),
+              decoration: const BoxDecoration(
+                color: AppColors.ashGray,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(12),
+                ),
+              ),
+              child: TextButton(
+                style: ButtonStyle(
+                    padding: MaterialStateProperty.all(EdgeInsets.zero)),
+                onPressed: () {
+                  const String amf = 'https://abdeltwabmf.github.io/about';
+                  _launchUrl(amf);
+                },
+                child: const ListTile(
+                  leading: Icon(
+                    Icons.person_rounded,
+                    color: AppColors.fg,
+                    size: 48,
+                  ),
+                  title: Text('Author'),
+                  subtitle: Text('Abd El-Twab M. Fakhry'),
+                ),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(
+                top: 8,
+                left: 8,
+                right: 8,
               ),
               decoration: const BoxDecoration(
                 color: AppColors.ashGray,
@@ -94,7 +123,7 @@ class AboutScreen extends StatelessWidget {
                     padding: MaterialStateProperty.all(EdgeInsets.zero)),
                 onPressed: () {
                   const String sourceCode =
-                      'https://github.com/AbdeltwabMF/Loc';
+                      'https://github.com/AbdeltwabMF/loc';
                   _launchUrl(sourceCode);
                 },
                 child: const ListTile(
@@ -104,13 +133,15 @@ class AboutScreen extends StatelessWidget {
                     size: 48,
                   ),
                   title: Text('Source code'),
-                  subtitle: Text('GitHub'),
+                  subtitle: Text('https://github.com/AbdeltwabMF/loc'),
                 ),
               ),
             ),
             Container(
               margin: const EdgeInsets.only(
                 top: 8,
+                left: 8,
+                right: 8,
               ),
               decoration: const BoxDecoration(
                 color: AppColors.ashGray,
@@ -140,34 +171,8 @@ class AboutScreen extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(
                 top: 8,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.ashGray,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-              ),
-              child: TextButton(
-                style: ButtonStyle(
-                    padding: MaterialStateProperty.all(EdgeInsets.zero)),
-                onPressed: () {
-                  const String amf = 'https://abdeltwabmf.github.io/about';
-                  _launchUrl(amf);
-                },
-                child: const ListTile(
-                  leading: Icon(
-                    Icons.person_rounded,
-                    color: AppColors.fg,
-                    size: 48,
-                  ),
-                  title: Text('Author'),
-                  subtitle: Text('Abd El-Twab M. Fakhry'),
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(
-                top: 8,
+                left: 8,
+                right: 8,
               ),
               decoration: const BoxDecoration(
                 color: AppColors.ashGray,
