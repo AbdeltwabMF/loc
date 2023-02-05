@@ -29,12 +29,12 @@ jobs:
         run: |
           build_number=$(awk -F+ '/version:/ {print $2}' pubspec.yaml)
           echo $build_number
-          flutter build apk --build-name=${{github.ref_name}} --build-number=$build_number --release
+          flutter build apk --split-per-abi --build-name=${{github.ref_name}} --build-number=$build_number --release
 
       - name: Release artifacts and source code
         uses: ncipollo/release-action@v1
         with:
-          artifacts: build/app/outputs/flutter-apk/app-release.apk
+          artifacts: build/app/outputs/flutter-apk/*
           name: ${{github.ref_name}}
           makeLatest: true
           generateReleaseNotes: true
