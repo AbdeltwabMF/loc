@@ -88,9 +88,7 @@ bool shouldPlaySound(BuildContext context) {
 
   if (isInRange(context) == true) {
     FlutterRingtonePlayer.playAlarm(
-      looping: true,
-      volume: 0.1,
-      asAlarm: true,
+      volume: 1.0,
     );
     return true;
   } else {

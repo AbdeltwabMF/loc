@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:loc/styles/colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const String version = 'v0.3.2';
+const String version = 'v0.3.3';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -173,6 +173,7 @@ class AboutScreen extends StatelessWidget {
                 top: 8,
                 left: 8,
                 right: 8,
+                bottom: 16,
               ),
               decoration: const BoxDecoration(
                 color: AppColors.ashGray,
