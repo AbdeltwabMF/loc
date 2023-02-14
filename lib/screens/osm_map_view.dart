@@ -11,15 +11,19 @@ import 'package:latlong2/latlong.dart';
 import 'package:loc/styles/colors.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/widgets/buttons.dart';
+import 'package:loc/utils/types.dart';
 
 const String osmBaseUrl = 'https://nominatim.openstreetmap.org';
 
 class OsmMapViewScreen extends StatefulWidget {
   OsmMapViewScreen({super.key});
 
-  // Initial center for the map
-  final LocationData center =
-      LocationData(latitude: 30.05336456509493, longitude: 31.230701671759462);
+  final Place center = Place(
+    position: LatLong(
+      latitude: 30.05336456509493,
+      longitude: 31.230701671759462,
+    ),
+  );
 
   @override
   State<OsmMapViewScreen> createState() => _OsmMapViewScreen();
@@ -29,12 +33,13 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
   MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  List<LocationData> _options = <LocationData>[];
+  List<Place> _options = <Place>[];
   Timer? _debounce;
 
   @override
   void initState() {
     _mapController = MapController();
+    centerCurrentLocation();
     _mapController.mapEventStream.listen((event) async {
       if (event is MapEventMoveEnd) {
         // Handle event.center.
@@ -59,10 +64,14 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
             Positioned.fill(
                 child: FlutterMap(
               options: MapOptions(
-                center: LatLng(widget.center.latitude, widget.center.longitude),
-                zoom: 15.0,
-                maxZoom: 30,
-                minZoom: 6,
+                center: LatLng(
+                  widget.center.position.latitude,
+                  widget.center.position.longitude,
+                ),
+                zoom: 15,
+                maxZoom: 18,
+                minZoom: 0,
+                keepAlive: true,
               ),
               mapController: _mapController,
               children: [
@@ -85,7 +94,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                         _searchController.text,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Color.fromARGB(255, 62, 23, 129),
+                          color: AppColors.bg1,
                         ),
                       );
                     },
@@ -93,13 +102,13 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                 ),
               ),
             ),
-            Positioned.fill(
+            const Positioned.fill(
               child: IgnorePointer(
                 child: Center(
                   child: Icon(
                     Icons.location_pin,
+                    color: AppColors.darkRed,
                     size: 56,
-                    color: AppColors.fg.withOpacity(0.9),
                   ),
                 ),
               ),
@@ -108,7 +117,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               bottom: 224,
               right: 8,
               child: FloatingActionButton(
-                backgroundColor: AppColors.fg.withOpacity(0.9),
+                backgroundColor: AppColors.darkBlue,
                 elevation: 0,
                 heroTag: 'btn1',
                 onPressed: () {
@@ -118,7 +127,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                 tooltip: 'Zoom in',
                 child: const Icon(
                   Icons.zoom_in_map,
-                  color: AppColors.linen,
+                  color: AppColors.fg,
                 ),
               ),
             ),
@@ -126,7 +135,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               bottom: 152,
               right: 8,
               child: FloatingActionButton(
-                backgroundColor: AppColors.fg.withOpacity(0.9),
+                backgroundColor: AppColors.darkBlue,
                 elevation: 0,
                 heroTag: 'btn2',
                 onPressed: () {
@@ -136,7 +145,7 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                 tooltip: 'Zoom out',
                 child: const Icon(
                   Icons.zoom_out_map,
-                  color: AppColors.linen,
+                  color: AppColors.fg,
                 ),
               ),
             ),
@@ -144,30 +153,16 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               bottom: 80,
               right: 8,
               child: FloatingActionButton(
-                backgroundColor: AppColors.fg.withOpacity(0.9),
+                backgroundColor: AppColors.darkBlue,
                 elevation: 0,
                 heroTag: 'btn3',
                 onPressed: () {
-                  // Move to the current location, if can not, move to the initial position
-                  getCurrentLocation().then((value) {
-                    _mapController.move(LatLng(value.latitude, value.longitude),
-                        _mapController.zoom);
-
-                    debugPrint(value.latitude.toString());
-                    debugPrint(value.longitude.toString());
-                  }).onError((error, stackTrace) {
-                    _mapController.move(
-                        LatLng(widget.center.latitude, widget.center.longitude),
-                        _mapController.zoom);
-
-                    debugPrint(error.toString());
-                    debugPrint(stackTrace.toString());
-                  });
+                  centerCurrentLocation();
                 },
                 tooltip: 'My location',
                 child: const Icon(
                   Icons.my_location,
-                  color: AppColors.linen,
+                  color: AppColors.fg,
                 ),
               ),
             ),
@@ -178,29 +173,37 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
               child: Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.fg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: TextFormField(
                   controller: _searchController,
                   focusNode: _focusNode,
                   decoration: const InputDecoration(
-                    prefixIconColor: AppColors.linen,
+                    fillColor: AppColors.bg,
+                    filled: true,
                     border: OutlineInputBorder(
                       borderSide: BorderSide(
-                        color: AppColors.linen,
-                        width: 2,
-                        strokeAlign: BorderSide.strokeAlignOutside,
+                        width: 0,
                       ),
                       borderRadius: BorderRadius.all(
                         Radius.circular(12),
                       ),
                     ),
                     contentPadding: EdgeInsets.all(4),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: AppColors.fg,
+                        width: 0,
+                        strokeAlign: BorderSide.strokeAlignOutside,
+                      ),
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(
-                        color: AppColors.yellowRed,
-                        width: 1,
+                        color: AppColors.fg,
+                        width: 0,
                         strokeAlign: BorderSide.strokeAlignOutside,
                       ),
                       borderRadius: BorderRadius.all(
@@ -211,15 +214,17 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                     hintStyle: TextStyle(
                       fontFamily: 'Fantasque',
                       fontSize: 18,
-                      color: AppColors.linen,
                     ),
-                    prefixIcon: Icon(Icons.search),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: AppColors.fg,
+                    ),
                   ),
                   onChanged: (String value) {
                     if (_debounce?.isActive ?? false) _debounce?.cancel();
 
                     _debounce = Timer(
-                      const Duration(milliseconds: 1000),
+                      const Duration(milliseconds: 0),
                       () async {
                         try {
                           final decodedResponse =
@@ -230,9 +235,10 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
 
                           _options = decodedResponse
                               .map(
-                                (e) => LocationData(
-                                  latitude: double.parse(e['lat']),
-                                  longitude: double.parse(e['lon']),
+                                (e) => Place(
+                                  position: LatLong(
+                                      latitude: double.parse(e['lat']),
+                                      longitude: double.parse(e['lon'])),
                                   displayName: e['display_name'],
                                 ),
                               )
@@ -247,20 +253,23 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                   },
                   style: const TextStyle(
                     fontSize: 18,
+                    color: AppColors.fg,
                     fontFamily: 'NotoArabic',
-                    color: AppColors.linen,
                   ),
                 ),
               ),
             ),
             Positioned(
-              top: 64,
+              top: 57,
               right: 8,
               left: 8,
               child: Container(
+                margin: const EdgeInsets.only(
+                  bottom: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.fg,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.bg,
                 ),
                 child: StatefulBuilder(
                   builder: ((context, setState) {
@@ -276,23 +285,22 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                             maxLines: 2,
                             style: const TextStyle(
                               fontFamily: 'NotoArabic',
+                              color: AppColors.fg,
                               fontSize: 14,
-                              color: AppColors.linen,
                             ),
                           ),
                           subtitle: Text(
-                            '${_options[index].latitude}, ${_options[index].longitude}',
+                            '${_options[index].position.latitude}, ${_options[index].position.longitude}',
                             style: const TextStyle(
                               fontFamily: 'Fantasque',
                               fontSize: 14,
-                              color: AppColors.lavender,
                             ),
                           ),
                           onTap: () {
                             _mapController.move(
                                 LatLng(
-                                  _options[index].latitude,
-                                  _options[index].longitude,
+                                  _options[index].position.latitude,
+                                  _options[index].position.longitude,
                                 ),
                                 15.0);
 
@@ -317,8 +325,8 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: PickLocationButton(onPressed: () async {
-                    pickLocationData().then((value) {
-                      Navigator.of(context).pop<LocationData>(value);
+                    pickPlace().then((value) {
+                      Navigator.of(context).pop<Place>(value);
                     });
                   }),
                 ),
@@ -330,33 +338,44 @@ class _OsmMapViewScreen extends State<OsmMapViewScreen> {
     );
   }
 
-  Future<LocationData> pickLocationData() async {
-    final latitude = _mapController.center.latitude;
-    final longitude = _mapController.center.longitude;
-    LocationData locationData =
-        LocationData(latitude: latitude, longitude: longitude);
+  Future<Place> pickPlace() async {
+    final LatLong position = LatLong(
+      latitude: _mapController.center.latitude,
+      longitude: _mapController.center.longitude,
+    );
 
-    final decodedResponse = await osmReverse(locationData);
-    locationData.displayName = decodedResponse['display_name'] ?? '';
+    final pickedPlace = Place(position: position);
+    final decodedResponse = await osmReverse(position);
+    pickedPlace.displayName = decodedResponse['display_name'] ?? '';
 
-    return locationData;
+    return pickedPlace;
+  }
+
+  void centerCurrentLocation() {
+    // Move to the current location, if can not, move to the initial position
+    getCurrentLocation().then((value) {
+      _mapController.move(
+          LatLng(value.latitude, value.longitude), _mapController.zoom);
+
+      debugPrint(value.latitude.toString());
+      debugPrint(value.longitude.toString());
+    }).onError((error, stackTrace) {
+      _mapController.move(
+          LatLng(widget.center.position.latitude,
+              widget.center.position.longitude),
+          _mapController.zoom);
+
+      debugPrint(error.toString());
+      debugPrint(stackTrace.toString());
+    });
   }
 }
 
-class LocationData {
-  double latitude;
-  double longitude;
-  String? displayName = '';
-
-  LocationData(
-      {required this.latitude, required this.longitude, this.displayName});
-}
-
 // Open street Map APIs
-Future<Map<String, dynamic>> osmReverse(LocationData locationData) async {
+Future<Map<String, dynamic>> osmReverse(LatLong position) async {
   try {
     String reverseUrl =
-        '$osmBaseUrl/reverse?format=json&lat=${locationData.latitude}&lon=${locationData.longitude}&zoom=16&addressdetails=1';
+        '$osmBaseUrl/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=16&addressdetails=1';
     final response = await http.get(Uri.parse(reverseUrl));
     if (response.statusCode != 200) {
       return Future.error(response.statusCode);

@@ -19,20 +19,13 @@ class PickLocationButton extends StatelessWidget {
       ),
       child: ElevatedButton(
         style: ButtonStyle(
-          backgroundColor: MaterialStateProperty.all(AppColors.babyBlue),
+          backgroundColor: MaterialStateProperty.all(AppColors.darkBlue),
           elevation: MaterialStateProperty.all(0),
           padding: MaterialStateProperty.all(
               const EdgeInsets.symmetric(vertical: 12)),
           shape: MaterialStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          side: MaterialStateProperty.all(
-            const BorderSide(
-              color: AppColors.babyBlue,
-              width: 1,
-              strokeAlign: BorderSide.strokeAlignOutside,
             ),
           ),
         ),
@@ -50,6 +43,7 @@ class PickLocationButton extends StatelessWidget {
               style: TextStyle(
                 color: AppColors.fg,
                 fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -59,36 +53,25 @@ class PickLocationButton extends StatelessWidget {
   }
 }
 
-class OpenMapButton extends StatelessWidget {
-  const OpenMapButton(
-      {required this.onPressed, Key? key, this.isListening = false})
+class ChooseOnMapButton extends StatelessWidget {
+  const ChooseOnMapButton({required this.onPressed, Key? key})
       : super(key: key);
 
   final void Function() onPressed;
-  final bool isListening;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.only(
-        top: 8,
-        right: 4,
-      ),
-      child: ElevatedButton(
-        onPressed: isListening == true ? null : onPressed,
+      child: TextButton(
+        onPressed: onPressed,
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all(
-            isListening ? AppColors.blue : AppColors.babyBlue,
+            AppColors.darkGrey,
           ),
-          shape: MaterialStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          elevation: MaterialStateProperty.all(0),
           padding: MaterialStateProperty.all(
-              const EdgeInsets.symmetric(vertical: 12)),
+            const EdgeInsets.symmetric(vertical: 12),
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -99,9 +82,10 @@ class OpenMapButton extends StatelessWidget {
               color: AppColors.fg,
             ),
             Text(
-              ' Open Map',
+              ' Choose on map',
               style: TextStyle(
                 fontSize: 20,
+                fontWeight: FontWeight.bold,
                 color: AppColors.fg,
               ),
             ),
@@ -112,65 +96,43 @@ class OpenMapButton extends StatelessWidget {
   }
 }
 
-class StartButton extends StatelessWidget {
-  const StartButton(
-      {required this.onPressed,
-      Key? key,
-      this.isListening = false,
-      this.isLocationValid = false})
-      : super(key: key);
+class AddReminderButton extends StatelessWidget {
+  const AddReminderButton({
+    required this.onPressed,
+    Key? key,
+  }) : super(key: key);
 
   final void Function() onPressed;
-  final bool isLocationValid;
-  final bool isListening;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.only(
-        top: 8,
-        left: 4,
-      ),
+      padding: const EdgeInsets.only(),
       width: double.infinity,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all(
-            isListening == true
-                ? isLocationValid == true
-                    ? AppColors.coral
-                    : AppColors.linen
-                : AppColors.ashGray,
-          ),
-          shape: MaterialStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            AppColors.darkBlue,
           ),
           elevation: MaterialStateProperty.all(0),
           padding: MaterialStateProperty.all(
-              const EdgeInsets.symmetric(vertical: 12)),
+            const EdgeInsets.symmetric(vertical: 12),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          children: const [
             Icon(
-              isListening == true
-                  ? isLocationValid == true
-                      ? Icons.stop_circle_rounded
-                      : Icons.calculate_rounded
-                  : Icons.navigation_rounded,
+              Icons.add_alarm,
               color: AppColors.fg,
             ),
             Text(
-              isListening == true
-                  ? isLocationValid == true
-                      ? ' Stop'
-                      : ' Calculating'
-                  : ' Start',
-              style: const TextStyle(
+              ' Add Reminder',
+              style: TextStyle(
                 fontSize: 20,
+                fontWeight: FontWeight.bold,
                 color: AppColors.fg,
               ),
             ),

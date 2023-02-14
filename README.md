@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/images/app_icon.png" width="200px" height="200px"></img>
+  <img src="assets/images/icon.png" height="200px"></img>
 </div>
 
 <h1 align="center">Loc</h1>

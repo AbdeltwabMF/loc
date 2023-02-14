@@ -1,111 +1,120 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart' as geo;
-import 'package:loc/utils/location.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:loc/utils/types.dart';
+
+late StreamSubscription<Position> positionStream;
 
 class AppStates extends ChangeNotifier {
-  TextEditingController destDisplayNameController = TextEditingController();
-  TextEditingController destLatitudeController = TextEditingController();
-  TextEditingController destLongitudeController = TextEditingController();
-  TextEditingController currDisplayNameController = TextEditingController();
-  TextEditingController radiusController = TextEditingController(text: '100');
-  TextEditingController distanceController = TextEditingController(text: null);
-  TextEditingController bearingController = TextEditingController(text: null);
+  final _reminders = <Reminder>[];
+  final _favoritPlaces = <Place>[];
+  late LatLong _current;
 
-  double? currLatitude;
-  double? currLongitude;
+  TextEditingController title = TextEditingController();
+  TextEditingController latitude = TextEditingController();
+  TextEditingController longitude = TextEditingController();
+  TextEditingController radius = TextEditingController(text: '1000');
+  bool withAlarm = true;
+  TextEditingController notes = TextEditingController();
 
-  bool isListening = false;
-  late StreamSubscription<geo.Position> positionStream;
+  bool isRinging = false;
 
-  void setDestDisplayName(String displayName) {
-    destDisplayNameController.value = destDisplayNameController.value.copyWith(
-      text: displayName,
-    );
+  void setCurrent(LatLong current) {
+    _current = current;
     notifyListeners();
   }
 
-  void setDestLatitude(String latitude) {
-    destLatitudeController.value = destLatitudeController.value.copyWith(
-      text: latitude,
-    );
+  LatLong getCurrent() {
+    return _current;
+  }
+
+  void addFavPlace(Place place) {
+    _favoritPlaces.add(place);
     notifyListeners();
   }
 
-  void setDestLongitude(String longitude) {
-    destLongitudeController.value = destLongitudeController.value.copyWith(
-      text: longitude,
-    );
+  void removeFavPlace(int index) {
+    _favoritPlaces.removeAt(index);
     notifyListeners();
   }
 
-  void setCurrDisplayName(String displayName) {
-    currDisplayNameController.value = currDisplayNameController.value.copyWith(
-      text: displayName,
-    );
+  List<Place> readAllFavPlaces() {
+    return _favoritPlaces;
+  }
+
+  void setIsRinging(bool state) {
+    isRinging = state;
     notifyListeners();
   }
 
-  void setCurrLatitude(double? latitude) {
-    currLatitude = latitude;
+  Reminder? readReminder(int index) {
+    if (index >= _reminders.length || index < 0) return null;
+    return _reminders[index];
+  }
+
+  List<Reminder> readAllReminders() {
+    return _reminders;
+  }
+
+  void createReminder(Reminder reminder) {
+    _reminders.add(reminder);
     notifyListeners();
   }
 
-  void setCurrLongitude(double? longitude) {
-    currLongitude = longitude;
+  void updateReminder(Reminder reminder) {
+    for (int i = 0; i < _reminders.length; ++i) {
+      if (_reminders[i].id == reminder.id) {
+        _reminders[i] = reminder;
+        notifyListeners();
+        return;
+      }
+    }
+  }
+
+  void deleteReminder(int index) {
+    _reminders.removeAt(index);
+    notifyListeners();
+  }
+
+  void setTitle(String title) {
+    this.title.value = this.title.value.copyWith(text: title);
+    notifyListeners();
+  }
+
+  void setLatitude(String latitude) {
+    this.latitude.value = this.latitude.value.copyWith(text: latitude);
+    notifyListeners();
+  }
+
+  void setLongitude(String longitude) {
+    this.longitude.value = this.longitude.value.copyWith(text: longitude);
     notifyListeners();
   }
 
   void setRadius(String radius) {
-    radiusController.value = radiusController.value.copyWith(
-      text: radius,
-    );
+    this.radius.value = this.radius.value.copyWith(text: radius);
     notifyListeners();
   }
 
-  void setDistance(double? distance) {
-    distanceController.value = distanceController.value.copyWith(
-      text: distance?.round().toString(),
-    );
+  void setWithAlarm(bool state) {
+    withAlarm = state;
     notifyListeners();
   }
 
-  void setBearing(double? bearing) {
-    bearingController.value = bearingController.value.copyWith(
-      text: bearing?.round().toString(),
-    );
+  void setNotes(String notes) {
+    this.notes.value = this.notes.value.copyWith(text: notes);
     notifyListeners();
   }
 
-  void setPositionStream(StreamSubscription<geo.Position> positionStream) {
-    this.positionStream = positionStream;
+  void clear() {
+    title.clear();
+    latitude.clear();
+    longitude.clear();
+    withAlarm = true;
+    setRadius('1000');
+    notes.clear();
+
     notifyListeners();
-  }
-
-  void setListening(bool listen) {
-    isListening = listen;
-    notifyListeners();
-  }
-
-  bool isCurrentLocationValid() {
-    bool flag = true;
-    flag &= currLatitude != null;
-    flag &= currLongitude != null;
-
-    return flag;
-  }
-
-  bool isDestinationLocationValid() {
-    bool flag = true;
-    flag &= radiusController.text != '';
-    flag &= validateNumber(destLatitudeController.text, limit: 90) == null;
-    flag &= validateNumber(destLongitudeController.text, limit: 180) == null;
-
-    return flag;
-  }
-
-  bool isDistanceValid() {
-    return distanceController.text != '';
   }
 }

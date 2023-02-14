@@ -2,8 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:loc/screens/about.dart';
 import 'package:loc/screens/home.dart';
+import 'package:loc/screens/new_reminder.dart';
 import 'package:loc/styles/colors.dart';
+import 'package:loc/utils/location.dart';
 import 'package:loc/utils/states.dart';
 import 'package:provider/provider.dart';
 
@@ -30,11 +33,24 @@ class App extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          fontFamily: 'Fantasque',
-          splashColor: AppColors.fg,
-          hintColor: AppColors.fg,
+          brightness: Brightness.dark,
+          fontFamily: 'Quicksand',
+          splashColor: AppColors.darkAqua,
+          primaryColor: AppColors.darkBlue,
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(
+              fontSize: 56.0,
+              fontWeight: FontWeight.bold,
+            ),
+            titleLarge: TextStyle(
+              fontSize: 28.0,
+            ),
+            bodyMedium: TextStyle(
+              fontSize: 14.0,
+            ),
+          ),
         ),
-        home: HomeScreen(),
+        home: const HomeScreen(),
       ),
     );
   }

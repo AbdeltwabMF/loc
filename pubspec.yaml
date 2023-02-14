@@ -11,32 +11,26 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
-  flutter_map: ^3.1.0
-  flutter_ringtone_player: ^3.2.0
-  geolocator: ^9.0.2
-  http: ^0.13.5
-  latlong2: ^0.8.1
-  provider: ^6.0.5
-  url_launcher: ^6.1.8
-
-dependency_overrides:
-  geolocator:
-    git:
-      url: https://gitlab.com/free2pass/flutter-geolocator-floss.git
-      ref: master
-      path: geolocator
+  cupertino_icons: 1.0.5
+  flutter_map: 3.1.0
+  flutter_ringtone_player: 3.2.0
+  geolocator: 9.0.2
+  http: 0.13.5
+  latlong2: 0.8.1
+  provider: 6.0.5
+  url_launcher: 6.1.8
+  uuid: ^3.0.7
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons: ^0.11.0
-  flutter_lints: ^2.0.0
+  flutter_launcher_icons: 0.11.0
+  flutter_lints: 2.0.0
 
 flutter:
   assets:
     - assets/ca/
-    - assets/images/app_icon.png
+    - assets/images/icon.png
     - assets/images/featureGraphic.png
   fonts:
       - family: Fantasque
@@ -48,11 +42,14 @@ flutter:
       - family: NotoArabic
         fonts:
           - asset: assets/fonts/NotoSansArabic-Regular.ttf
+      - family: Quicksand
+        fonts:
+          - asset: assets/fonts/Quicksand-Regular.ttf
   uses-material-design: true
 
 flutter_icons:
   android: ic_launcher
   ios: true
   remove_alpha_ios: true
-  image_path: assets/images/app_icon.png
+  image_path: assets/images/icon.png
   min_sdk_android: 16

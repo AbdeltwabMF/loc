@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:loc/styles/colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const String version = 'v0.3.3';
+const String version = 'v1.0.0';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -10,191 +10,248 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bg,
       appBar: AppBar(
-        backgroundColor: AppColors.lavender,
         elevation: 0,
-        foregroundColor: AppColors.fg,
         title: const Text(
           'About',
-          style: TextStyle(
-            fontSize: 20,
-          ),
         ),
       ),
-      body: Container(
-        alignment: Alignment.topCenter,
-        child: ListView(
-          physics: const ScrollPhysics(),
-          shrinkWrap: true,
-          children: <Widget>[
-            const Image(
-              image: AssetImage('assets/images/featureGraphic.png'),
-              width: 100,
-            ),
-            Container(
-              margin: const EdgeInsets.only(
-                top: 16,
-                left: 8,
-                right: 8,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.ashGray,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-              ),
-              child: const ListTile(
-                leading: Icon(
-                  Icons.star_border_rounded,
-                  color: AppColors.fg,
-                  size: 48,
-                ),
-                title: Text('Loc version'),
-                subtitle: Text(version),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(
-                top: 8,
-                left: 8,
-                right: 8,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.ashGray,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-              ),
-              child: const ListTile(
-                leading: Icon(
-                  Icons.copyright_rounded,
-                  color: AppColors.fg,
-                  size: 48,
-                ),
-                title: Text('License'),
-                subtitle: Text('GPL v3'),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(
-                top: 8,
-                left: 8,
-                right: 8,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.ashGray,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-              ),
-              child: TextButton(
-                style: ButtonStyle(
-                    padding: MaterialStateProperty.all(EdgeInsets.zero)),
-                onPressed: () {
-                  const String amf = 'https://abdeltwabmf.github.io/about';
-                  _launchUrl(amf);
-                },
-                child: const ListTile(
-                  leading: Icon(
-                    Icons.person_rounded,
-                    color: AppColors.fg,
-                    size: 48,
+      body: Column(
+        children: [
+          const Image(
+            image: AssetImage('assets/images/featureGraphic.png'),
+            alignment: Alignment.topCenter,
+            fit: BoxFit.fill,
+          ),
+          Expanded(
+            child: Container(
+              alignment: Alignment.topCenter,
+              child: ListView(
+                physics: const ScrollPhysics(),
+                shrinkWrap: true,
+                children: <Widget>[
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 16,
+                      left: 8,
+                      right: 8,
+                    ),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                      color: AppColors.bg1,
+                    ),
+                    child: const ListTile(
+                      dense: true,
+                      leading: Icon(
+                        Icons.star_border_rounded,
+                        size: 32,
+                      ),
+                      subtitle: Text(
+                        version,
+                        style: TextStyle(
+                          fontFamily: 'Fantasque',
+                        ),
+                      ),
+                      title: Text(
+                        'Loc version',
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
                   ),
-                  title: Text('Author'),
-                  subtitle: Text('Abd El-Twab M. Fakhry'),
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(
-                top: 8,
-                left: 8,
-                right: 8,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.ashGray,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-              ),
-              child: TextButton(
-                style: ButtonStyle(
-                    padding: MaterialStateProperty.all(EdgeInsets.zero)),
-                onPressed: () {
-                  const String sourceCode =
-                      'https://github.com/AbdeltwabMF/loc';
-                  _launchUrl(sourceCode);
-                },
-                child: const ListTile(
-                  leading: Icon(
-                    Icons.code_rounded,
-                    color: AppColors.fg,
-                    size: 48,
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 8,
+                      left: 8,
+                      right: 8,
+                    ),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                    ),
+                    child: const ListTile(
+                      dense: true,
+                      leading: Icon(
+                        Icons.copyright_rounded,
+                        size: 32,
+                      ),
+                      subtitle: Text(
+                        'GPL v3',
+                        style: TextStyle(
+                          fontFamily: 'Fantasque',
+                        ),
+                      ),
+                      title: Text(
+                        'License',
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
                   ),
-                  title: Text('Source code'),
-                  subtitle: Text('https://github.com/AbdeltwabMF/loc'),
-                ),
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(
-                top: 8,
-                left: 8,
-                right: 8,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.ashGray,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-              ),
-              child: TextButton(
-                style: ButtonStyle(
-                    padding: MaterialStateProperty.all(EdgeInsets.zero)),
-                onPressed: () {
-                  const String issues =
-                      'https://github.com/AbdeltwabMF/Loc/issues';
-                  _launchUrl(issues);
-                },
-                child: const ListTile(
-                  leading: Icon(
-                    Icons.info_rounded,
-                    color: AppColors.fg,
-                    size: 48,
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 8,
+                      left: 8,
+                      right: 8,
+                    ),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                      color: AppColors.bg1,
+                    ),
+                    child: TextButton(
+                      style: ButtonStyle(
+                          padding: MaterialStateProperty.all(EdgeInsets.zero)),
+                      onPressed: () {
+                        const String amf =
+                            'https://abdeltwabmf.github.io/about';
+                        _launchUrl(amf);
+                      },
+                      child: const ListTile(
+                        dense: true,
+                        leading: Icon(
+                          Icons.person_rounded,
+                          size: 32,
+                        ),
+                        subtitle: Text(
+                          'Abd El-Twab M. Fakhry',
+                          style: TextStyle(
+                            fontFamily: 'Fantasque',
+                          ),
+                        ),
+                        title: Text(
+                          'Author',
+                          style: TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                  title: Text('Issues'),
-                  subtitle: Text('Issues found in this software'),
-                ),
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 8,
+                      left: 8,
+                      right: 8,
+                    ),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                    ),
+                    child: TextButton(
+                      style: ButtonStyle(
+                          padding: MaterialStateProperty.all(EdgeInsets.zero)),
+                      onPressed: () {
+                        const String sourceCode =
+                            'https://github.com/AbdeltwabMF/loc';
+                        _launchUrl(sourceCode);
+                      },
+                      child: const ListTile(
+                        dense: true,
+                        leading: Icon(
+                          Icons.code_rounded,
+                          size: 32,
+                        ),
+                        subtitle: Text(
+                          'https://github.com/AbdeltwabMF/loc',
+                          style: TextStyle(
+                            fontFamily: 'Fantasque',
+                          ),
+                        ),
+                        title: Text(
+                          'Source code',
+                          style: TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 8,
+                      left: 8,
+                      right: 8,
+                    ),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                      color: AppColors.bg1,
+                    ),
+                    child: TextButton(
+                      style: ButtonStyle(
+                          padding: MaterialStateProperty.all(EdgeInsets.zero)),
+                      onPressed: () {
+                        const String issues =
+                            'https://github.com/AbdeltwabMF/Loc/issues';
+                        _launchUrl(issues);
+                      },
+                      child: const ListTile(
+                        dense: true,
+                        leading: Icon(
+                          Icons.info_rounded,
+                          size: 32,
+                        ),
+                        subtitle: Text(
+                          'Issues found in this software',
+                          style: TextStyle(
+                            fontFamily: 'Fantasque',
+                          ),
+                        ),
+                        title: Text(
+                          'Issues',
+                          style: TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(
+                      top: 8,
+                      left: 8,
+                      right: 8,
+                      bottom: 16,
+                    ),
+                    decoration: const BoxDecoration(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(12),
+                      ),
+                    ),
+                    child: const ListTile(
+                      dense: true,
+                      leading: Icon(
+                        Icons.privacy_tip_rounded,
+                        size: 32,
+                      ),
+                      subtitle: Text(
+                        'Loc doesn\'t collect any of your data',
+                        style: TextStyle(
+                          fontFamily: 'Fantasque',
+                        ),
+                      ),
+                      title: Text(
+                        'Privacy policy',
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Container(
-              margin: const EdgeInsets.only(
-                top: 8,
-                left: 8,
-                right: 8,
-                bottom: 16,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.ashGray,
-                borderRadius: BorderRadius.all(
-                  Radius.circular(12),
-                ),
-              ),
-              child: const ListTile(
-                isThreeLine: true,
-                leading: Icon(
-                  Icons.privacy_tip_rounded,
-                  color: AppColors.fg,
-                  size: 48,
-                ),
-                title: Text('Privacy policy'),
-                subtitle:
-                    Text('Loc doesn\'t collect or store any of your data'),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
