@@ -7,9 +7,6 @@
 
 
 <p align='center'>
-    <a href='https://apt.izzysoft.de/fdroid/index/apk/org.abdeltwabmf.loc'>
-        <img height='56' alt='Get it on IzzyOnDroid' src='https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png'/>
-    </a>
 </p>
 
 <p align='center'>

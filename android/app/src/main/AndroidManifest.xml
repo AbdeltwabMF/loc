@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.abdeltwabmf.loc">
+    package="xyz.abdeltwabmf.loc">
    <application
         android:label="Loc"
         android:name="${applicationName}"
