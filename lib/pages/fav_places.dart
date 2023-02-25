@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:loc/utils/states.dart';
+import 'package:loc/data/app_states.dart';
 import 'package:provider/provider.dart';
 
 class FavPlacesScreen extends StatelessWidget {

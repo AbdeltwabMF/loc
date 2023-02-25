@@ -2,12 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:loc/screens/about.dart';
-import 'package:loc/screens/home.dart';
-import 'package:loc/screens/new_reminder.dart';
-import 'package:loc/styles/colors.dart';
-import 'package:loc/utils/location.dart';
-import 'package:loc/utils/states.dart';
+import 'package:loc/pages/home.dart';
+import 'package:loc/themes/loc_theme_data.dart';
+import 'package:loc/data/app_states.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -32,25 +29,10 @@ class App extends StatelessWidget {
       create: (context) => AppStates(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          fontFamily: 'Quicksand',
-          splashColor: AppColors.darkAqua,
-          primaryColor: AppColors.darkBlue,
-          textTheme: const TextTheme(
-            displayLarge: TextStyle(
-              fontSize: 56.0,
-              fontWeight: FontWeight.bold,
-            ),
-            titleLarge: TextStyle(
-              fontSize: 28.0,
-            ),
-            bodyMedium: TextStyle(
-              fontSize: 14.0,
-            ),
-          ),
-        ),
-        home: const HomeScreen(),
+        theme: LocThemeData.lightThemeData,
+        darkTheme: LocThemeData.darkThemeData,
+        themeMode: ThemeMode.system,
+        home: const HomePage(),
       ),
     );
   }

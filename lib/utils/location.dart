@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_android/geolocator_android.dart';
 import 'package:geolocator_apple/geolocator_apple.dart';
-import 'package:loc/utils/states.dart';
-import 'package:loc/utils/types.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:loc/data/app_states.dart';
+import 'package:loc/data/models/place.dart';
 import 'package:provider/provider.dart';
 
 Future<bool> _checkPermissions() async {
@@ -29,9 +29,8 @@ Future<bool> _checkPermissions() async {
   return true;
 }
 
-// APIs
 void handlePositionUpdates(BuildContext context) {
-  final provider = Provider.of<AppStates>(context, listen: false);
+  final appStates = Provider.of<AppStates>(context, listen: false);
 
   late LocationSettings locationSettings;
 
@@ -68,18 +67,18 @@ void handlePositionUpdates(BuildContext context) {
   positionStream =
       Geolocator.getPositionStream(locationSettings: locationSettings).listen(
           (value) async {
-            final current =
-                LatLong(latitude: value.latitude, longitude: value.longitude);
-            provider.setCurrent(current);
+            final currentPosition = LatLng(value.latitude, value.longitude);
+            appStates.setCurrent(currentPosition);
           },
           cancelOnError: true,
           onError: (error, stackTrace) {
+            appStates.setListening(false);
             debugPrint(error.toString());
             debugPrint(stackTrace.toString());
           });
 }
 
-String? validateNumber(String? value,
+String? latLngValidate(String? value,
     {String? message = 'Not a number', double limit = 1.0}) {
   if (value == null || value == '') {
     return message;
@@ -92,16 +91,17 @@ String? validateNumber(String? value,
   return null;
 }
 
-Future<Position> getCurrentLocation() async {
-  final result = await _checkPermissions().then((value) async {
-    return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.best,
-      // forceAndroidLocationManager: true,
-      timeLimit: const Duration(seconds: 5),
-    );
-  }).onError((error, stackTrace) {
-    return Future.error(error!, stackTrace);
-  });
+Future<Place> getCurrentLocation() async {
+  await _checkPermissions().onError(
+    (error, stackTrace) => Future.error(error!, stackTrace),
+  );
 
-  return result;
+  final position = await Geolocator.getCurrentPosition(
+    desiredAccuracy: LocationAccuracy.best,
+    // forceAndroidLocationManager: true,
+    timeLimit: const Duration(seconds: 5),
+  );
+  final latlng = LatLng(position.latitude, position.longitude);
+
+  return Place(position: latlng);
 }

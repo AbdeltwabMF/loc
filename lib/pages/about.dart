@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:loc/styles/colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 const String version = 'v1.0.0';
@@ -40,7 +39,7 @@ class AboutScreen extends StatelessWidget {
                       borderRadius: BorderRadius.all(
                         Radius.circular(12),
                       ),
-                      color: AppColors.bg1,
+                      // color: AppColors.bg1,
                     ),
                     child: const ListTile(
                       dense: true,
@@ -103,7 +102,7 @@ class AboutScreen extends StatelessWidget {
                       borderRadius: BorderRadius.all(
                         Radius.circular(12),
                       ),
-                      color: AppColors.bg1,
+                      // color: AppColors.bg1,
                     ),
                     child: TextButton(
                       style: ButtonStyle(
@@ -184,7 +183,7 @@ class AboutScreen extends StatelessWidget {
                       borderRadius: BorderRadius.all(
                         Radius.circular(12),
                       ),
-                      color: AppColors.bg1,
+                      // color: AppColors.bg1,
                     ),
                     child: TextButton(
                       style: ButtonStyle(

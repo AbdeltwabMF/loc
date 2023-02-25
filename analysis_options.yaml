@@ -30,4 +30,4 @@ linter:
 
 analyzer:
   exclude:
-    - flutter_sdk
+    - .flutter
