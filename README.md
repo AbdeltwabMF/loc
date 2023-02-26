@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/images/app_icon.png" width="200px" height="200px"></img>
+  <img src="assets/images/icon.png" height="200px"></img>
 </div>
 
 <h1 align="center">Loc</h1>
@@ -7,9 +7,6 @@
 
 
 <p align='center'>
-    <a href='https://apt.izzysoft.de/fdroid/index/apk/org.abdeltwabmf.loc'>
-        <img height='56' alt='Get it on IzzyOnDroid' src='https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png'/>
-    </a>
 </p>
 
 <p align='center'>

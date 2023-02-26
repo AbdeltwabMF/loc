@@ -34,7 +34,7 @@ jobs:
       - name: Release artifacts and source code
         uses: ncipollo/release-action@v1
         with:
-          artifacts: build/app/outputs/flutter-apk/*
+          artifacts: build/app/outputs/flutter-apk/*.apk
           name: ${{github.ref_name}}
           makeLatest: true
           generateReleaseNotes: true

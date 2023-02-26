@@ -1,103 +1,84 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
-import 'package:geolocator/geolocator.dart' as geo;
-import 'package:loc/screens/osm_map_view.dart';
-import 'package:loc/utils/states.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geolocator_android/geolocator_android.dart';
+import 'package:geolocator_apple/geolocator_apple.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:loc/data/app_states.dart';
+import 'package:loc/data/models/place.dart';
 import 'package:provider/provider.dart';
 
 Future<bool> _checkPermissions() async {
-  bool isServiceEnabled = await geo.Geolocator.isLocationServiceEnabled();
+  bool isServiceEnabled = await Geolocator.isLocationServiceEnabled();
   if (isServiceEnabled == false) {
     return Future.error('Location services are disabled.');
   }
 
-  geo.LocationPermission permission = await geo.Geolocator.checkPermission();
-  if (permission == geo.LocationPermission.denied) {
-    permission = await geo.Geolocator.requestPermission();
+  LocationPermission permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
   }
 
-  if (permission == geo.LocationPermission.denied) {
+  if (permission == LocationPermission.denied) {
     return Future.error('Location services permission is denied');
   }
 
-  if (permission == geo.LocationPermission.deniedForever) {
+  if (permission == LocationPermission.deniedForever) {
     return Future.error('Location services permission is permanently denied');
   }
   return true;
 }
 
-// APIs
-
 void handlePositionUpdates(BuildContext context) {
-  final provider = Provider.of<AppStates>(context, listen: false);
+  final appStates = Provider.of<AppStates>(context, listen: false);
 
-  final subscription = geo.Geolocator.getPositionStream(
-    distanceFilter: 16,
-    forceAndroidLocationManager: true,
-    intervalDuration: const Duration(seconds: 10),
-  ).listen(
-      (value) async {
-        provider.setCurrLatitude(value.latitude);
-        provider.setCurrLongitude(value.longitude);
+  late LocationSettings locationSettings;
 
-        provider.setDistance(distanceAndBearing(context)?.first);
-        provider.setBearing(distanceAndBearing(context)?.last);
-        shouldPlaySound(context);
-
-        LocationData locationData =
-            LocationData(latitude: value.latitude, longitude: value.longitude);
-        final decodedResponse = await osmReverse(locationData);
-        provider.setCurrDisplayName(decodedResponse['display_name']);
-      },
-      cancelOnError: true,
-      onError: (error, stackTrace) {
-        debugPrint(error.toString());
-        debugPrint(stackTrace.toString());
-      });
-
-  provider.setPositionStream(subscription);
-}
-
-void cancelPositionUpdates(BuildContext context) {
-  final provider = Provider.of<AppStates>(context, listen: false);
-  provider.positionStream.cancel();
-}
-
-bool isInRange(BuildContext context) {
-  final provider = Provider.of<AppStates>(context, listen: false);
-
-  if (provider.isDestinationLocationValid() == false ||
-      provider.isDistanceValid() == false) {
-    return false;
-  }
-
-  final distance = double.parse(provider.distanceController.text);
-  if (distance <= double.parse(provider.radiusController.text)) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool shouldPlaySound(BuildContext context) {
-  final provider = Provider.of<AppStates>(context, listen: false);
-  if (provider.isListening == false) {
-    FlutterRingtonePlayer.stop();
-    return false;
-  }
-
-  if (isInRange(context) == true) {
-    FlutterRingtonePlayer.playAlarm(
-      volume: 1.0,
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    locationSettings = AndroidSettings(
+      accuracy: LocationAccuracy.best,
+      distanceFilter: 0,
+      // forceLocationManager: true,
+      intervalDuration: const Duration(seconds: 10),
+      // Foreground notification config to keep the app alive when going to the background
+      foregroundNotificationConfig: const ForegroundNotificationConfig(
+        notificationText: "Loc will continue running in background",
+        notificationTitle: "Loc - Running",
+        enableWakeLock: true,
+      ),
     );
-    return true;
+  } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS) {
+    locationSettings = AppleSettings(
+      accuracy: LocationAccuracy.best,
+      activityType: ActivityType.fitness,
+      distanceFilter: 0,
+      pauseLocationUpdatesAutomatically: true,
+      // Only set to true if our app will be started up in the background.
+      showBackgroundLocationIndicator: false,
+    );
   } else {
-    FlutterRingtonePlayer.stop();
-    return false;
+    locationSettings = const LocationSettings(
+      accuracy: LocationAccuracy.best,
+      distanceFilter: 0,
+    );
   }
+
+  positionStream =
+      Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+          (value) async {
+            final currentPosition = LatLng(value.latitude, value.longitude);
+            appStates.setCurrent(currentPosition);
+          },
+          cancelOnError: true,
+          onError: (error, stackTrace) {
+            appStates.setListening(false);
+            debugPrint(error.toString());
+            debugPrint(stackTrace.toString());
+          });
 }
 
-String? validateNumber(String? value,
+String? latLngValidate(String? value,
     {String? message = 'Not a number', double limit = 1.0}) {
   if (value == null || value == '') {
     return message;
@@ -110,40 +91,17 @@ String? validateNumber(String? value,
   return null;
 }
 
-Future<geo.Position> getCurrentLocation() async {
-  final result = await _checkPermissions().then((value) async {
-    return await geo.Geolocator.getCurrentPosition(
-      desiredAccuracy: geo.LocationAccuracy.best,
-    );
-  }).onError((error, stackTrace) {
-    return Future.error(error!, stackTrace);
-  });
+Future<Place> getCurrentLocation() async {
+  await _checkPermissions().onError(
+    (error, stackTrace) => Future.error(error!, stackTrace),
+  );
 
-  return result;
-}
+  final position = await Geolocator.getCurrentPosition(
+    desiredAccuracy: LocationAccuracy.best,
+    // forceAndroidLocationManager: true,
+    timeLimit: const Duration(seconds: 5),
+  );
+  final latlng = LatLng(position.latitude, position.longitude);
 
-List<double?>? distanceAndBearing(BuildContext context) {
-  final provider = Provider.of<AppStates>(context, listen: false);
-
-  // Check for values you gonna compare
-  if (provider.isCurrentLocationValid() == false) return null;
-  if (provider.isDestinationLocationValid() == false) return null;
-
-  final currentLatitude = provider.currLatitude!;
-  final currentLongitude = provider.currLongitude!;
-  final destLatitude = double.parse(provider.destLatitudeController.text);
-  final destLongitude = double.parse(provider.destLongitudeController.text);
-
-  final returnValue = <double?>[];
-  double inMeters = geo.Geolocator.distanceBetween(
-      currentLatitude, currentLongitude, destLatitude, destLongitude);
-
-  returnValue.add(inMeters);
-  inMeters = geo.Geolocator.bearingBetween(
-      currentLatitude, currentLongitude, destLatitude, destLongitude);
-  returnValue.add(inMeters);
-
-  // First is distance
-  // Second is bearing
-  return returnValue;
+  return Place(position: latlng);
 }
