@@ -321,8 +321,8 @@ class AddReminderPage extends StatelessWidget {
                   );
 
                   // Update the initial distance
-                  newReminder.getTraveledDistance(position);
-                  appStates.createReminder(newReminder);
+                  newReminder.traveledDistance(position);
+                  appStates.reminderAdd(newReminder);
 
                   if (context.mounted) {
                     Navigator.of(context).pop<void>();

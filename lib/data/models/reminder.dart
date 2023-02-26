@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:loc/data/models/place.dart';
@@ -40,27 +39,27 @@ class Reminder {
     };
   }
 
-  double getRemainderDistance(LatLng current) {
+  double remainderDistance(LatLng current) {
     double inMeters = Geolocator.distanceBetween(current.latitude,
         current.longitude, place.position.latitude, place.position.longitude);
     return inMeters;
   }
 
-  double getBearing(LatLng current) {
+  double bearing(LatLng current) {
     double inDegrees = Geolocator.bearingBetween(current.latitude,
         current.longitude, place.position.latitude, place.position.longitude);
     return inDegrees;
   }
 
-  double getTraveledDistance(LatLng current) {
-    double remainder = getRemainderDistance(current);
+  double traveledDistance(LatLng current) {
+    double remainder = remainderDistance(current);
     if (initialDistance < remainder) initialDistance = remainder;
 
     return (initialDistance - remainder);
   }
 
-  double? getTraveledDistancePercent(LatLng current) {
-    double traveled = getTraveledDistance(current);
+  double? traveledDistancePercent(LatLng current) {
+    double traveled = traveledDistance(current);
     if (initialDistance == 0.0) return 1;
     return (traveled / initialDistance);
   }

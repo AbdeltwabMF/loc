@@ -307,26 +307,60 @@ class _OsmMapViewScreen extends State<ChooseLocationPage> {
                 );
               } else if (snapshot.hasError) {
                 return Center(
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width / 2,
-                    height: MediaQuery.of(context).size.height / 2,
-                    child: const RiveAnimation.asset(
-                      'assets/raw/404.riv',
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Expanded(
+                        flex: 2,
+                        child: SizedBox(
+                          child: RiveAnimation.asset(
+                            'assets/raw/404.riv',
+                            fit: BoxFit.fitWidth,
+                            alignment: Alignment.center,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Error Occurred!',
+                          style: TextStyle(
+                            fontSize: 32,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               } else {
                 return Center(
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width / 2,
-                    height: MediaQuery.of(context).size.height / 2,
-                    child: const RiveAnimation.asset(
-                      'assets/raw/spinner.riv',
-                      fit: BoxFit.fitWidth,
-                      alignment: Alignment.center,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Expanded(
+                        flex: 2,
+                        child: SizedBox(
+                          width: 200,
+                          height: 200,
+                          child: RiveAnimation.asset(
+                            'assets/raw/spinner.riv',
+                            fit: BoxFit.fitWidth,
+                            alignment: Alignment.center,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Loading Maps...',
+                          style: TextStyle(
+                            fontSize: 32,
+                            color: Theme.of(context).colorScheme.onBackground,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }

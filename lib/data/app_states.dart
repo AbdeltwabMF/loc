@@ -11,62 +11,101 @@ late StreamSubscription<Position> positionStream;
 class AppStates extends ChangeNotifier {
   final _reminders = <Reminder>[];
   final _favoritPlaces = <Place>[];
+  final _history = <Reminder>[];
+  final _arrived = <Reminder>[];
   late LatLng _currentPosition;
 
   bool notify = true;
   bool ringing = false;
   bool listening = false;
-  bool arrived = false;
   ThemeMode _themeMode = ThemeMode.system;
 
-  Reminder? readReminder(int index) {
+  Reminder? reminderRead(int index) {
     if (index >= _reminders.length || index < 0) return null;
     return _reminders[index];
   }
 
-  void createReminder(Reminder reminder) {
+  void reminderAdd(Reminder reminder) {
     _reminders.add(reminder);
     notifyListeners();
   }
 
-  void updateReminder(Reminder reminder) {
+  void reminderUpdate(Reminder reminder) {
     final index = _reminders.indexWhere((element) => element.id == reminder.id);
     if (index == -1) return;
     _reminders[index] = reminder;
     notifyListeners();
   }
 
-  void deleteReminder(int index) {
+  void reminderDelete(int index) {
     if (index >= _reminders.length || index < 0) return;
     _reminders.removeAt(index);
     notifyListeners();
   }
 
-  List<Reminder> readAllReminders() {
+  List<Reminder> reminderAll() {
     return _reminders;
   }
 
-  void deleteAllReminders() {
+  void reminderClear() {
     _reminders.clear();
   }
 
-  void addFavPlace(Place place) {
+  void favoriteAdd(Place place) {
     _favoritPlaces.add(place);
     notifyListeners();
   }
 
-  void deleteFavPlace(int index) {
+  void favoriteDelete(int index) {
     if (index >= _favoritPlaces.length || index < 0) return;
     _favoritPlaces.removeAt(index);
     notifyListeners();
   }
 
-  void deleteAllFavPlaces() {
+  void favoriteClear() {
     _favoritPlaces.clear();
   }
 
-  List<Place> readAllFavPlaces() {
+  List<Place> favoriteAll() {
     return _favoritPlaces;
+  }
+
+  void historyAdd(Reminder reminder) {
+    _history.add(reminder);
+    notifyListeners();
+  }
+
+  void historyDelete(int index) {
+    if (index >= _history.length || index < 0) return;
+    _history.removeAt(index);
+    notifyListeners();
+  }
+
+  void historyClear() {
+    _history.clear();
+  }
+
+  List<Reminder> historyAll() {
+    return _history;
+  }
+
+  void arrivedAdd(Reminder reminder) {
+    _arrived.add(reminder);
+    notifyListeners();
+  }
+
+  void arrivedDelete(int index) {
+    if (index >= _arrived.length || index < 0) return;
+    _arrived.removeAt(index);
+    notifyListeners();
+  }
+
+  void arrivedClear() {
+    _arrived.clear();
+  }
+
+  List<Reminder> arrivedAll() {
+    return _arrived;
   }
 
   void setCurrent(LatLng current) {
@@ -85,11 +124,6 @@ class AppStates extends ChangeNotifier {
 
   void setNotify(bool state) {
     notify = state;
-    notifyListeners();
-  }
-
-  void setArrived(bool state) {
-    arrived = state;
     notifyListeners();
   }
 

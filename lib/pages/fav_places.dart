@@ -7,7 +7,7 @@ class FavPlacesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<AppStates>(context);
+    final appStates = Provider.of<AppStates>(context);
 
     return Scaffold(
       appBar: AppBar(

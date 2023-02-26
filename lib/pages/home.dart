@@ -16,10 +16,6 @@ class HomePage extends StatelessWidget {
     final appStates = Provider.of<AppStates>(context);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (context.mounted) {
-        if (appStates.readAllReminders().isEmpty) {
-          appStates.setArrived(false);
-        }
-
         if (appStates.listening == false) {
           getCurrentLocation().then(
             (value) => appStates.setCurrent(value.position),
@@ -28,15 +24,15 @@ class HomePage extends StatelessWidget {
           appStates.setListening(true);
         }
 
-        if (appStates.arrived == true) {
+        if (appStates.arrivedAll().isNotEmpty) {
           if (appStates.ringing == false) {
-            FlutterRingtonePlayer.playNotification(
+            FlutterRingtonePlayer.playAlarm(
               asAlarm: true,
               looping: true,
               volume: 1.0,
             );
+            appStates.setRinging(true);
           }
-          appStates.setRinging(true);
         } else {
           if (appStates.ringing == true) {
             FlutterRingtonePlayer.stop();
@@ -87,7 +83,7 @@ class HomePage extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: appStates.readAllReminders().isEmpty
+        child: appStates.reminderAll().isEmpty
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,

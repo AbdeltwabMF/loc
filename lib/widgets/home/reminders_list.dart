@@ -13,16 +13,16 @@ class RemindersList extends StatelessWidget {
 
     return ListView.builder(
       physics: const ScrollPhysics(),
-      itemCount: appStates.readAllReminders().length,
+      itemCount: appStates.reminderAll().length,
       itemBuilder: (context, index) {
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
           final remainderDistance = appStates
-              .readReminder(index)!
-              .getRemainderDistance(appStates.getCurrent());
-          final radius = appStates.readReminder(index)!.place.radius;
-          final flag = remainderDistance <= radius!;
-
-          appStates.setArrived(flag);
+              .reminderRead(index)!
+              .remainderDistance(appStates.getCurrent());
+          final radius = appStates.reminderRead(index)!.place.radius;
+          if (remainderDistance <= radius!) {
+            appStates.arrivedAdd(appStates.reminderRead(index)!);
+          }
         });
 
         return Container(
@@ -59,21 +59,20 @@ class RemindersList extends StatelessWidget {
                           topLeft: Radius.circular(16),
                         ),
                         child: LinearProgressIndicator(
-                          minHeight: 24,
+                          minHeight: 26,
                           backgroundColor:
-                              Theme.of(context).colorScheme.onSecondary,
-                          color: Theme.of(context).colorScheme.onPrimary,
+                              Theme.of(context).colorScheme.onPrimary,
+                          color: Theme.of(context).colorScheme.tertiary,
                           value: appStates
-                              .readReminder(index)!
-                              .getTraveledDistancePercent(
-                                  appStates.getCurrent()),
+                              .reminderRead(index)!
+                              .traveledDistancePercent(appStates.getCurrent()),
                         ),
                       ),
                     ),
                     Text(
                       intFormat(appStates
-                          .readReminder(index)!
-                          .getRemainderDistance(appStates.getCurrent())
+                          .reminderRead(index)!
+                          .remainderDistance(appStates.getCurrent())
                           .round()),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
@@ -91,7 +90,7 @@ class RemindersList extends StatelessWidget {
                   ),
                   width: double.infinity,
                   child: Text(
-                    appStates.readReminder(index)!.title,
+                    appStates.reminderRead(index)!.title,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -104,7 +103,7 @@ class RemindersList extends StatelessWidget {
                   child: ListTile(
                     shape: const RoundedRectangleBorder(side: BorderSide.none),
                     subtitle: Text(
-                      '${appStates.readReminder(index)!.place.position.latitude}, ${appStates.readReminder(index)!.place.position.longitude}',
+                      '${appStates.reminderRead(index)!.place.position.latitude}, ${appStates.reminderRead(index)!.place.position.longitude}',
                       maxLines: 1,
                       style: const TextStyle(
                         fontFamily: 'Fantasque',
@@ -114,7 +113,7 @@ class RemindersList extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     title: Text(
-                      appStates.readReminder(index)!.place.displayName!,
+                      appStates.reminderRead(index)!.place.displayName!,
                       maxLines: 2,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
