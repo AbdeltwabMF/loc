@@ -12,7 +12,8 @@ class AppStates extends ChangeNotifier {
   final _reminders = <Reminder>[];
   final _favoritPlaces = <Place>[];
   final _history = <Reminder>[];
-  final _arrived = <Reminder>[];
+  final _arrived = <String>{};
+
   late LatLng _currentPosition;
 
   bool notify = true;
@@ -89,14 +90,13 @@ class AppStates extends ChangeNotifier {
     return _history;
   }
 
-  void arrivedAdd(Reminder reminder) {
-    _arrived.add(reminder);
+  void arrivedAdd(String id) {
+    _arrived.add(id);
     notifyListeners();
   }
 
-  void arrivedDelete(int index) {
-    if (index >= _arrived.length || index < 0) return;
-    _arrived.removeAt(index);
+  void arrivedDelete(String id) {
+    _arrived.remove(id);
     notifyListeners();
   }
 
@@ -104,7 +104,7 @@ class AppStates extends ChangeNotifier {
     _arrived.clear();
   }
 
-  List<Reminder> arrivedAll() {
+  Set<String> arrivedAll() {
     return _arrived;
   }
 

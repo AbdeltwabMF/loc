@@ -7,7 +7,6 @@ import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/repository/maps.dart';
 import 'package:loc/widgets/add_reminder/buttons.dart';
 import 'package:loc/pages/choose_location.dart';
-import 'package:loc/pages/home.dart';
 import 'package:loc/utils/location.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
@@ -60,18 +59,18 @@ class AddReminderPage extends StatelessWidget {
                             borderSide: BorderSide.none,
                           ),
                           contentPadding: EdgeInsets.only(
-                            left: 8,
-                            right: 8,
+                            left: 12,
+                            right: 12,
                           ),
                           filled: true,
                           errorStyle: TextStyle(
                             fontFamily: 'Fantasque',
                           ),
-                          hintText: 'e.g. Remind me when...',
+                          hintText: 'Remind me when...',
                         ),
                         style: const TextStyle(
-                          fontSize: 20,
                           fontFamily: 'Fantasque',
+                          fontWeight: FontWeight.normal,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty == true) {
@@ -118,7 +117,7 @@ class AddReminderPage extends StatelessWidget {
                                 errorStyle: TextStyle(
                                   fontFamily: 'Fantasque',
                                 ),
-                                hintText: '<latitude>',
+                                hintText: 'lat coordinate',
                                 hintStyle: TextStyle(
                                   fontWeight: FontWeight.normal,
                                 ),
@@ -162,7 +161,7 @@ class AddReminderPage extends StatelessWidget {
                                 errorStyle: TextStyle(
                                   fontFamily: 'Fantasque',
                                 ),
-                                hintText: '<longitude>',
+                                hintText: 'long coordinate',
                                 hintStyle: TextStyle(
                                   fontWeight: FontWeight.normal,
                                 ),
@@ -223,11 +222,11 @@ class AddReminderPage extends StatelessWidget {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: EdgeInsets.symmetric(
-                          horizontal: 8,
+                          horizontal: 12,
                           vertical: 4,
                         ),
                         filled: true,
-                        hintText: '<radius>',
+                        hintText: 'radius',
                         hintStyle: TextStyle(
                           fontWeight: FontWeight.normal,
                         ),
@@ -262,7 +261,7 @@ class AddReminderPage extends StatelessWidget {
                             borderSide: BorderSide.none,
                           ),
                           contentPadding: EdgeInsets.symmetric(
-                            horizontal: 8,
+                            horizontal: 12,
                             vertical: 8,
                           ),
                           filled: true,
@@ -275,7 +274,7 @@ class AddReminderPage extends StatelessWidget {
                         fontFamily: 'Fantasque',
                       ),
                       keyboardType: TextInputType.multiline,
-                      minLines: 6,
+                      minLines: 2,
                       maxLines: 64,
                     ),
                     const SizedBox(
