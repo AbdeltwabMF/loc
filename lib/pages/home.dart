@@ -17,26 +17,27 @@ class HomePage extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (context.mounted) {
         if (appStates.listening == false) {
-          getCurrentLocation().then(
-            (value) => appStates.setCurrent(value.position),
-          );
-          handlePositionUpdates(context);
-          appStates.setListening(true);
+          getCurrentLocation().then((value) {
+            appStates.setCurrent(value.position);
+            handlePositionUpdates(context);
+            appStates.setListening(true);
+          });
         }
-
-        if (appStates.arrivedAll().isNotEmpty) {
-          if (appStates.ringing == false) {
-            FlutterRingtonePlayer.playAlarm(
-              asAlarm: true,
-              looping: true,
-              volume: 1.0,
-            );
-            appStates.setRinging(true);
-          }
-        } else {
-          if (appStates.ringing == true) {
-            FlutterRingtonePlayer.stop();
-            appStates.setRinging(false);
+        if (appStates.notify == true) {
+          if (appStates.arrivedAll().isNotEmpty) {
+            if (appStates.ringing == false) {
+              FlutterRingtonePlayer.playAlarm(
+                asAlarm: true,
+                looping: true,
+                volume: 1.0,
+              );
+              appStates.setRinging(true);
+            }
+          } else {
+            if (appStates.ringing == true) {
+              FlutterRingtonePlayer.stop();
+              appStates.setRinging(false);
+            }
           }
         }
       }
@@ -63,6 +64,23 @@ class HomePage extends StatelessWidget {
             },
             icon: const Icon(
               Icons.info_rounded,
+              size: 32,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              if (appStates.notify == true) {
+                FlutterRingtonePlayer.stop();
+                appStates.ringing = false;
+                appStates.notify = false;
+              } else {
+                appStates.notify = true;
+              }
+            },
+            icon: Icon(
+              appStates.notify == true
+                  ? Icons.alarm_on_rounded
+                  : Icons.alarm_off_rounded,
               size: 32,
             ),
           ),

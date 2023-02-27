@@ -7,7 +7,5 @@ String intFormat(int number) {
     ++i;
   }
 
-  // 44343443,444
-
   return numberStr;
 }

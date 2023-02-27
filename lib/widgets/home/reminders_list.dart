@@ -21,7 +21,9 @@ class RemindersList extends StatelessWidget {
               .remainderDistance(appStates.getCurrent());
           final radius = appStates.reminderRead(index)!.place.radius;
           if (remainderDistance <= radius!) {
-            appStates.arrivedAdd(appStates.reminderRead(index)!);
+            appStates.arrivedAdd(appStates.reminderRead(index)!.id);
+          } else {
+            appStates.arrivedDelete(appStates.reminderRead(index)!.id);
           }
         });
 
