@@ -72,10 +72,7 @@ class RemindersList extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      intFormat(appStates
-                          .reminderRead(index)!
-                          .remainderDistance(appStates.getCurrent())
-                          .round()),
+                      '${intFormat(appStates.reminderRead(index)!.remainderDistance(appStates.getCurrent()).round())} meters away',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                       ),
