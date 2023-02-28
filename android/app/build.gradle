@@ -61,6 +61,7 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+
     splits {
         // Configures multiple APKs based on ABI.
         abi {
@@ -86,7 +87,7 @@ android {
 
             // armeabi
             // armeabi is very old ARM based architecture. Since Android 4.4
-            include "x86", "armeabi-v7a"
+            include "armeabi-v7a", "x86"
 
             // Specifies that we do not want to also generate a universal APK that includes all ABIs.
             universalApk true
@@ -105,5 +106,5 @@ dependencies {
 
 configurations.implementation {
     // TODO: Use LocationManager for higher APIs
-//   exclude group: 'com.google.android.gms'
+    // exclude group: 'com.google.android.gms'
 }

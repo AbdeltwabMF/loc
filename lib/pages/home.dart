@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
+import 'package:loc/main.dart';
 import 'package:loc/pages/about.dart';
 import 'package:loc/pages/add_reminder.dart';
 import 'package:loc/utils/location.dart';
@@ -46,11 +48,6 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        elevation: 0,
-        title: const Text(
-          'Loc Reminders',
-        ),
-        leading: null,
         actions: [
           IconButton(
             onPressed: () {
@@ -71,20 +68,28 @@ class HomePage extends StatelessWidget {
             onPressed: () {
               if (appStates.notify == true) {
                 FlutterRingtonePlayer.stop();
-                appStates.ringing = false;
-                appStates.notify = false;
+                appStates.setRinging(false);
+                appStates.setNotify(false);
               } else {
-                appStates.notify = true;
+                appStates.setNotify(true);
               }
             },
             icon: Icon(
               appStates.notify == true
                   ? Icons.alarm_on_rounded
                   : Icons.alarm_off_rounded,
+              color: appStates.notify == true
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : Theme.of(context).colorScheme.tertiary,
               size: 32,
             ),
           ),
         ],
+        elevation: 0,
+        leading: null,
+        title: const Text(
+          'Loc Reminders',
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

@@ -34,6 +34,23 @@ class LocThemeData {
         ),
       ),
       textTheme: textTheme,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colorScheme.primaryContainer,
+          foregroundColor: colorScheme.onPrimaryContainer,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          backgroundColor: colorScheme.onSecondary,
+          foregroundColor: colorScheme.secondary,
+          side: BorderSide(
+            color: colorScheme.outline,
+            width: 1,
+            strokeAlign: BorderSide.strokeAlignOutside,
+          ),
+        ),
+      ),
     );
   }
 }
