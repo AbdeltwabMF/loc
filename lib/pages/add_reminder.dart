@@ -29,43 +29,8 @@ class AddReminderPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         elevation: 0,
-        leading: null,
-        title: Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                onPressed: () {
-                  if (context.mounted) {
-                    Navigator.of(context).pop<void>();
-                  }
-                },
-                child: const Text(
-                  'Save',
-                  style: TextStyle(
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: TextButton(
-                onPressed: () {
-                  if (context.mounted) {
-                    Navigator.of(context).pop<void>();
-                  }
-                },
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: const Text('New Reminder'),
       ),
       body: SafeArea(
         child: Container(
@@ -132,8 +97,8 @@ class AddReminderPage extends StatelessWidget {
                       key: _locationFormKey,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: TextFormField(

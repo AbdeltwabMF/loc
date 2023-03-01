@@ -3,7 +3,8 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/pages/choose_location.dart';
 import 'package:loc/pages/fav_places.dart';
-import 'package:loc/pages/settings_dart';
+import 'package:loc/pages/map.dart';
+import 'package:loc/pages/settings.dart';
 import 'package:loc/pages/about.dart';
 import 'package:loc/pages/add_reminder.dart';
 import 'package:loc/utils/location.dart';
@@ -187,18 +188,16 @@ class HomePage extends StatelessWidget {
                           return const FavPlacesPage();
                         },
                       ),
-                    );
-                    appStates.setBottomNavBarIndex(0);
+                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
                     break;
                   case 2:
                     Navigator.of(context).push<void>(
                       MaterialPageRoute<void>(
                         builder: (context) {
-                          return const ChooseLocationPage();
+                          return const MapPage();
                         },
                       ),
-                    );
-                    appStates.setBottomNavBarIndex(0);
+                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
                     break;
                   case 3:
                     Navigator.of(context).push<void>(
@@ -207,8 +206,7 @@ class HomePage extends StatelessWidget {
                           return const SettingsPage();
                         },
                       ),
-                    );
-                    appStates.setBottomNavBarIndex(0);
+                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
                     break;
                   default:
                     break;
