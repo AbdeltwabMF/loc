@@ -12,11 +12,11 @@ class LocThemeData {
       useMaterial3: true,
       colorScheme: colorScheme,
       appBarTheme: AppBarTheme(
-        backgroundColor: colorScheme.primaryContainer,
-        foregroundColor: colorScheme.onPrimaryContainer,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
         elevation: 0,
         iconTheme: IconThemeData(
-          color: colorScheme.onPrimaryContainer,
+          color: colorScheme.onSurface,
         ),
       ),
       iconTheme: IconThemeData(color: colorScheme.onPrimary),
@@ -38,17 +38,6 @@ class LocThemeData {
         style: ElevatedButton.styleFrom(
           backgroundColor: colorScheme.primaryContainer,
           foregroundColor: colorScheme.onPrimaryContainer,
-        ),
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          backgroundColor: colorScheme.onSecondary,
-          foregroundColor: colorScheme.secondary,
-          side: BorderSide(
-            color: colorScheme.outline,
-            width: 1,
-            strokeAlign: BorderSide.strokeAlignOutside,
-          ),
         ),
       ),
     );

@@ -99,7 +99,7 @@ Future<Place> getCurrentLocation() async {
   final position = await Geolocator.getCurrentPosition(
     desiredAccuracy: LocationAccuracy.best,
     // forceAndroidLocationManager: true,
-    timeLimit: const Duration(seconds: 5),
+    timeLimit: const Duration(seconds: 20),
   );
   final latlng = LatLng(position.latitude, position.longitude);
 
