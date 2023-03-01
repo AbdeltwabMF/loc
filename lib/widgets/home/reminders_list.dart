@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_states.dart';
-import 'package:loc/pages/add_reminder.dart';
 import 'package:loc/utils/format_strings.dart';
 import 'package:provider/provider.dart';
 
@@ -37,14 +36,15 @@ class RemindersList extends StatelessWidget {
             vertical: 8,
           ),
           child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (context) {
-                    return AddReminderPage();
-                  },
-                ),
-              );
+            onTap: () {},
+            onLongPress: () {
+              if (appStates.reminderOptions == true) {
+                appStates.setReminderOptions(false);
+                appStates.setSelected(-1);
+              } else {
+                appStates.setReminderOptions(true);
+                appStates.setSelected(index);
+              }
             },
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,

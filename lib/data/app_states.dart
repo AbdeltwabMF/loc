@@ -18,6 +18,8 @@ class AppStates extends ChangeNotifier {
   bool notify = true;
   bool ringing = false;
   bool listening = false;
+  bool reminderOptions = false;
+  int selected = -1;
   int bottomNavBarIndex = 0;
   ThemeMode _themeMode = ThemeMode.system;
 
@@ -53,8 +55,10 @@ class AppStates extends ChangeNotifier {
   }
 
   void favoriteAdd(Place place) {
-    _favoritPlaces.add(place);
-    notifyListeners();
+    if (_favoritPlaces.contains(place) == false) {
+      _favoritPlaces.add(place);
+      notifyListeners();
+    }
   }
 
   void favoriteDelete(int index) {
@@ -115,6 +119,16 @@ class AppStates extends ChangeNotifier {
 
   void setBottomNavBarIndex(int index) {
     bottomNavBarIndex = index;
+    notifyListeners();
+  }
+
+  void setReminderOptions(bool state) {
+    reminderOptions = state;
+    notifyListeners();
+  }
+
+  void setSelected(int index) {
+    selected = index;
     notifyListeners();
   }
 
