@@ -11,6 +11,7 @@
 migrate_working_dir/
 .metadata
 pubspec.lock
+key.properties
 
 # IntelliJ related
 *.iml

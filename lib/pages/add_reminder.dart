@@ -29,9 +29,42 @@ class AddReminderPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         elevation: 0,
-        title: const Text(
-          'Add Reminder',
+        leading: null,
+        title: Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () {
+                  if (context.mounted) {
+                    Navigator.of(context).pop<void>();
+                  }
+                },
+                child: const Text(
+                  'Save',
+                  style: TextStyle(
+                    fontSize: 24,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: TextButton(
+                onPressed: () {
+                  if (context.mounted) {
+                    Navigator.of(context).pop<void>();
+                  }
+                },
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontSize: 24,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
       body: SafeArea(
@@ -120,6 +153,7 @@ class AddReminderPage extends StatelessWidget {
                                 hintText: 'lat coordinate',
                                 hintStyle: TextStyle(
                                   fontWeight: FontWeight.normal,
+                                  fontSize: 20,
                                 ),
                               ),
                               inputFormatters: [
@@ -164,6 +198,7 @@ class AddReminderPage extends StatelessWidget {
                                 hintText: 'long coordinate',
                                 hintStyle: TextStyle(
                                   fontWeight: FontWeight.normal,
+                                  fontSize: 20,
                                 ),
                               ),
                               inputFormatters: [
@@ -229,6 +264,7 @@ class AddReminderPage extends StatelessWidget {
                         hintText: 'radius',
                         hintStyle: TextStyle(
                           fontWeight: FontWeight.normal,
+                          fontSize: 20,
                         ),
                         suffixText: 'Meters',
                         suffixStyle: TextStyle(
@@ -270,12 +306,12 @@ class AddReminderPage extends StatelessWidget {
                             fontWeight: FontWeight.normal,
                           )),
                       style: const TextStyle(
-                        fontSize: 20,
                         fontFamily: 'Fantasque',
+                        fontSize: 20,
                       ),
                       keyboardType: TextInputType.multiline,
-                      minLines: 2,
-                      maxLines: 64,
+                      minLines: 1,
+                      maxLines: 32,
                     ),
                     const SizedBox(
                       height: 16,

@@ -55,7 +55,7 @@ class _OsmMapViewScreen extends State<ChooseLocationPage> {
         child: FutureBuilder<Place>(
             future: getCurrentLocation(),
             builder: (BuildContext context, AsyncSnapshot<Place> snapshot) {
-              if (snapshot.hasData) {
+              if (snapshot.hasData || snapshot.hasError) {
                 return Stack(
                   children: [
                     Positioned.fill(

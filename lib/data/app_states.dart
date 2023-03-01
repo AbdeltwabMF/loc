@@ -11,7 +11,6 @@ late StreamSubscription<Position> positionStream;
 class AppStates extends ChangeNotifier {
   final _reminders = <Reminder>[];
   final _favoritPlaces = <Place>[];
-  final _history = <Reminder>[];
   final _arrived = <String>{};
 
   late LatLng _currentPosition;
@@ -19,6 +18,7 @@ class AppStates extends ChangeNotifier {
   bool notify = true;
   bool ringing = false;
   bool listening = false;
+  int bottomNavBarIndex = 0;
   ThemeMode _themeMode = ThemeMode.system;
 
   Reminder? reminderRead(int index) {
@@ -71,25 +71,6 @@ class AppStates extends ChangeNotifier {
     return _favoritPlaces;
   }
 
-  void historyAdd(Reminder reminder) {
-    _history.add(reminder);
-    notifyListeners();
-  }
-
-  void historyDelete(int index) {
-    if (index >= _history.length || index < 0) return;
-    _history.removeAt(index);
-    notifyListeners();
-  }
-
-  void historyClear() {
-    _history.clear();
-  }
-
-  List<Reminder> historyAll() {
-    return _history;
-  }
-
   void arrivedAdd(String id) {
     _arrived.add(id);
     notifyListeners();
@@ -129,6 +110,11 @@ class AppStates extends ChangeNotifier {
 
   void setListening(bool state) {
     listening = state;
+    notifyListeners();
+  }
+
+  void setBottomNavBarIndex(int index) {
+    bottomNavBarIndex = index;
     notifyListeners();
   }
 

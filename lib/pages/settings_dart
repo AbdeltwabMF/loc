@@ -3,8 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 const String version = 'v1.0.0';
 
-class AboutPage extends StatelessWidget {
-  const AboutPage({super.key});
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +12,7 @@ class AboutPage extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         title: const Text(
-          'About',
+          'Settings',
         ),
       ),
       body: Column(

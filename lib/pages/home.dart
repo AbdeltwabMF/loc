@@ -1,8 +1,13 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/main.dart';
+import 'package:loc/pages/choose_location.dart';
+import 'package:loc/pages/fav_places.dart';
+import 'package:loc/pages/settings_dart';
 import 'package:loc/pages/about.dart';
 import 'package:loc/pages/add_reminder.dart';
 import 'package:loc/utils/location.dart';
@@ -16,6 +21,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appStates = Provider.of<AppStates>(context);
+
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (context.mounted) {
         if (appStates.listening == false) {
@@ -54,7 +60,7 @@ class HomePage extends StatelessWidget {
               Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
                   builder: (context) {
-                    return const AboutScreen();
+                    return const AboutPage();
                   },
                 ),
               );
@@ -79,8 +85,8 @@ class HomePage extends StatelessWidget {
                   ? Icons.alarm_on_rounded
                   : Icons.alarm_off_rounded,
               color: appStates.notify == true
-                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                  : Theme.of(context).colorScheme.tertiary,
+                  ? Theme.of(context).colorScheme.onSurface
+                  : Theme.of(context).colorScheme.onTertiary,
               size: 32,
             ),
           ),
@@ -88,10 +94,79 @@ class HomePage extends StatelessWidget {
         elevation: 0,
         leading: null,
         title: const Text(
-          'Loc Reminders',
+          'Loc',
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: appStates.bottomNavBarIndex,
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.home_rounded,
+            ),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.favorite_border_rounded,
+            ),
+            label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.map_rounded,
+            ),
+            label: 'Map',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.settings_rounded,
+            ),
+            label: 'Settings',
+          ),
+        ],
+        onTap: (index) {
+          if (appStates.bottomNavBarIndex == index) return;
+          appStates.setBottomNavBarIndex(index);
+          switch (index) {
+            case 0:
+              Navigator.of(context).popAndPushNamed('/');
+              break;
+            case 1:
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (context) {
+                    return const FavPlacesPage();
+                  },
+                ),
+              );
+              break;
+            case 2:
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (context) {
+                    return const ChooseLocationPage();
+                  },
+                ),
+              );
+              break;
+            case 3:
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (context) {
+                    return const SettingsPage();
+                  },
+                ),
+              );
+              break;
+            default:
+              break;
+          }
+        },
+        type: BottomNavigationBarType.fixed,
+      ),
       floatingActionButton: FloatingActionButton(
+        elevation: 0,
         onPressed: () {
           Navigator.of(context).push<void>(
             MaterialPageRoute<void>(
