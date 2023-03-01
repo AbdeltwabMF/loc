@@ -16,8 +16,32 @@ class FavPlacesPage extends StatelessWidget {
           'Favorite Places',
         ),
       ),
-      body: const SafeArea(
-        child: Text('Hola'),
+      body: SafeArea(
+        child: ListView.builder(
+          itemCount: appStates.favoriteAll().length,
+          addAutomaticKeepAlives: true,
+          itemBuilder: (BuildContext context, int index) {
+            return ListTile(
+              dense: true,
+              leading: const Icon(
+                Icons.favorite_rounded,
+                size: 32,
+              ),
+              subtitle: Text(
+                '${appStates.favoriteAll()[index].position.latitude}, ${appStates.favoriteAll()[index].position.longitude}',
+                style: const TextStyle(
+                  fontFamily: 'Fantasque',
+                ),
+              ),
+              title: Text(
+                '${appStates.favoriteAll()[index].displayName}',
+                style: const TextStyle(
+                  fontFamily: 'NotoArabic',
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

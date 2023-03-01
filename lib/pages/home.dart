@@ -1,13 +1,10 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
-import 'package:loc/main.dart';
 import 'package:loc/pages/choose_location.dart';
 import 'package:loc/pages/fav_places.dart';
-import 'package:loc/pages/settings_dart';
+import 'package:loc/pages/map.dart';
+import 'package:loc/pages/settings.dart';
 import 'package:loc/pages/about.dart';
 import 'package:loc/pages/add_reminder.dart';
 import 'package:loc/utils/location.dart';
@@ -55,131 +52,185 @@ class HomePage extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (context) {
-                    return const AboutPage();
+          appStates.reminderOptions == true
+              ? IconButton(
+                  onPressed: () {
+                    appStates.favoriteAdd(
+                        appStates.reminderRead(appStates.selected)!.place);
                   },
+                  icon: const Icon(
+                    Icons.favorite_rounded,
+                    size: 32,
+                  ),
+                )
+              : const SizedBox.shrink(),
+          appStates.reminderOptions == true
+              ? IconButton(
+                  onPressed: () {
+                    appStates.reminderDelete(appStates.selected);
+                  },
+                  icon: const Icon(
+                    Icons.delete_rounded,
+                    size: 32,
+                  ),
+                )
+              : const SizedBox.shrink(),
+          appStates.reminderOptions == true
+              ? IconButton(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.edit_rounded,
+                    size: 32,
+                  ),
+                )
+              : const SizedBox.shrink(),
+          appStates.reminderOptions == true
+              ? const SizedBox.shrink()
+              : IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (context) {
+                          return const AboutPage();
+                        },
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.info_rounded,
+                    size: 32,
+                  ),
                 ),
-              );
-            },
-            icon: const Icon(
-              Icons.info_rounded,
-              size: 32,
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              if (appStates.notify == true) {
-                FlutterRingtonePlayer.stop();
-                appStates.setRinging(false);
-                appStates.setNotify(false);
-              } else {
-                appStates.setNotify(true);
-              }
-            },
-            icon: Icon(
-              appStates.notify == true
-                  ? Icons.alarm_on_rounded
-                  : Icons.alarm_off_rounded,
-              color: appStates.notify == true
-                  ? Theme.of(context).colorScheme.onSurface
-                  : Theme.of(context).colorScheme.onTertiary,
-              size: 32,
-            ),
-          ),
+          appStates.reminderOptions == true
+              ? const SizedBox.shrink()
+              : IconButton(
+                  onPressed: () {
+                    if (appStates.notify == true) {
+                      FlutterRingtonePlayer.stop();
+                      appStates.setRinging(false);
+                      appStates.setNotify(false);
+                    } else {
+                      appStates.setNotify(true);
+                    }
+                  },
+                  icon: Icon(
+                    appStates.notify == true
+                        ? Icons.alarm_on_rounded
+                        : Icons.alarm_off_rounded,
+                    color: appStates.notify == true
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Theme.of(context).colorScheme.onTertiary,
+                    size: 32,
+                  ),
+                ),
         ],
         elevation: 0,
-        leading: null,
-        title: const Text(
-          'Loc',
-        ),
+        leading: appStates.reminderOptions == true
+            ? IconButton(
+                icon: Icon(
+                  Icons.close_rounded,
+                  size: 32,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                onPressed: () {
+                  appStates.setReminderOptions(false);
+                  appStates.setSelected(-1);
+                },
+              )
+            : null,
+        title: appStates.reminderOptions == true
+            ? const SizedBox.shrink()
+            : const Text(
+                'Loc',
+              ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: appStates.bottomNavBarIndex,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home_rounded,
-            ),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.favorite_border_rounded,
-            ),
-            label: 'Favorites',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.map_rounded,
-            ),
-            label: 'Map',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.settings_rounded,
-            ),
-            label: 'Settings',
-          ),
-        ],
-        onTap: (index) {
-          if (appStates.bottomNavBarIndex == index) return;
-          appStates.setBottomNavBarIndex(index);
-          switch (index) {
-            case 0:
-              Navigator.of(context).popAndPushNamed('/');
-              break;
-            case 1:
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (context) {
-                    return const FavPlacesPage();
-                  },
+      bottomNavigationBar: appStates.reminderOptions == true
+          ? null
+          : BottomNavigationBar(
+              currentIndex: appStates.bottomNavBarIndex,
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.home_rounded,
+                  ),
+                  label: 'Home',
                 ),
-              );
-              break;
-            case 2:
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (context) {
-                    return const ChooseLocationPage();
-                  },
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.favorite_border_rounded,
+                  ),
+                  label: 'Favorites',
                 ),
-              );
-              break;
-            case 3:
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (context) {
-                    return const SettingsPage();
-                  },
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.map_rounded,
+                  ),
+                  label: 'Map',
                 ),
-              );
-              break;
-            default:
-              break;
-          }
-        },
-        type: BottomNavigationBarType.fixed,
-      ),
-      floatingActionButton: FloatingActionButton(
-        elevation: 0,
-        onPressed: () {
-          Navigator.of(context).push<void>(
-            MaterialPageRoute<void>(
-              builder: (context) {
-                return AddReminderPage();
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    Icons.settings_rounded,
+                  ),
+                  label: 'Settings',
+                ),
+              ],
+              onTap: (index) {
+                if (appStates.bottomNavBarIndex == index) return;
+                appStates.setBottomNavBarIndex(index);
+                switch (index) {
+                  case 0:
+                    Navigator.of(context).popAndPushNamed('/');
+                    break;
+                  case 1:
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (context) {
+                          return const FavPlacesPage();
+                        },
+                      ),
+                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
+                    break;
+                  case 2:
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (context) {
+                          return const MapPage();
+                        },
+                      ),
+                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
+                    break;
+                  case 3:
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (context) {
+                          return const SettingsPage();
+                        },
+                      ),
+                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
+                    break;
+                  default:
+                    break;
+                }
               },
+              type: BottomNavigationBarType.fixed,
             ),
-          );
-        },
-        child: const Icon(
-          Icons.add_alarm_rounded,
-        ),
-      ),
+      floatingActionButton: appStates.reminderOptions == true
+          ? null
+          : FloatingActionButton(
+              elevation: 0,
+              onPressed: () {
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (context) {
+                      return AddReminderPage();
+                    },
+                  ),
+                );
+              },
+              child: const Icon(
+                Icons.add_alarm_rounded,
+              ),
+            ),
       body: SafeArea(
         child: appStates.reminderAll().isEmpty
             ? Column(
