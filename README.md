@@ -33,6 +33,7 @@
 - Compass for bearing angle. (not yet)
 - Customizable radius of a circle around the destination.
 - Remind with sound when arriving.
+- Persistent data.
 
 ## Development
 
