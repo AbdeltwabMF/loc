@@ -15,17 +15,24 @@
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="256"/>
 </p>
 
-
 ## ✨ Features
 
-- Free and open-data embedded map (based on OSM).
+- Based on the free and open-data Open Street Map.
+- Support multiple reminders.
+- Support title and notes for the reminder.
+- Disable/Enable specific reminders.
+- Delete/Edit/Search reminders.
+- Save favorite places for later usage.
+- Dark/Light theme.
+- Run in background.
+- Offline usage.
+- Online usage (Map navigation).
+- Live location.
 - Search for the destination.
-- Shows Eucliedian distance and bearing angle.
-- Shows Live location.
+- Shows Eucliedian distance between current and destination locations.
+- Compass for bearing angle. (not yet)
 - Customizable radius of a circle around the destination.
-- Remind you with sound when you arrive.
-- Offline/Online usage.
-- Displays location name.
+- Remind with sound when arriving.
 
 ## Development
 
@@ -37,25 +44,13 @@
 
 ### Build
 
-1. Clone the repository.
-
 ```shell
-git clone https://github.com/AbdeltwabMF/Loc.git
-cd Loc
-```
-
-2. Generate the mobile specific files and download dependencies.
-
-```shell
-flutter create --platforms=ios,android .
+git clone https://github.com/AbdeltwabMF/loc.git
+cd loc
 flutter pub get
 ```
 
-3. Open `main.dart` and start from there and then click on the top-right play button to `RUN` the app.
-
-```shell
-cd lib
-```
+Open `main.dart` and start from there and then click on the top-right play button to `RUN` the app.
 
 ## Release
 
