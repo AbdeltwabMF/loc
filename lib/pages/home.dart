@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
-import 'package:loc/pages/choose_location.dart';
-import 'package:loc/pages/fav_places.dart';
-import 'package:loc/pages/map.dart';
+import 'package:loc/pages/arrival_list.dart';
+import 'package:loc/pages/favorites_list.dart';
+import 'package:loc/pages/reminders_search.dart';
 import 'package:loc/pages/settings.dart';
 import 'package:loc/pages/about.dart';
-import 'package:loc/pages/add_reminder.dart';
+import 'package:loc/pages/reminders_add.dart';
 import 'package:loc/utils/location.dart';
-import 'package:loc/widgets/home/reminders_list.dart';
+import 'package:loc/widgets/bottom_nav_bar.dart';
+import 'package:loc/pages/reminders_list.dart';
 import 'package:provider/provider.dart';
-import 'package:rive/rive.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  static const List<Widget> _navWidgetList = [
+    RemindersList(),
+    FavoritesList(),
+    ArrivalList(),
+    Settings(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +36,7 @@ class HomePage extends StatelessWidget {
           });
         }
         if (appStates.notify == true) {
-          if (appStates.arrivedAll().isNotEmpty) {
+          if (appStates.arrivalAll().isNotEmpty) {
             if (appStates.ringing == false) {
               FlutterRingtonePlayer.playAlarm(
                 asAlarm: true,
@@ -91,6 +98,23 @@ class HomePage extends StatelessWidget {
                     Navigator.of(context).push<void>(
                       MaterialPageRoute<void>(
                         builder: (context) {
+                          return const RemindersSearch();
+                        },
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.search_rounded,
+                    size: 32,
+                  ),
+                ),
+          appStates.reminderOptions == true
+              ? const SizedBox.shrink()
+              : IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (context) {
                           return const AboutPage();
                         },
                       ),
@@ -125,96 +149,13 @@ class HomePage extends StatelessWidget {
                 ),
         ],
         elevation: 0,
-        leading: appStates.reminderOptions == true
-            ? IconButton(
-                icon: Icon(
-                  Icons.close_rounded,
-                  size: 32,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                onPressed: () {
-                  appStates.setReminderOptions(false);
-                  appStates.setSelected(-1);
-                },
-              )
-            : null,
-        title: appStates.reminderOptions == true
-            ? const SizedBox.shrink()
-            : const Text(
-                'Loc',
-              ),
+        leading: null,
+        title: const Text(
+          'Loc',
+        ),
       ),
-      bottomNavigationBar: appStates.reminderOptions == true
-          ? null
-          : BottomNavigationBar(
-              currentIndex: appStates.bottomNavBarIndex,
-              items: const <BottomNavigationBarItem>[
-                BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.home_rounded,
-                  ),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.favorite_border_rounded,
-                  ),
-                  label: 'Favorites',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.map_rounded,
-                  ),
-                  label: 'Map',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.settings_rounded,
-                  ),
-                  label: 'Settings',
-                ),
-              ],
-              onTap: (index) {
-                if (appStates.bottomNavBarIndex == index) return;
-                appStates.setBottomNavBarIndex(index);
-                switch (index) {
-                  case 0:
-                    Navigator.of(context).popAndPushNamed('/');
-                    break;
-                  case 1:
-                    Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (context) {
-                          return const FavPlacesPage();
-                        },
-                      ),
-                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
-                    break;
-                  case 2:
-                    Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (context) {
-                          return const MapPage();
-                        },
-                      ),
-                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
-                    break;
-                  case 3:
-                    Navigator.of(context).push<void>(
-                      MaterialPageRoute<void>(
-                        builder: (context) {
-                          return const SettingsPage();
-                        },
-                      ),
-                    ).then((value) => {appStates.setBottomNavBarIndex(0)});
-                    break;
-                  default:
-                    break;
-                }
-              },
-              type: BottomNavigationBarType.fixed,
-            ),
-      floatingActionButton: appStates.reminderOptions == true
+      bottomNavigationBar: const AppBottomNavBar(),
+      floatingActionButton: appStates.bottomNavBarIndex != 0
           ? null
           : FloatingActionButton(
               elevation: 0,
@@ -222,7 +163,7 @@ class HomePage extends StatelessWidget {
                 Navigator.of(context).push<void>(
                   MaterialPageRoute<void>(
                     builder: (context) {
-                      return AddReminderPage();
+                      return RemindersAdd();
                     },
                   ),
                 );
@@ -232,31 +173,7 @@ class HomePage extends StatelessWidget {
               ),
             ),
       body: SafeArea(
-        child: appStates.reminderAll().isEmpty
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Expanded(
-                    flex: 2,
-                    child: RiveAnimation.asset(
-                      'assets/raw/cat.riv',
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      'No reminders yet',
-                      style: TextStyle(
-                        fontSize: 32,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : const RemindersList(),
+        child: _navWidgetList.elementAt(appStates.bottomNavBarIndex),
       ),
     );
   }

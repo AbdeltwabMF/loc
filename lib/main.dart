@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:loc/pages/home.dart';
-import 'package:loc/themes/loc_theme_data.dart';
+import 'package:loc/themes/theme_data.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:provider/provider.dart';
 
@@ -17,23 +17,34 @@ void main() async {
   SecurityContext.defaultContext
       .setTrustedCertificatesBytes(data.buffer.asUint8List());
 
-  runApp(const App());
+  runApp(const Root());
 }
 
-class App extends StatelessWidget {
-  const App({super.key});
+class Root extends StatelessWidget {
+  const Root({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<AppStates>(
       create: (context) => AppStates(),
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: LocThemeData.lightThemeData,
-        darkTheme: LocThemeData.darkThemeData,
-        themeMode: ThemeMode.system,
-        home: const HomePage(),
-      ),
+      child: const Loc(),
+    );
+  }
+}
+
+class Loc extends StatelessWidget {
+  const Loc({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final appStates = Provider.of<AppStates>(context);
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: LocThemeData.lightThemeData,
+      darkTheme: LocThemeData.darkThemeData,
+      themeMode: appStates.themeMode,
+      home: const HomePage(),
     );
   }
 }

@@ -11,17 +11,19 @@ late StreamSubscription<Position> positionStream;
 class AppStates extends ChangeNotifier {
   final _reminders = <Reminder>[];
   final _favoritPlaces = <Place>[];
-  final _arrived = <String>{};
+  final _arrival = <String>{};
 
   late LatLng _currentPosition;
 
   bool notify = true;
   bool ringing = false;
   bool listening = false;
+
+  ThemeMode themeMode = ThemeMode.system;
+
   bool reminderOptions = false;
-  int selected = -1;
+  int selected = 0;
   int bottomNavBarIndex = 0;
-  ThemeMode _themeMode = ThemeMode.system;
 
   Reminder? reminderRead(int index) {
     if (index >= _reminders.length || index < 0) return null;
@@ -54,6 +56,10 @@ class AppStates extends ChangeNotifier {
     _reminders.clear();
   }
 
+  Reminder? reminderFromId(String id) {
+    return _reminders.firstWhere((element) => element.id == id);
+  }
+
   void favoriteAdd(Place place) {
     if (_favoritPlaces.contains(place) == false) {
       _favoritPlaces.add(place);
@@ -75,22 +81,22 @@ class AppStates extends ChangeNotifier {
     return _favoritPlaces;
   }
 
-  void arrivedAdd(String id) {
-    _arrived.add(id);
+  void arrivalAdd(String id) {
+    _arrival.add(id);
     notifyListeners();
   }
 
-  void arrivedDelete(String id) {
-    _arrived.remove(id);
+  void arrivalDelete(String id) {
+    _arrival.remove(id);
     notifyListeners();
   }
 
-  void arrivedClear() {
-    _arrived.clear();
+  void arrivalClear() {
+    _arrival.clear();
   }
 
-  Set<String> arrivedAll() {
-    return _arrived;
+  Set<String> arrivalAll() {
+    return _arrival;
   }
 
   void setCurrent(LatLng current) {
@@ -117,6 +123,11 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setThemeMode(ThemeMode mode) {
+    themeMode = mode;
+    notifyListeners();
+  }
+
   void setBottomNavBarIndex(int index) {
     bottomNavBarIndex = index;
     notifyListeners();
@@ -130,14 +141,5 @@ class AppStates extends ChangeNotifier {
   void setSelected(int index) {
     selected = index;
     notifyListeners();
-  }
-
-  void setThemeMode(ThemeMode state) {
-    _themeMode = state;
-    notifyListeners();
-  }
-
-  ThemeMode getThemeMode() {
-    return _themeMode;
   }
 }
