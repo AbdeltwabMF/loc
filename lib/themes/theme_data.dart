@@ -8,9 +8,6 @@ class LocThemeData {
 
   static ThemeData themeData(ColorScheme colorScheme) {
     return ThemeData(
-      fontFamily: 'TiltNeon',
-      useMaterial3: true,
-      colorScheme: colorScheme,
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
@@ -19,10 +16,18 @@ class LocThemeData {
           color: colorScheme.onSurface,
         ),
       ),
-      iconTheme: IconThemeData(color: colorScheme.onPrimary),
+      colorScheme: colorScheme,
       canvasColor: colorScheme.onSecondary,
-      scaffoldBackgroundColor: colorScheme.background,
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colorScheme.primaryContainer,
+          foregroundColor: colorScheme.onPrimaryContainer,
+        ),
+      ),
+      fontFamily: 'TiltNeon',
       highlightColor: Colors.transparent,
+      iconTheme: IconThemeData(color: colorScheme.onPrimary),
+      scaffoldBackgroundColor: colorScheme.background,
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: Color.alphaBlend(
@@ -34,12 +39,7 @@ class LocThemeData {
         ),
       ),
       textTheme: textTheme,
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: colorScheme.primaryContainer,
-          foregroundColor: colorScheme.onPrimaryContainer,
-        ),
-      ),
+      useMaterial3: true,
     );
   }
 }

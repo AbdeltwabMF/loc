@@ -12,6 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  connectivity_plus: ^3.0.3
   cupertino_icons: ^1.0.5
   flutter_map: ^3.1.0
   flutter_ringtone_player: ^3.2.0

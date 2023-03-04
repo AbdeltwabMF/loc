@@ -6,13 +6,13 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/repository/maps.dart';
 import 'package:loc/widgets/add_reminder/buttons.dart';
-import 'package:loc/pages/choose_location.dart';
+import 'package:loc/pages/map.dart';
 import 'package:loc/utils/location.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
-class AddReminderPage extends StatelessWidget {
-  AddReminderPage({super.key});
+class RemindersAdd extends StatelessWidget {
+  RemindersAdd({super.key});
 
   final _locationFormKey = GlobalKey<FormState>();
   final _titleFormKey = GlobalKey<FormState>();
@@ -199,7 +199,7 @@ class AddReminderPage extends StatelessWidget {
                             await Navigator.of(context).push<Place>(
                           MaterialPageRoute<Place>(
                             builder: (context) {
-                              return const ChooseLocationPage();
+                              return const MapPage();
                             },
                           ),
                         );
