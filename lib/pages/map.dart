@@ -249,7 +249,7 @@ class _MapPage extends State<MapPage> {
                                 }
 
                                 _debounce = Timer(
-                                  const Duration(milliseconds: 0),
+                                  const Duration(seconds: 1),
                                   () async {
                                     try {
                                       _options = await Maps()
