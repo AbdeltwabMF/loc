@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:provider/provider.dart';
 
@@ -13,14 +14,16 @@ class Settings extends StatelessWidget {
       children: [
         ListTile(
           dense: true,
-          subtitle: const Text(
-              'Choose between dark, light, and system. Initial is \'system\'.'),
+          subtitle: const Text('Set theme mode globally.'),
           title: const Text('Theme Mode'),
           trailing: DropdownMenu<ThemeMode>(
             initialSelection: appStates.themeMode,
             inputDecorationTheme: const InputDecorationTheme(
               filled: true,
               isDense: true,
+            ),
+            menuStyle: MenuStyle(
+              side: MaterialStateProperty.all(BorderSide.none),
             ),
             onSelected: (value) {
               if (value != null) {
@@ -50,6 +53,13 @@ class Settings extends StatelessWidget {
           trailing: Switch(
             onChanged: (value) {
               appStates.setNotify(value);
+              if (value == false) {
+                FlutterRingtonePlayer.stop();
+                appStates.setRinging(false);
+                appStates.setNotify(false);
+              } else {
+                appStates.setNotify(true);
+              }
             },
             value: appStates.notify,
           ),

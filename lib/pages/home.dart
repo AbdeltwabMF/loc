@@ -63,150 +63,169 @@ class HomePage extends StatelessWidget {
       }
     });
 
-    return Stack(
-      children: [
-        const Positioned.fill(
-          child: RiveAnimation.asset(
-            'assets/raw/fanoos.riv',
-            fit: BoxFit.fitWidth,
-            alignment: Alignment.center,
+    return WillPopScope(
+      onWillPop: () async {
+        if (appStates.reminderOptions == true) {
+          appStates.setReminderOptions(false);
+          return false;
+        }
+        return false;
+      },
+      child: Stack(
+        children: [
+          const Positioned.fill(
+            child: RiveAnimation.asset(
+              'assets/raw/fanoos.riv',
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.center,
+            ),
           ),
-        ),
-        BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 10,
-            sigmaY: 10,
-          ),
-          child: Scaffold(
-            backgroundColor:
-                Theme.of(context).colorScheme.background.withOpacity(0.8),
-            resizeToAvoidBottomInset: false,
-            appBar: AppBar(
-              actions: [
-                appStates.reminderOptions == true
+          BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 10,
+              sigmaY: 10,
+            ),
+            child: Scaffold(
+              backgroundColor:
+                  Theme.of(context).colorScheme.background.withOpacity(0.8),
+              resizeToAvoidBottomInset: false,
+              appBar: AppBar(
+                actions: [
+                  appStates.reminderOptions == true
+                      ? IconButton(
+                          onPressed: () {
+                            appStates.favoriteAdd(appStates
+                                .reminderRead(appStates.selected)!
+                                .place);
+                            appStates.setReminderOptions(false);
+                          },
+                          icon: const Icon(
+                            Icons.favorite_rounded,
+                            size: 32,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                  appStates.reminderOptions == true
+                      ? IconButton(
+                          onPressed: () {
+                            appStates.reminderDelete(appStates.selected);
+                            appStates.setReminderOptions(false);
+                          },
+                          icon: const Icon(
+                            Icons.delete_rounded,
+                            size: 32,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                  appStates.reminderOptions == true
+                      ? IconButton(
+                          onPressed: () {
+                            appStates.setReminderOptions(false);
+                          },
+                          icon: const Icon(
+                            Icons.edit_rounded,
+                            size: 32,
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                  appStates.reminderOptions == true
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          onPressed: () {
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (context) {
+                                  return const RemindersSearch();
+                                },
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.search_rounded,
+                            size: 32,
+                          ),
+                        ),
+                  appStates.reminderOptions == true
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          onPressed: () {
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (context) {
+                                  return const AboutPage();
+                                },
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.info_rounded,
+                            size: 32,
+                          ),
+                        ),
+                  appStates.reminderOptions == true
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          onPressed: () {
+                            if (appStates.notify == true) {
+                              FlutterRingtonePlayer.stop();
+                              appStates.setRinging(false);
+                              appStates.setNotify(false);
+                            } else {
+                              appStates.setNotify(true);
+                            }
+                          },
+                          icon: Icon(
+                            appStates.notify == true
+                                ? Icons.alarm_on_rounded
+                                : Icons.alarm_off_rounded,
+                            color: appStates.notify == true
+                                ? Theme.of(context).colorScheme.onSurface
+                                : Theme.of(context).colorScheme.onTertiary,
+                            size: 32,
+                          ),
+                        ),
+                ],
+                elevation: 0,
+                leading: null,
+                title: appStates.reminderOptions == true
                     ? IconButton(
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 32,
+                        ),
                         onPressed: () {
-                          appStates.favoriteAdd(appStates
-                              .reminderRead(appStates.selected)!
-                              .place);
                           appStates.setReminderOptions(false);
                         },
-                        icon: const Icon(
-                          Icons.favorite_rounded,
-                          size: 32,
-                        ),
                       )
-                    : const SizedBox.shrink(),
-                appStates.reminderOptions == true
-                    ? IconButton(
-                        onPressed: () {
-                          appStates.reminderDelete(appStates.selected);
-                          appStates.setReminderOptions(false);
-                        },
-                        icon: const Icon(
-                          Icons.delete_rounded,
-                          size: 32,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-                appStates.reminderOptions == true
-                    ? IconButton(
-                        onPressed: () {
-                          appStates.setReminderOptions(false);
-                        },
-                        icon: const Icon(
-                          Icons.edit_rounded,
-                          size: 32,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-                appStates.reminderOptions == true
-                    ? const SizedBox.shrink()
-                    : IconButton(
-                        onPressed: () {
-                          Navigator.of(context).push<void>(
-                            MaterialPageRoute<void>(
-                              builder: (context) {
-                                return const RemindersSearch();
-                              },
-                            ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.search_rounded,
-                          size: 32,
-                        ),
+                    : const Text(
+                        'Loc',
                       ),
-                appStates.reminderOptions == true
-                    ? const SizedBox.shrink()
-                    : IconButton(
-                        onPressed: () {
-                          Navigator.of(context).push<void>(
-                            MaterialPageRoute<void>(
-                              builder: (context) {
-                                return const AboutPage();
-                              },
-                            ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.info_rounded,
-                          size: 32,
-                        ),
+              ),
+              bottomNavigationBar: const AppBottomNavBar(),
+              floatingActionButton: appStates.bottomNavBarIndex != 0
+                  ? null
+                  : FloatingActionButton(
+                      elevation: 0,
+                      onPressed: () {
+                        Navigator.of(context).push<void>(
+                          MaterialPageRoute<void>(
+                            builder: (context) {
+                              return const RemindersAdd();
+                            },
+                          ),
+                        );
+                      },
+                      child: const Icon(
+                        Icons.add_alarm_rounded,
                       ),
-                appStates.reminderOptions == true
-                    ? const SizedBox.shrink()
-                    : IconButton(
-                        onPressed: () {
-                          if (appStates.notify == true) {
-                            FlutterRingtonePlayer.stop();
-                            appStates.setRinging(false);
-                            appStates.setNotify(false);
-                          } else {
-                            appStates.setNotify(true);
-                          }
-                        },
-                        icon: Icon(
-                          appStates.notify == true
-                              ? Icons.alarm_on_rounded
-                              : Icons.alarm_off_rounded,
-                          color: appStates.notify == true
-                              ? Theme.of(context).colorScheme.onSurface
-                              : Theme.of(context).colorScheme.onTertiary,
-                          size: 32,
-                        ),
-                      ),
-              ],
-              elevation: 0,
-              leading: null,
-              title: const Text(
-                'Loc',
+                    ),
+              body: SafeArea(
+                child: _navWidgetList.elementAt(appStates.bottomNavBarIndex),
               ),
             ),
-            bottomNavigationBar: const AppBottomNavBar(),
-            floatingActionButton: appStates.bottomNavBarIndex != 0
-                ? null
-                : FloatingActionButton(
-                    elevation: 0,
-                    onPressed: () {
-                      Navigator.of(context).push<void>(
-                        MaterialPageRoute<void>(
-                          builder: (context) {
-                            return const RemindersAdd();
-                          },
-                        ),
-                      );
-                    },
-                    child: const Icon(
-                      Icons.add_alarm_rounded,
-                    ),
-                  ),
-            body: SafeArea(
-              child: _navWidgetList.elementAt(appStates.bottomNavBarIndex),
-            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
