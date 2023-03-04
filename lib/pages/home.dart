@@ -9,21 +9,62 @@ import 'package:loc/pages/reminders_search.dart';
 import 'package:loc/pages/settings.dart';
 import 'package:loc/pages/about.dart';
 import 'package:loc/pages/reminders_add.dart';
+import 'package:loc/utils/data.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/widgets/bottom_nav_bar.dart';
 import 'package:loc/pages/reminders_list.dart';
 import 'package:rive/rive.dart';
 import 'package:provider/provider.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePage();
+}
+
+class _HomePage extends State<HomePage> with WidgetsBindingObserver {
   static const List<Widget> _navWidgetList = [
     RemindersList(),
     FavoritesList(),
     ArrivalList(),
     Settings(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Future<bool> didPopRoute() async {
+    writeData(context);
+    return false;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        readData(context);
+        break;
+      case AppLifecycleState.paused:
+        writeData(context);
+        break;
+      case AppLifecycleState.detached:
+        writeData(context);
+        break;
+      default:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +79,12 @@ class HomePage extends StatelessWidget {
             appStates.setListening(true);
           });
         }
+
+        if (appStates.loaded == false) {
+          readData(context);
+          appStates.setLoaded(true);
+        }
+
         if (appStates.notify == true) {
           if (appStates.arrivalAll().isNotEmpty) {
             if (appStates.reminderAll().isEmpty) {
@@ -69,7 +116,8 @@ class HomePage extends StatelessWidget {
           appStates.setReminderOptions(false);
           return false;
         }
-        return false;
+        writeData(context);
+        return true;
       },
       child: Stack(
         children: [

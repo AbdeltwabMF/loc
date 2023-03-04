@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:latlong2/latlong.dart';
+import 'package:loc/data/models/point.dart';
 
 class OsmApis {
   static const String osmBaseUrl = 'https://nominatim.openstreetmap.org';
@@ -12,7 +12,7 @@ class OsmApis {
     _client = http.Client();
   }
 
-  Future<dynamic> reverse(LatLng position) async {
+  Future<dynamic> reverse(Point position) async {
     try {
       String reverseUrl =
           '$osmBaseUrl/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}&zoom=16&addressdetails=1';

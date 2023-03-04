@@ -2,6 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:loc/data/models/place.dart';
+import 'package:loc/data/models/point.dart';
+import 'package:loc/data/models/reminder.dart';
 import 'package:loc/pages/home.dart';
 import 'package:loc/themes/theme_data.dart';
 import 'package:loc/data/app_states.dart';
@@ -16,6 +20,17 @@ void main() async {
       await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
   SecurityContext.defaultContext
       .setTrustedCertificatesBytes(data.buffer.asUint8List());
+
+  // Initialize hive databases
+  await Hive.initFlutter('loc_db');
+
+  Hive.registerAdapter<Reminder>(ReminderAdapter());
+  Hive.registerAdapter<Place>(PlaceAdapter());
+  Hive.registerAdapter<Point>(PointAdapter());
+
+  boxReminders = await Hive.openBox('reminders');
+  boxFavorites = await Hive.openBox('favorites');
+  boxSettings = await Hive.openBox('settings');
 
   runApp(const Root());
 }

@@ -6,6 +6,7 @@ import 'package:geolocator_apple/geolocator_apple.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/place.dart';
+import 'package:loc/data/models/point.dart';
 import 'package:provider/provider.dart';
 
 Future<bool> _checkPermissions() async {
@@ -67,7 +68,10 @@ void handlePositionUpdates(BuildContext context) {
   positionStream =
       Geolocator.getPositionStream(locationSettings: locationSettings).listen(
           (value) async {
-            final currentPosition = LatLng(value.latitude, value.longitude);
+            final currentPosition = Point(
+              latitude: value.latitude,
+              longitude: value.longitude,
+            );
             appStates.setCurrent(currentPosition);
           },
           cancelOnError: true,
@@ -78,7 +82,7 @@ void handlePositionUpdates(BuildContext context) {
           });
 }
 
-String? latLngValidate(String? value,
+String? pointValidate(String? value,
     {String? message = 'Not a number', double limit = 1.0}) {
   if (value == null || value == '') {
     return message;
@@ -101,7 +105,11 @@ Future<Place> getCurrentLocation() async {
     // forceAndroidLocationManager: true,
     timeLimit: const Duration(seconds: 20),
   );
-  final latlng = LatLng(position.latitude, position.longitude);
 
-  return Place(position: latlng);
+  final point = Point(
+    latitude: position.latitude,
+    longitude: position.longitude,
+  );
+
+  return Place(position: point);
 }

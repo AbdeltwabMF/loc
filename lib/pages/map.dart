@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:loc/data/models/place.dart';
+import 'package:loc/data/models/point.dart';
 import 'package:loc/data/repository/maps.dart';
 import 'package:loc/themes/color_scheme.dart';
 import 'package:loc/utils/location.dart';
@@ -111,7 +112,7 @@ class _MapPage extends State<MapPage> {
             : FutureBuilder<Place>(
                 future: getCurrentLocation(),
                 builder: (BuildContext context, AsyncSnapshot<Place> snapshot) {
-                  if (snapshot.hasData || snapshot.hasError) {
+                  if (snapshot.hasData) {
                     return Stack(
                       children: [
                         Positioned.fill(
@@ -201,8 +202,10 @@ class _MapPage extends State<MapPage> {
                                     Future.error(error!, stackTrace),
                               );
                               _mapController.move(
-                                LatLng(currentLocation.position.latitude,
-                                    currentLocation.position.longitude),
+                                LatLng(
+                                  currentLocation.position.latitude,
+                                  currentLocation.position.longitude,
+                                ),
                                 _mapController.zoom,
                               );
                             },
@@ -342,9 +345,9 @@ class _MapPage extends State<MapPage> {
                               padding: const EdgeInsets.all(8.0),
                               child:
                                   SelectDestinationButton(onPressed: () async {
-                                final LatLng position = LatLng(
-                                  _mapController.center.latitude,
-                                  _mapController.center.longitude,
+                                final Point position = Point(
+                                  latitude: _mapController.center.latitude,
+                                  longitude: _mapController.center.longitude,
                                 );
                                 await Maps()
                                     .getLocationInfo(position)
