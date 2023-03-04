@@ -116,8 +116,18 @@ class RemindersList extends StatelessWidget {
                         ),
                         decoration: const BoxDecoration(),
                         child: ListTile(
+                          dense: true,
+                          leading: Switch(
+                            onChanged: (value) {
+                              final reminder = appStates.reminderRead(index)!;
+                              reminder.isTracking = value;
+                              appStates.reminderUpdate(reminder);
+                            },
+                            value: appStates.reminderRead(index)!.isTracking,
+                          ),
                           shape: const RoundedRectangleBorder(
-                              side: BorderSide.none),
+                            side: BorderSide.none,
+                          ),
                           subtitle: Text(
                             '${appStates.reminderRead(index)!.place.position.latitude}, ${appStates.reminderRead(index)!.place.position.longitude}',
                             maxLines: 1,
