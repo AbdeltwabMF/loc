@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/place.dart';
+import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/repository/maps.dart';
 import 'package:loc/widgets/buttons.dart';
@@ -149,7 +150,7 @@ class _RemindersAdd extends State<RemindersAdd> {
                                 fontFamily: 'Fantasque',
                               ),
                               validator: (value) {
-                                return latLngValidate(
+                                return pointValidate(
                                   value,
                                   message: 'Invalid latitude',
                                   limit: 90,
@@ -194,7 +195,7 @@ class _RemindersAdd extends State<RemindersAdd> {
                                 fontFamily: 'Fantasque',
                               ),
                               validator: (value) {
-                                return latLngValidate(
+                                return pointValidate(
                                   value,
                                   message: 'Invalid longitude',
                                   limit: 180,
@@ -316,9 +317,9 @@ class _RemindersAdd extends State<RemindersAdd> {
                     return;
                   }
 
-                  LatLng position = LatLng(
-                    double.parse(latitude.text),
-                    double.parse(longitude.text),
+                  Point position = Point(
+                    latitude: double.parse(latitude.text),
+                    longitude: double.parse(longitude.text),
                   );
 
                   final destination = await Maps()

@@ -1,5 +1,5 @@
-import 'package:latlong2/latlong.dart';
 import 'package:loc/data/models/place.dart';
+import 'package:loc/data/models/point.dart';
 import 'package:loc/data/services/osm_apis.dart';
 
 class Maps {
@@ -9,7 +9,7 @@ class Maps {
     _osmApis = OsmApis();
   }
 
-  Future<Place> getLocationInfo(LatLng position) async {
+  Future<Place> getLocationInfo(Point position) async {
     final location = await _osmApis.reverse(position).onError(
           (error, stackTrace) => Future.error(error!, stackTrace),
         );

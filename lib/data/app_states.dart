@@ -2,24 +2,34 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:hive/hive.dart';
 import 'package:loc/data/models/place.dart';
+import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 
 late StreamSubscription<Position> positionStream;
 
+// Hive boxes
+late Box boxReminders;
+late Box boxFavorites;
+late Box boxSettings;
+
 class AppStates extends ChangeNotifier {
+  // Data
   final _reminders = <Reminder>[];
   final _favoritPlaces = <Place>[];
 
-  late LatLng _currentPosition;
-
+  // Preferences
   bool notify = true;
+  ThemeMode themeMode = ThemeMode.system;
+
+  // Does not matter, just Set to default on start
+  late Point _currentPosition;
+
   bool ringing = false;
   bool listening = false;
 
-  ThemeMode themeMode = ThemeMode.system;
-
+  bool loaded = false;
   bool reminderOptions = false;
   int selected = -1;
   int bottomNavBarIndex = 0;
@@ -85,12 +95,12 @@ class AppStates extends ChangeNotifier {
     return _favoritPlaces;
   }
 
-  void setCurrent(LatLng current) {
+  void setCurrent(Point current) {
     _currentPosition = current;
     notifyListeners();
   }
 
-  LatLng getCurrent() {
+  Point getCurrent() {
     return _currentPosition;
   }
 
@@ -126,6 +136,11 @@ class AppStates extends ChangeNotifier {
 
   void setSelected(int index) {
     selected = index;
+    notifyListeners();
+  }
+
+  void setLoaded(bool state) {
+    loaded = state;
     notifyListeners();
   }
 }
