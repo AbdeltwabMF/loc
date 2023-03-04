@@ -10,7 +10,7 @@ class ArrivalList extends StatelessWidget {
   Widget build(BuildContext context) {
     final appStates = Provider.of<AppStates>(context);
 
-    return appStates.reminderAll().isEmpty
+    return appStates.arrivalAll().isEmpty
         ? const EmptyPlaceHolder(comment: 'Arrival list is empty')
         : ListView.builder(
             itemCount: appStates.arrivalAll().length,
@@ -23,20 +23,14 @@ class ArrivalList extends StatelessWidget {
                   size: 32,
                 ),
                 subtitle: Text(
-                  appStates
-                          .reminderFromId(
-                              appStates.arrivalAll().elementAt(index))!
-                          .place
-                          .displayName ??
+                  appStates.arrivalAll().elementAt(index).place.displayName ??
                       '',
                   style: const TextStyle(
                     fontFamily: 'Fantasque',
                   ),
                 ),
                 title: Text(
-                  appStates
-                      .reminderFromId(appStates.arrivalAll().elementAt(index))!
-                      .title,
+                  appStates.arrivalAll().elementAt(index).title,
                   style: const TextStyle(
                     fontFamily: 'NotoArabic',
                   ),

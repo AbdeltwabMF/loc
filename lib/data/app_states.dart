@@ -11,7 +11,6 @@ late StreamSubscription<Position> positionStream;
 class AppStates extends ChangeNotifier {
   final _reminders = <Reminder>[];
   final _favoritPlaces = <Place>[];
-  final _arrival = <String>{};
 
   late LatLng _currentPosition;
 
@@ -22,7 +21,7 @@ class AppStates extends ChangeNotifier {
   ThemeMode themeMode = ThemeMode.system;
 
   bool reminderOptions = false;
-  int selected = 0;
+  int selected = -1;
   int bottomNavBarIndex = 0;
 
   Reminder? reminderRead(int index) {
@@ -31,6 +30,8 @@ class AppStates extends ChangeNotifier {
   }
 
   void reminderAdd(Reminder reminder) {
+    final index = _reminders.indexWhere((element) => element.id == reminder.id);
+    if (index != -1) return;
     _reminders.add(reminder);
     notifyListeners();
   }
@@ -48,16 +49,16 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<Reminder> arrivalAll() {
+    return _reminders.where((element) => element.isArrived == true).toList();
+  }
+
   List<Reminder> reminderAll() {
     return _reminders;
   }
 
   void reminderClear() {
     _reminders.clear();
-  }
-
-  Reminder? reminderFromId(String id) {
-    return _reminders.firstWhere((element) => element.id == id);
   }
 
   void favoriteAdd(Place place) {
@@ -79,24 +80,6 @@ class AppStates extends ChangeNotifier {
 
   List<Place> favoriteAll() {
     return _favoritPlaces;
-  }
-
-  void arrivalAdd(String id) {
-    _arrival.add(id);
-    notifyListeners();
-  }
-
-  void arrivalDelete(String id) {
-    _arrival.remove(id);
-    notifyListeners();
-  }
-
-  void arrivalClear() {
-    _arrival.clear();
-  }
-
-  Set<String> arrivalAll() {
-    return _arrival;
   }
 
   void setCurrent(LatLng current) {

@@ -10,7 +10,7 @@ class FavoritesList extends StatelessWidget {
   Widget build(BuildContext context) {
     final appStates = Provider.of<AppStates>(context);
 
-    return appStates.reminderAll().isEmpty
+    return appStates.favoriteAll().isEmpty
         ? const EmptyPlaceHolder(comment: 'No favorites yet')
         : ListView.builder(
             itemCount: appStates.favoriteAll().length,
