@@ -7,7 +7,8 @@ class Reminder {
   late String title;
   late Place place;
   late double initialDistance;
-  bool? isTracking = true;
+  late bool isTracking;
+  late bool isArrived;
   String? notes = '';
 
   Reminder({
@@ -15,7 +16,8 @@ class Reminder {
     required this.title,
     required this.place,
     required this.initialDistance,
-    this.isTracking,
+    required this.isTracking,
+    required this.isArrived,
     this.notes,
   });
 
@@ -25,6 +27,7 @@ class Reminder {
     place = json['place'] as Place;
     initialDistance = json['initialDistance'] as double;
     isTracking = json['isTracking'] as bool;
+    isArrived = json['isArrived'] as bool;
     notes = json['notes'] as String;
   }
 
@@ -35,6 +38,7 @@ class Reminder {
       'place': place,
       'initialDistance': initialDistance,
       'isTracking': isTracking,
+      'isArrived': isArrived,
       'notes': notes,
     };
   }

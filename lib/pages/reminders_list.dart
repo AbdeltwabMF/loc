@@ -23,16 +23,28 @@ class RemindersList extends StatelessWidget {
                     .remainderDistance(appStates.getCurrent());
                 final radius = appStates.reminderRead(index)!.place.radius;
                 if (remainderDistance <= radius!) {
-                  appStates.arrivalAdd(appStates.reminderRead(index)!.id);
+                  final reminder = appStates.reminderRead(index);
+                  reminder!.isArrived = true;
+                  appStates.reminderUpdate(reminder);
                 } else {
-                  appStates.arrivalDelete(appStates.reminderRead(index)!.id);
+                  final reminder = appStates.reminderRead(index);
+                  reminder!.isArrived = false;
+                  appStates.reminderUpdate(reminder);
                 }
               });
 
               return Container(
                 decoration: BoxDecoration(
+                  border: appStates.selected != index
+                      ? null
+                      : Border.all(
+                          color: Theme.of(context).colorScheme.onTertiary,
+                          strokeAlign: BorderSide.strokeAlignCenter,
+                        ),
                   borderRadius: BorderRadius.circular(16),
-                  color: Theme.of(context).colorScheme.onSecondary,
+                  color: appStates.selected != index
+                      ? Theme.of(context).colorScheme.onSecondary
+                      : Theme.of(context).colorScheme.tertiary,
                 ),
                 margin: const EdgeInsets.symmetric(
                   horizontal: 8,

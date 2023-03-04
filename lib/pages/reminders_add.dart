@@ -5,15 +5,20 @@ import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/repository/maps.dart';
-import 'package:loc/widgets/add_reminder/buttons.dart';
+import 'package:loc/widgets/buttons.dart';
 import 'package:loc/pages/map.dart';
 import 'package:loc/utils/location.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
-class RemindersAdd extends StatelessWidget {
-  RemindersAdd({super.key});
+class RemindersAdd extends StatefulWidget {
+  const RemindersAdd({super.key});
 
+  @override
+  State<RemindersAdd> createState() => _RemindersAdd();
+}
+
+class _RemindersAdd extends State<RemindersAdd> {
   final _locationFormKey = GlobalKey<FormState>();
   final _titleFormKey = GlobalKey<FormState>();
 
@@ -24,8 +29,18 @@ class RemindersAdd extends StatelessWidget {
   final TextEditingController notes = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final appStates = Provider.of<AppStates>(context);
+    final appStates = Provider.of<AppStates>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -205,10 +220,14 @@ class RemindersAdd extends StatelessWidget {
                         );
 
                         if (pickedLocation != null) {
-                          latitude.text =
-                              pickedLocation.position.latitude.toString();
-                          longitude.text =
-                              pickedLocation.position.longitude.toString();
+                          if (mounted) {
+                            setState(() {
+                              latitude.text =
+                                  pickedLocation.position.latitude.toString();
+                              longitude.text =
+                                  pickedLocation.position.longitude.toString();
+                            });
+                          }
                         }
                       },
                     ),
@@ -309,7 +328,11 @@ class RemindersAdd extends StatelessWidget {
                   });
 
                   if (radius.text.isEmpty) {
-                    radius.text = destination.radius.toString();
+                    if (mounted) {
+                      setState(() {
+                        radius.text = destination.radius.toString();
+                      });
+                    }
                   }
 
                   Reminder newReminder = Reminder(
@@ -317,6 +340,8 @@ class RemindersAdd extends StatelessWidget {
                     title: title.text,
                     place: destination,
                     initialDistance: 0.0,
+                    isTracking: true,
+                    isArrived: false,
                     notes: notes.text,
                   );
 

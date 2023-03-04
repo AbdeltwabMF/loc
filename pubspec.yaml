@@ -37,6 +37,7 @@ flutter:
     - assets/raw/cat.riv
     - assets/raw/spinner.riv
     - assets/raw/404.riv
+    - assets/raw/fanoos.riv
   fonts:
       - family: Fantasque
         fonts:

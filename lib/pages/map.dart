@@ -11,17 +11,17 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/repository/maps.dart';
 import 'package:loc/themes/color_scheme.dart';
 import 'package:loc/utils/location.dart';
-import 'package:loc/widgets/map/buttons.dart';
+import 'package:loc/widgets/buttons.dart';
 import 'package:rive/rive.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
   @override
-  State<MapPage> createState() => _OsmMapViewScreen();
+  State<MapPage> createState() => _MapPage();
 }
 
-class _OsmMapViewScreen extends State<MapPage> {
+class _MapPage extends State<MapPage> {
   MapController _mapController = MapController();
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
