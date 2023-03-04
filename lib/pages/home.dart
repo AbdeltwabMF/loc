@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
-import 'package:hive/hive.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/pages/arrival_list.dart';
 import 'package:loc/pages/favorites_list.dart';
