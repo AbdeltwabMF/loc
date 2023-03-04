@@ -50,7 +50,10 @@ class AppStates extends ChangeNotifier {
   }
 
   List<Reminder> arrivalAll() {
-    return _reminders.where((element) => element.isArrived == true).toList();
+    return _reminders
+        .where((element) =>
+            element.isArrived == true && element.isTracking == true)
+        .toList();
   }
 
   List<Reminder> reminderAll() {
