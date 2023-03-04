@@ -35,16 +35,18 @@ class RemindersList extends StatelessWidget {
 
               return Container(
                 decoration: BoxDecoration(
-                  border: appStates.selected != index
-                      ? null
-                      : Border.all(
+                  border: appStates.reminderOptions == true &&
+                          appStates.selected == index
+                      ? Border.all(
                           color: Theme.of(context).colorScheme.onTertiary,
                           strokeAlign: BorderSide.strokeAlignCenter,
-                        ),
+                        )
+                      : null,
                   borderRadius: BorderRadius.circular(16),
-                  color: appStates.selected != index
-                      ? Theme.of(context).colorScheme.onSecondary
-                      : Theme.of(context).colorScheme.tertiary,
+                  color: appStates.reminderOptions == true &&
+                          appStates.selected != index
+                      ? Theme.of(context).colorScheme.tertiary
+                      : Theme.of(context).colorScheme.onSecondary,
                 ),
                 margin: const EdgeInsets.symmetric(
                   horizontal: 8,
