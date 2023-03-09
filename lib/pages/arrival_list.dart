@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_states.dart';
-import 'package:loc/widgets/empty_plce_holder.dart';
+import 'package:loc/widgets/animations.dart';
 import 'package:provider/provider.dart';
 
 class ArrivalList extends StatelessWidget {
@@ -11,7 +11,7 @@ class ArrivalList extends StatelessWidget {
     final appStates = Provider.of<AppStates>(context);
 
     return appStates.arrivalAll().isEmpty
-        ? const EmptyPlaceHolder(comment: 'Arrival list is empty')
+        ? const EmptySpace(comment: 'Arrival list is empty')
         : ListView.builder(
             itemCount: appStates.arrivalAll().length,
             addAutomaticKeepAlives: true,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rive/rive.dart';
 
-class EmptyPlaceHolder extends StatelessWidget {
-  const EmptyPlaceHolder({
+class EmptySpace extends StatelessWidget {
+  const EmptySpace({
     required this.comment,
     super.key,
   });

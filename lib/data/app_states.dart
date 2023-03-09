@@ -10,18 +10,17 @@ import 'package:loc/data/models/reminder.dart';
 late StreamSubscription<Position> positionStream;
 
 // Hive boxes
-late Box boxReminders;
-late Box boxFavorites;
-late Box boxSettings;
+late Box boxStates;
+late Box boxPreferences;
 
 class AppStates extends ChangeNotifier {
-  // Data
-  final _reminders = <Reminder>[];
-  final _favoritPlaces = <Place>[];
+  // States
+  List<Reminder> _reminders = <Reminder>[];
+  List<Place> _favoritPlaces = <Place>[];
 
   // Preferences
   bool notify = true;
-  ThemeMode themeMode = ThemeMode.system;
+  int themeMode = 0;
 
   // Does not matter, just Set to default on start
   late Point _currentPosition;
@@ -70,6 +69,11 @@ class AppStates extends ChangeNotifier {
     return _reminders;
   }
 
+  void reminderAddAll(List<Reminder> reminders) {
+    _reminders = reminders;
+    notifyListeners();
+  }
+
   void reminderClear() {
     _reminders.clear();
   }
@@ -93,6 +97,11 @@ class AppStates extends ChangeNotifier {
 
   List<Place> favoriteAll() {
     return _favoritPlaces;
+  }
+
+  void favoriteAddAll(List<Place> places) {
+    _favoritPlaces = places;
+    notifyListeners();
   }
 
   void setCurrent(Point current) {
@@ -119,7 +128,7 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setThemeMode(ThemeMode mode) {
+  void setThemeMode(int mode) {
     themeMode = mode;
     notifyListeners();
   }

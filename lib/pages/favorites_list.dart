@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_states.dart';
-import 'package:loc/widgets/empty_plce_holder.dart';
+import 'package:loc/widgets/animations.dart';
 import 'package:provider/provider.dart';
 
 class FavoritesList extends StatelessWidget {
@@ -11,7 +11,7 @@ class FavoritesList extends StatelessWidget {
     final appStates = Provider.of<AppStates>(context);
 
     return appStates.favoriteAll().isEmpty
-        ? const EmptyPlaceHolder(comment: 'No favorites yet')
+        ? const EmptySpace(comment: 'No favorites yet')
         : ListView.builder(
             itemCount: appStates.favoriteAll().length,
             addAutomaticKeepAlives: true,
