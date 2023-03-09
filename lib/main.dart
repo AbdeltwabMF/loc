@@ -28,9 +28,8 @@ void main() async {
   Hive.registerAdapter<Place>(PlaceAdapter());
   Hive.registerAdapter<Point>(PointAdapter());
 
-  boxReminders = await Hive.openBox('reminders');
-  boxFavorites = await Hive.openBox('favorites');
-  boxSettings = await Hive.openBox('settings');
+  boxStates = await Hive.openBox('states');
+  boxPreferences = await Hive.openBox('settings');
 
   runApp(const Root());
 }
@@ -50,6 +49,19 @@ class Root extends StatelessWidget {
 class Loc extends StatelessWidget {
   const Loc({super.key});
 
+  ThemeMode mode(int state) {
+    switch (state) {
+      case 0:
+        return ThemeMode.system;
+      case 1:
+        return ThemeMode.dark;
+      case 2:
+        return ThemeMode.light;
+      default:
+        return ThemeMode.system;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appStates = Provider.of<AppStates>(context);
@@ -58,7 +70,7 @@ class Loc extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: LocThemeData.lightThemeData,
       darkTheme: LocThemeData.darkThemeData,
-      themeMode: appStates.themeMode,
+      themeMode: mode(appStates.themeMode),
       home: const HomePage(),
     );
   }

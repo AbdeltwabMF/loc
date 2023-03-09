@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_android/geolocator_android.dart';
 import 'package:geolocator_apple/geolocator_apple.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';

@@ -3,7 +3,7 @@ description: Free and open-spurce location-based reminder for Android
 repository: https://github.com/AbdeltwabMF/loc
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+100
+version: 0.5.9+59
 
 environment:
   flutter: 3.7.5

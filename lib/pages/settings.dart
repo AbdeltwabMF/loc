@@ -16,7 +16,7 @@ class Settings extends StatelessWidget {
           dense: true,
           subtitle: const Text('Set theme mode globally.'),
           title: const Text('Theme Mode'),
-          trailing: DropdownMenu<ThemeMode>(
+          trailing: DropdownMenu<int>(
             initialSelection: appStates.themeMode,
             inputDecorationTheme: const InputDecorationTheme(
               filled: true,
@@ -32,15 +32,15 @@ class Settings extends StatelessWidget {
             },
             dropdownMenuEntries: const [
               DropdownMenuEntry(
-                value: ThemeMode.system,
+                value: 0,
                 label: 'system',
               ),
               DropdownMenuEntry(
-                value: ThemeMode.dark,
+                value: 1,
                 label: 'dark',
               ),
               DropdownMenuEntry(
-                value: ThemeMode.light,
+                value: 2,
                 label: 'light',
               ),
             ],
