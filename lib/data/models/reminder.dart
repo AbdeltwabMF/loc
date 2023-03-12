@@ -1,6 +1,5 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 

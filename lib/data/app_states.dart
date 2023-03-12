@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -10,7 +11,8 @@ import 'package:loc/data/models/reminder.dart';
 late StreamSubscription<Position> positionStream;
 
 // Hive boxes
-late Box boxStates;
+late Box boxReminders;
+late Box boxFavorites;
 late Box boxPreferences;
 
 class AppStates extends ChangeNotifier {
@@ -83,6 +85,11 @@ class AppStates extends ChangeNotifier {
       _favoritPlaces.add(place);
       notifyListeners();
     }
+  }
+
+  Place? favoriteRead(int index) {
+    if (index >= _favoritPlaces.length || index < 0) return null;
+    return _favoritPlaces[index];
   }
 
   void favoriteDelete(int index) {

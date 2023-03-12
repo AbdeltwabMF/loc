@@ -23,23 +23,6 @@ class RemindersList extends StatelessWidget {
                     physics: const ScrollPhysics(),
                     itemCount: appStates.reminderAll().length,
                     itemBuilder: (context, index) {
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                        final remainderDistance = appStates
-                            .reminderRead(index)!
-                            .remainderDistance(appStates.getCurrent());
-                        final radius =
-                            appStates.reminderRead(index)!.place.radius;
-                        if (remainderDistance <= radius!) {
-                          appStates.reminderUpdate(appStates
-                              .reminderRead(index)!
-                              .copy(isArrived: true));
-                        } else {
-                          appStates.reminderUpdate(appStates
-                              .reminderRead(index)!
-                              .copy(isArrived: false));
-                        }
-                      });
-
                       return Container(
                         decoration: BoxDecoration(
                           border: appStates.reminderOptions == true &&
