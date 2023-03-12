@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/reminder.dart';
-import 'package:loc/utils/format_strings.dart';
+import 'package:loc/utils/format.dart';
 import 'package:provider/provider.dart';
 
 class RemindersSearch extends StatefulWidget {
@@ -14,6 +14,7 @@ class RemindersSearch extends StatefulWidget {
 class _RemindersSearch extends State<RemindersSearch> {
   final _search = TextEditingController();
   List<Reminder> _matched = <Reminder>[];
+  final FocusNode _focusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -22,11 +23,20 @@ class _RemindersSearch extends State<RemindersSearch> {
     return Scaffold(
       appBar: AppBar(
         title: TextFormField(
+          focusNode: _focusNode,
           controller: _search,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             border: InputBorder.none,
             hintText: 'Search...',
             isDense: true,
+            suffix: IconButton(
+              onPressed: () {
+                _search.clear();
+              },
+              icon: const Icon(
+                Icons.close_rounded,
+              ),
+            ),
           ),
           onChanged: (value) {
             final reminders = appStates.reminderAll();
@@ -47,6 +57,9 @@ class _RemindersSearch extends State<RemindersSearch> {
                 _matched = matched;
               });
             }
+          },
+          onTap: () {
+            _focusNode.unfocus();
           },
         ),
       ),

@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geolocator_android/geolocator_android.dart';
 import 'package:geolocator_apple/geolocator_apple.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
@@ -73,6 +73,41 @@ void handlePositionUpdates(BuildContext context) {
               longitude: value.longitude,
             );
             appStates.setCurrent(currentPosition);
+            for (int i = 0; i < appStates.reminderAll().length; ++i) {
+              final remainderDistance = appStates
+                  .reminderRead(i)!
+                  .remainderDistance(appStates.getCurrent());
+              final radius = appStates.reminderRead(i)!.place.radius;
+              if (remainderDistance <= radius!) {
+                appStates.reminderUpdate(
+                    appStates.reminderRead(i)!.copy(isArrived: true));
+              } else {
+                appStates.reminderUpdate(
+                    appStates.reminderRead(i)!.copy(isArrived: false));
+              }
+            }
+            if (appStates.notify == true) {
+              if (appStates.arrivalAll().isNotEmpty) {
+                if (appStates.reminderAll().isEmpty) {
+                  FlutterRingtonePlayer.stop();
+                  appStates.setRinging(false);
+                } else {
+                  if (appStates.ringing == false) {
+                    FlutterRingtonePlayer.playAlarm(
+                      asAlarm: true,
+                      looping: true,
+                      volume: 1.0,
+                    );
+                    appStates.setRinging(true);
+                  }
+                }
+              } else {
+                if (appStates.ringing == true) {
+                  FlutterRingtonePlayer.stop();
+                  appStates.setRinging(false);
+                }
+              }
+            }
           },
           cancelOnError: true,
           onError: (error, stackTrace) {

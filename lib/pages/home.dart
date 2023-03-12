@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
@@ -9,7 +10,7 @@ import 'package:loc/pages/reminders_search.dart';
 import 'package:loc/pages/settings.dart';
 import 'package:loc/pages/about.dart';
 import 'package:loc/pages/reminders_add.dart';
-import 'package:loc/utils/data.dart';
+import 'package:loc/utils/database_ops.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/widgets/bottom_nav_bar.dart';
 import 'package:loc/pages/reminders_list.dart';
@@ -84,29 +85,6 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
           readData(context);
           appStates.setLoaded(true);
         }
-
-        if (appStates.notify == true) {
-          if (appStates.arrivalAll().isNotEmpty) {
-            if (appStates.reminderAll().isEmpty) {
-              FlutterRingtonePlayer.stop();
-              appStates.setRinging(false);
-            } else {
-              if (appStates.ringing == false) {
-                FlutterRingtonePlayer.playAlarm(
-                  asAlarm: true,
-                  looping: true,
-                  volume: 1.0,
-                );
-                appStates.setRinging(true);
-              }
-            }
-          } else {
-            if (appStates.ringing == true) {
-              FlutterRingtonePlayer.stop();
-              appStates.setRinging(false);
-            }
-          }
-        }
       }
     });
 
@@ -178,38 +156,23 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                       : const SizedBox.shrink(),
                   appStates.reminderOptions == true
                       ? const SizedBox.shrink()
-                      : IconButton(
-                          onPressed: () {
-                            Navigator.of(context).push<void>(
-                              MaterialPageRoute<void>(
-                                builder: (context) {
-                                  return const RemindersSearch();
-                                },
+                      : appStates.bottomNavBarIndex != 3
+                          ? IconButton(
+                              onPressed: () {
+                                Navigator.of(context).push<void>(
+                                  MaterialPageRoute<void>(
+                                    builder: (context) {
+                                      return const RemindersSearch();
+                                    },
+                                  ),
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.search_rounded,
+                                size: 32,
                               ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.search_rounded,
-                            size: 32,
-                          ),
-                        ),
-                  appStates.reminderOptions == true
-                      ? const SizedBox.shrink()
-                      : IconButton(
-                          onPressed: () {
-                            Navigator.of(context).push<void>(
-                              MaterialPageRoute<void>(
-                                builder: (context) {
-                                  return const AboutPage();
-                                },
-                              ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.info_rounded,
-                            size: 32,
-                          ),
-                        ),
+                            )
+                          : const SizedBox.shrink(),
                   appStates.reminderOptions == true
                       ? const SizedBox.shrink()
                       : IconButton(
@@ -229,6 +192,23 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                             color: appStates.notify == true
                                 ? Theme.of(context).colorScheme.onSurface
                                 : Theme.of(context).colorScheme.onTertiary,
+                            size: 32,
+                          ),
+                        ),
+                  appStates.reminderOptions == true
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          onPressed: () {
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (context) {
+                                  return const AboutPage();
+                                },
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.info_rounded,
                             size: 32,
                           ),
                         ),

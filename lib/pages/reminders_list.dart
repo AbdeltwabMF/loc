@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/place.dart';
-import 'package:loc/utils/format_strings.dart';
+import 'package:loc/utils/format.dart';
 import 'package:loc/utils/location.dart';
-import 'package:loc/widgets/empty_plce_holder.dart';
+import 'package:loc/widgets/animations.dart';
 import 'package:provider/provider.dart';
 
 class RemindersList extends StatelessWidget {
@@ -14,7 +14,7 @@ class RemindersList extends StatelessWidget {
     final appStates = Provider.of<AppStates>(context);
 
     return appStates.reminderAll().isEmpty
-        ? const EmptyPlaceHolder(comment: 'No reminders yet')
+        ? const EmptySpace(comment: 'No reminders yet')
         : FutureBuilder<Place>(
             future: getCurrentLocation(),
             builder: (BuildContext context, AsyncSnapshot<Place> snapshot) {
@@ -23,23 +23,6 @@ class RemindersList extends StatelessWidget {
                     physics: const ScrollPhysics(),
                     itemCount: appStates.reminderAll().length,
                     itemBuilder: (context, index) {
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                        final remainderDistance = appStates
-                            .reminderRead(index)!
-                            .remainderDistance(appStates.getCurrent());
-                        final radius =
-                            appStates.reminderRead(index)!.place.radius;
-                        if (remainderDistance <= radius!) {
-                          appStates.reminderUpdate(appStates
-                              .reminderRead(index)!
-                              .copy(isArrived: true));
-                        } else {
-                          appStates.reminderUpdate(appStates
-                              .reminderRead(index)!
-                              .copy(isArrived: false));
-                        }
-                      });
-
                       return Container(
                         decoration: BoxDecoration(
                           border: appStates.reminderOptions == true &&
@@ -176,7 +159,7 @@ class RemindersList extends StatelessWidget {
                       );
                     });
               } else {
-                return const EmptyPlaceHolder(comment: 'No reminders yet');
+                return const EmptySpace(comment: 'No reminders yet');
               }
             });
   }
