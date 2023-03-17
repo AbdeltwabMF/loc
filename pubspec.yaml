@@ -36,6 +36,7 @@ flutter:
     - assets/ca/lets-encrypt-r3.pem
     - assets/images/icon.png
     - assets/images/featureGraphic.png
+    - assets/images/background.jpg
   fonts:
       - family: Fantasque
         fonts:
@@ -43,7 +44,4 @@ flutter:
       - family: NotoArabic
         fonts:
           - asset: assets/fonts/NotoSansArabic-Regular.ttf
-      - family: Quicksand
-        fonts:
-          - asset: assets/fonts/Quicksand-Regular.ttf
   uses-material-design: true

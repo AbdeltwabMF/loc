@@ -11,7 +11,7 @@ class ArrivalList extends StatelessWidget {
     final appStates = Provider.of<AppStates>(context);
 
     return appStates.arrivalAll().isEmpty
-        ? const EmptySpace(comment: 'Arrival list is empty')
+        ? const EmptySpace(comment: 'Empty arrival list')
         : ListView.builder(
             itemCount: appStates.arrivalAll().length,
             addAutomaticKeepAlives: true,

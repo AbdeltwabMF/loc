@@ -50,13 +50,13 @@ class Root extends StatelessWidget {
 class Loc extends StatelessWidget {
   const Loc({super.key});
 
-  ThemeMode mode(int state) {
+  ThemeMode mode(String state) {
     switch (state) {
-      case 0:
+      case 'System':
         return ThemeMode.system;
-      case 1:
+      case 'Dark':
         return ThemeMode.dark;
-      case 2:
+      case 'Light':
         return ThemeMode.light;
       default:
         return ThemeMode.system;

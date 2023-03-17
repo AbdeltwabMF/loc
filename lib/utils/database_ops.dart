@@ -40,5 +40,6 @@ Future<void> readData(BuildContext context) async {
   }
   // Read settings
   appStates.setNotify(boxPreferences.get('pre-notify', defaultValue: true));
-  appStates.setThemeMode(boxPreferences.get('pre-themeMode', defaultValue: 0));
+  appStates.setThemeMode(
+      boxPreferences.get('pre-themeMode', defaultValue: 'System'));
 }
