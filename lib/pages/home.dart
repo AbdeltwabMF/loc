@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
@@ -14,7 +13,6 @@ import 'package:loc/utils/database_ops.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/widgets/bottom_nav_bar.dart';
 import 'package:loc/pages/reminders_list.dart';
-import 'package:rive/rive.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -99,13 +97,6 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
       },
       child: Stack(
         children: [
-          const Positioned.fill(
-            child: RiveAnimation.asset(
-              'assets/raw/fanoos.riv',
-              fit: BoxFit.fitWidth,
-              alignment: Alignment.center,
-            ),
-          ),
           BackdropFilter(
             filter: ImageFilter.blur(
               sigmaX: 10,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rive/rive.dart';
 
 class EmptySpace extends StatelessWidget {
   const EmptySpace({
@@ -15,14 +14,6 @@ class EmptySpace extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(
-          flex: 2,
-          child: RiveAnimation.asset(
-            'assets/raw/cat.riv',
-            fit: BoxFit.cover,
-            alignment: Alignment.center,
-          ),
-        ),
         Expanded(
           child: Text(
             comment,
