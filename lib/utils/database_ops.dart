@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_states.dart';
-import 'package:loc/data/models/place.dart';
-import 'package:loc/data/models/reminder.dart';
 import 'package:provider/provider.dart';
 
 Future<void> writeData(BuildContext context) async {
