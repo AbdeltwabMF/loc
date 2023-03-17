@@ -75,15 +75,15 @@ void handlePositionUpdates(BuildContext context) {
             appStates.setCurrent(currentPosition);
             for (int i = 0; i < appStates.reminderAll().length; ++i) {
               final remainderDistance = appStates
-                  .reminderRead(i)!
+                  .reminderRead(index: i)!
                   .remainderDistance(appStates.getCurrent());
-              final radius = appStates.reminderRead(i)!.place.radius;
+              final radius = appStates.reminderRead(index: i)!.place.radius;
               if (remainderDistance <= radius!) {
                 appStates.reminderUpdate(
-                    appStates.reminderRead(i)!.copy(isArrived: true));
+                    appStates.reminderRead(index: i)!.copy(isArrived: true));
               } else {
                 appStates.reminderUpdate(
-                    appStates.reminderRead(i)!.copy(isArrived: false));
+                    appStates.reminderRead(index: i)!.copy(isArrived: false));
               }
             }
             if (appStates.notify == true) {

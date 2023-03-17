@@ -18,6 +18,7 @@ class AppStates extends ChangeNotifier {
   // States
   List<Reminder> _reminders = <Reminder>[];
   List<Place> _favoritePlaces = <Place>[];
+  List<String> _selected = <String>[];
 
   // Preferences
   bool notify = true;
@@ -30,13 +31,21 @@ class AppStates extends ChangeNotifier {
   bool listening = false;
 
   bool loaded = false;
-  bool reminderOptions = false;
-  int selected = -1;
   int bottomNavBarIndex = 0;
 
-  Reminder? reminderRead(int index) {
-    if (index >= _reminders.length || index < 0) return null;
-    return _reminders[index];
+  Reminder? reminderRead({int? index, String? id}) {
+    if (index != null) {
+      return _reminders[index];
+    } else if (id != null) {
+      for (int i = 0; i < _reminders.length; ++i) {
+        if (_reminders[i].id == id) {
+          return _reminders[i];
+        }
+      }
+      return null;
+    } else {
+      return null;
+    }
   }
 
   void reminderAdd(Reminder reminder) {
@@ -53,9 +62,18 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
-  void reminderDelete(int index) {
-    if (index >= _reminders.length || index < 0) return;
-    _reminders.removeAt(index);
+  void reminderDelete({int? index, String? id}) {
+    if (index != null) {
+      _reminders.removeAt(index);
+    } else if (id != null) {
+      for (int i = 0; i < _reminders.length; ++i) {
+        if (_reminders[i].id == id) {
+          _reminders.removeAt(i);
+        }
+      }
+    } else {
+      return;
+    }
     notifyListeners();
   }
 
@@ -144,14 +162,44 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setReminderOptions(bool state) {
-    reminderOptions = state;
+  void selectedAdd(String id) {
+    _selected.add(id);
     notifyListeners();
   }
 
-  void setSelected(int index) {
-    selected = index;
+  void selectedDelete(String id) {
+    _selected.removeWhere((element) => element == id);
     notifyListeners();
+  }
+
+  bool selectedRead({int? index, String? id}) {
+    if (index != null) {
+      final id = _reminders[index].id;
+      for (int i = 0; i < _selected.length; ++i) {
+        if (id == _selected[i]) {
+          return true;
+        }
+      }
+      return false;
+    } else if (id != null) {
+      for (int i = 0; i < _selected.length; ++i) {
+        if (_selected[i] == id) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return false;
+    }
+  }
+
+  void selectedClear() {
+    _selected.clear();
+    notifyListeners();
+  }
+
+  List<String> selectedAll() {
+    return _selected;
   }
 
   void setLoaded(bool state) {

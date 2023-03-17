@@ -8,7 +8,7 @@ Future<void> writeData(BuildContext context) async {
   // Write reminders
   await boxReminders.put('len', appStates.reminderAll().length);
   for (int i = 0; i < appStates.reminderAll().length; ++i) {
-    await boxReminders.put(i, appStates.reminderRead(i)!);
+    await boxReminders.put(i, appStates.reminderRead(index: i)!);
   }
 
   // Write favorites

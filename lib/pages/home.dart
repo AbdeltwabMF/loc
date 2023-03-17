@@ -88,8 +88,8 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
 
     return WillPopScope(
       onWillPop: () async {
-        if (appStates.reminderOptions == true) {
-          appStates.setReminderOptions(false);
+        if (appStates.selectedAll().isNotEmpty) {
+          appStates.selectedClear();
           return false;
         }
         writeData(context);
@@ -110,13 +110,15 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
             resizeToAvoidBottomInset: false,
             appBar: AppBar(
               actions: [
-                appStates.reminderOptions == true
+                appStates.selectedAll().isNotEmpty
                     ? IconButton(
                         onPressed: () {
-                          appStates.favoriteAdd(appStates
-                              .reminderRead(appStates.selected)!
-                              .place);
-                          appStates.setReminderOptions(false);
+                          final selected = appStates.selectedAll();
+                          for (int i = 0; i < selected.length; ++i) {
+                            appStates.favoriteAdd(
+                                appStates.reminderRead(id: selected[i])!.place);
+                          }
+                          appStates.selectedClear();
                         },
                         icon: const Icon(
                           Icons.favorite_rounded,
@@ -124,11 +126,14 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                         ),
                       )
                     : const SizedBox.shrink(),
-                appStates.reminderOptions == true
+                appStates.selectedAll().isNotEmpty
                     ? IconButton(
                         onPressed: () {
-                          appStates.reminderDelete(appStates.selected);
-                          appStates.setReminderOptions(false);
+                          final selected = appStates.selectedAll();
+                          for (int i = 0; i < selected.length; ++i) {
+                            appStates.reminderDelete(id: selected[i]);
+                          }
+                          appStates.selectedClear();
                         },
                         icon: const Icon(
                           Icons.delete_rounded,
@@ -136,10 +141,10 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                         ),
                       )
                     : const SizedBox.shrink(),
-                appStates.reminderOptions == true
+                appStates.selectedAll().isNotEmpty
                     ? IconButton(
                         onPressed: () {
-                          appStates.setReminderOptions(false);
+                          appStates.selectedClear();
                         },
                         icon: const Icon(
                           Icons.edit_rounded,
@@ -147,9 +152,9 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                         ),
                       )
                     : const SizedBox.shrink(),
-                appStates.reminderOptions == true
+                appStates.selectedAll().isNotEmpty
                     ? const SizedBox.shrink()
-                    : appStates.bottomNavBarIndex != 3
+                    : appStates.bottomNavBarIndex == 0
                         ? IconButton(
                             onPressed: () {
                               Navigator.of(context).push<void>(
@@ -166,7 +171,7 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                             ),
                           )
                         : const SizedBox.shrink(),
-                appStates.reminderOptions == true
+                appStates.selectedAll().isNotEmpty
                     ? const SizedBox.shrink()
                     : IconButton(
                         onPressed: () {
@@ -188,7 +193,7 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                           size: 32,
                         ),
                       ),
-                appStates.reminderOptions == true
+                appStates.selectedAll().isNotEmpty
                     ? const SizedBox.shrink()
                     : IconButton(
                         onPressed: () {
@@ -208,14 +213,14 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
               ],
               elevation: 0,
               leading: null,
-              title: appStates.reminderOptions == true
+              title: appStates.selectedAll().isNotEmpty
                   ? IconButton(
                       icon: const Icon(
                         Icons.close_rounded,
                         size: 32,
                       ),
                       onPressed: () {
-                        appStates.setReminderOptions(false);
+                        appStates.selectedClear();
                       },
                     )
                   : const Text(
