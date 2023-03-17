@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
@@ -335,6 +334,7 @@ class _RemindersAdd extends State<RemindersAdd> {
                       });
                     }
                   }
+                  destination.radius = int.parse(radius.text);
 
                   Reminder newReminder = Reminder(
                     id: const Uuid().v4(),

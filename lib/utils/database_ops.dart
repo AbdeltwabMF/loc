@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_states.dart';
-import 'package:loc/data/models/place.dart';
-import 'package:loc/data/models/reminder.dart';
 import 'package:provider/provider.dart';
 
 Future<void> writeData(BuildContext context) async {
   final appStates = Provider.of<AppStates>(context, listen: false);
 
   // Write reminders
-  await boxStates.put('reminders', appStates.reminderAll());
+  await boxReminders.put('len', appStates.reminderAll().length);
+  for (int i = 0; i < appStates.reminderAll().length; ++i) {
+    await boxReminders.put(i, appStates.reminderRead(i)!);
+  }
 
   // Write favorites
-  await boxStates.put('favorites', appStates.favoriteAll());
+  await boxFavorites.put('len', appStates.favoriteAll().length);
+  for (int i = 0; i < appStates.favoriteAll().length; ++i) {
+    await boxFavorites.put(i, appStates.favoriteRead(i)!);
+  }
 
   // Write preferences
   await boxPreferences.put('pre-notify', appStates.notify);
@@ -22,24 +26,17 @@ Future<void> readData(BuildContext context) async {
   final appStates = Provider.of<AppStates>(context, listen: false);
 
   // Read reminders
-  appStates.reminderAddAll(
-    List<Reminder>.from(
-      boxStates.get('reminders')?.map(
-            (e) => Reminder.fromJson(e),
-          ),
-    ),
-  );
+  final remindersLen = boxReminders.get('len', defaultValue: 0);
+  for (int i = 0; i < remindersLen; ++i) {
+    appStates.reminderAdd(boxReminders.get(i));
+  }
 
   // Read favorites
-  appStates.favoriteAddAll(
-    List<Place>.from(
-      boxStates.get('favorites')?.map(
-            (e) => Place.fromJson(e),
-          ),
-    ),
-  );
-
+  final favoritesLen = boxFavorites.get('len', defaultValue: 0);
+  for (int i = 0; i < favoritesLen; ++i) {
+    appStates.favoriteAdd(boxFavorites.get(i));
+  }
   // Read settings
-  appStates.setNotify(boxPreferences.get('pre-notify') as bool);
-  appStates.setThemeMode(boxPreferences.get('pre-themeMode') as int);
+  appStates.setNotify(boxPreferences.get('pre-notify', defaultValue: true));
+  appStates.setThemeMode(boxPreferences.get('pre-themeMode', defaultValue: 0));
 }

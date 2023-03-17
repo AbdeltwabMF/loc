@@ -85,29 +85,6 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
           readData(context);
           appStates.setLoaded(true);
         }
-
-        if (appStates.notify == true) {
-          if (appStates.arrivalAll().isNotEmpty) {
-            if (appStates.reminderAll().isEmpty) {
-              FlutterRingtonePlayer.stop();
-              appStates.setRinging(false);
-            } else {
-              if (appStates.ringing == false) {
-                FlutterRingtonePlayer.playAlarm(
-                  asAlarm: true,
-                  looping: true,
-                  volume: 1.0,
-                );
-                appStates.setRinging(true);
-              }
-            }
-          } else {
-            if (appStates.ringing == true) {
-              FlutterRingtonePlayer.stop();
-              appStates.setRinging(false);
-            }
-          }
-        }
       }
     });
 

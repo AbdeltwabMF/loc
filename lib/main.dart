@@ -28,7 +28,8 @@ void main() async {
   Hive.registerAdapter<Place>(PlaceAdapter());
   Hive.registerAdapter<Point>(PointAdapter());
 
-  boxStates = await Hive.openBox('states');
+  boxReminders = await Hive.openBox('reminders');
+  boxFavorites = await Hive.openBox('favorites');
   boxPreferences = await Hive.openBox('settings');
 
   runApp(const Root());

@@ -10,13 +10,14 @@ import 'package:loc/data/models/reminder.dart';
 late StreamSubscription<Position> positionStream;
 
 // Hive boxes
-late Box boxStates;
+late Box boxReminders;
+late Box boxFavorites;
 late Box boxPreferences;
 
 class AppStates extends ChangeNotifier {
   // States
   List<Reminder> _reminders = <Reminder>[];
-  List<Place> _favoritPlaces = <Place>[];
+  List<Place> _favoritePlaces = <Place>[];
 
   // Preferences
   bool notify = true;
@@ -79,28 +80,33 @@ class AppStates extends ChangeNotifier {
   }
 
   void favoriteAdd(Place place) {
-    if (_favoritPlaces.contains(place) == false) {
-      _favoritPlaces.add(place);
+    if (_favoritePlaces.contains(place) == false) {
+      _favoritePlaces.add(place);
       notifyListeners();
     }
   }
 
+  Place? favoriteRead(int index) {
+    if (index >= _favoritePlaces.length || index < 0) return null;
+    return _favoritePlaces[index];
+  }
+
   void favoriteDelete(int index) {
-    if (index >= _favoritPlaces.length || index < 0) return;
-    _favoritPlaces.removeAt(index);
+    if (index >= _favoritePlaces.length || index < 0) return;
+    _favoritePlaces.removeAt(index);
     notifyListeners();
   }
 
   void favoriteClear() {
-    _favoritPlaces.clear();
+    _favoritePlaces.clear();
   }
 
   List<Place> favoriteAll() {
-    return _favoritPlaces;
+    return _favoritePlaces;
   }
 
   void favoriteAddAll(List<Place> places) {
-    _favoritPlaces = places;
+    _favoritePlaces = places;
     notifyListeners();
   }
 
