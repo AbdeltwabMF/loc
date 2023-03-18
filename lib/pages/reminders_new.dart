@@ -331,6 +331,8 @@ class _RemindersNew extends State<RemindersNew> {
                 ),
               ),
               AddReminderButton(
+                buttonText:
+                    widget.id != null ? ' Save Reminder' : ' Add Reminder',
                 onPressed: () async {
                   // Validate inputs
                   if (_titleController.text.isEmpty) {

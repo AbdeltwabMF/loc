@@ -3,7 +3,7 @@ import 'package:loc/data/app_states.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/utils/format.dart';
 import 'package:loc/utils/location.dart';
-import 'package:loc/widgets/animations.dart';
+import 'package:loc/widgets/place_holders.dart';
 import 'package:provider/provider.dart';
 
 class RemindersList extends StatelessWidget {
