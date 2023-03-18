@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-const String version = 'v0.5.9';
+const String version = 'v0.6.4';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
