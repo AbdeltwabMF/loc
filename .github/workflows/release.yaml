@@ -23,11 +23,9 @@ jobs:
           channel: 'stable'
       - run: flutter --version
 
-      - name: Install dependencies
-        run: flutter create --org xyz.abdeltwabmf --platforms=android .
-
       - name: Build artifacts
         run: |
+          flutter pub get
           build_number=$(awk -F+ '/version:/ {print $2}' pubspec.yaml)
           echo $build_number
           flutter build apk --split-per-abi --build-name=${{github.ref_name}} --build-number=$build_number --release
