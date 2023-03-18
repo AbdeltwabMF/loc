@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:loc/themes/text_theme.dart';
 import 'package:loc/themes/color_scheme.dart';
 
@@ -9,13 +10,19 @@ class LocThemeData {
   static ThemeData themeData(ColorScheme colorScheme) {
     return ThemeData(
       appBarTheme: AppBarTheme(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: colorScheme.surface.withOpacity(0.5),
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
         iconTheme: IconThemeData(
           color: colorScheme.onSurface,
         ),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarIconBrightness: colorScheme.brightness == Brightness.dark
+              ? Brightness.light
+              : Brightness.dark,
+        ),
       ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(),
       colorScheme: colorScheme,
       canvasColor: colorScheme.onSecondary,
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -24,7 +31,7 @@ class LocThemeData {
           foregroundColor: colorScheme.onPrimaryContainer,
         ),
       ),
-      fontFamily: 'TiltNeon',
+      fontFamily: 'Fantasque',
       highlightColor: Colors.transparent,
       iconTheme: IconThemeData(color: colorScheme.onPrimary),
       scaffoldBackgroundColor: colorScheme.background,

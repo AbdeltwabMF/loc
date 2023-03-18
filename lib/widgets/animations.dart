@@ -10,20 +10,14 @@ class EmptySpace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Text(
-            comment,
-            style: TextStyle(
-              fontSize: 32,
-              color: Theme.of(context).colorScheme.onBackground,
-            ),
-          ),
+    return Center(
+      child: Text(
+        comment,
+        style: TextStyle(
+          fontSize: 32,
+          color: Theme.of(context).colorScheme.onBackground,
         ),
-      ],
+      ),
     );
   }
 }

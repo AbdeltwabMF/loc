@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
+import 'package:loc/pages/about.dart';
 import 'package:provider/provider.dart';
 
 class Settings extends StatelessWidget {
@@ -13,39 +14,24 @@ class Settings extends StatelessWidget {
     return ListView(
       children: [
         ListTile(
-          dense: true,
-          subtitle: const Text('Set theme mode globally.'),
-          title: const Text('Theme Mode'),
-          trailing: DropdownMenu<int>(
-            initialSelection: appStates.themeMode,
-            inputDecorationTheme: const InputDecorationTheme(
-              filled: true,
-              isDense: true,
-            ),
-            menuStyle: MenuStyle(
-              side: MaterialStateProperty.all(BorderSide.none),
-            ),
-            onSelected: (value) {
-              if (value != null) {
-                appStates.setThemeMode(value);
-              }
-            },
-            dropdownMenuEntries: const [
-              DropdownMenuEntry(
-                value: 0,
-                label: 'system',
-              ),
-              DropdownMenuEntry(
-                value: 1,
-                label: 'dark',
-              ),
-              DropdownMenuEntry(
-                value: 2,
-                label: 'light',
-              ),
-            ],
-          ),
-        ),
+            dense: true,
+            subtitle: const Text('Set theme mode globally.'),
+            title: const Text('Theme Mode'),
+            trailing: DropdownButton<String>(
+              iconSize: 32,
+              value: appStates.themeMode,
+              items: <String>['System', 'Dark', 'Light'].map((value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  appStates.setThemeMode(value);
+                }
+              },
+            )),
         ListTile(
           dense: true,
           subtitle: const Text('Turn alarm on/off globally'),
@@ -62,6 +48,31 @@ class Settings extends StatelessWidget {
               }
             },
             value: appStates.notify,
+          ),
+        ),
+        const Divider(
+          height: 16,
+          thickness: 1,
+          endIndent: 16,
+          indent: 16,
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (context) {
+                  return const AboutPage();
+                },
+              ),
+            );
+          },
+          child: ListTile(
+            dense: true,
+            title: const Text('About'),
+            leading: Icon(
+              Icons.info_rounded,
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
           ),
         ),
       ],

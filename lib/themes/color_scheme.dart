@@ -105,7 +105,7 @@ const ColorScheme darkColorScheme = ColorScheme(
   tertiary: GruvboxDarkPalette.bg2,
   onTertiary: GruvboxDarkPalette.fg4,
   background: GruvboxDarkPalette.bg0h,
-  onBackground: GruvboxDarkPalette.bg2,
+  onBackground: GruvboxDarkPalette.fg2,
   error: GruvboxDarkPalette.darkRed,
   onError: GruvboxDarkPalette.bg0h,
   surface: GruvboxDarkPalette.bg1,
