@@ -58,9 +58,6 @@ class _RemindersSearch extends State<RemindersSearch> {
               });
             }
           },
-          onTap: () {
-            _focusNode.unfocus();
-          },
         ),
       ),
       body: ListView.builder(
@@ -78,85 +75,27 @@ class _RemindersSearch extends State<RemindersSearch> {
             child: GestureDetector(
               onTap: () {},
               onLongPress: () {},
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.only(
-                            topRight: Radius.circular(16),
-                            topLeft: Radius.circular(16),
-                          ),
-                          child: LinearProgressIndicator(
-                            minHeight: 26,
-                            backgroundColor:
-                                Theme.of(context).colorScheme.onPrimary,
-                            color: Theme.of(context).colorScheme.tertiary,
-                            value: _matched[index].traveledDistancePercent(
-                                appStates.getCurrent()),
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${intFormat(_matched[index].remainderDistance(appStates.getCurrent()).round())} meters away',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
+              child: ListTile(
+                dense: true,
+                leading: Icon(
+                  Icons.location_pin,
+                  color: Theme.of(context).colorScheme.onBackground,
+                ),
+                subtitle: Text(
+                  _matched[index].place.displayName!,
+                  maxLines: 1,
+                  style: const TextStyle(
+                    fontFamily: 'Fantasque',
                   ),
-                  Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
-                    ),
-                    width: double.infinity,
-                    child: Text(
-                      _matched[index].title,
-                      textAlign: TextAlign.center,
-                    ),
+                ),
+                title: Text(
+                  _matched[index].title,
+                  maxLines: 2,
+                  style: const TextStyle(
+                    fontFamily: 'NotoArabic',
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  Container(
-                    margin: const EdgeInsets.only(
-                      left: 12,
-                      right: 12,
-                    ),
-                    decoration: const BoxDecoration(),
-                    child: ListTile(
-                      shape:
-                          const RoundedRectangleBorder(side: BorderSide.none),
-                      subtitle: Text(
-                        '${_matched[index].place.position.latitude}, ${_matched[index].place.position.longitude}',
-                        maxLines: 1,
-                        style: const TextStyle(
-                          fontFamily: 'Fantasque',
-                          fontSize: 12,
-                          height: 2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      title: Text(
-                        _matched[index].place.displayName!,
-                        maxLines: 2,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontFamily: 'NotoArabic',
-                          fontSize: 16,
-                          height: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           );

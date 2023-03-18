@@ -158,10 +158,12 @@ class ChooseOnMapButton extends StatelessWidget {
 class AddReminderButton extends StatelessWidget {
   const AddReminderButton({
     required this.onPressed,
+    this.buttonText = ' Add Reminder',
     Key? key,
   }) : super(key: key);
 
   final void Function() onPressed;
+  final String buttonText;
 
   @override
   Widget build(BuildContext context) {
@@ -179,13 +181,13 @@ class AddReminderButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: const [
-            Icon(
+          children: [
+            const Icon(
               Icons.add_alarm,
             ),
             Text(
-              ' Add Reminder',
-              style: TextStyle(
+              buttonText,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),

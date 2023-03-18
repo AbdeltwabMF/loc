@@ -7,7 +7,6 @@ import 'package:loc/pages/arrival_list.dart';
 import 'package:loc/pages/favorites_list.dart';
 import 'package:loc/pages/reminders_search.dart';
 import 'package:loc/pages/settings.dart';
-import 'package:loc/pages/about.dart';
 import 'package:loc/pages/reminders_new.dart';
 import 'package:loc/utils/database_ops.dart';
 import 'package:loc/utils/location.dart';
@@ -39,6 +38,7 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    positionStream.cancel();
     super.dispose();
   }
 
@@ -110,6 +110,18 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
             resizeToAvoidBottomInset: false,
             appBar: AppBar(
               actions: [
+                appStates.bottomNavBarIndex == 1 &&
+                        appStates.favoriteAll().isNotEmpty
+                    ? IconButton(
+                        onPressed: () {
+                          appStates.favoriteClear();
+                        },
+                        icon: const Icon(
+                          Icons.clear_rounded,
+                          size: 32,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
                 appStates.selectedAll().isNotEmpty
                     ? IconButton(
                         onPressed: () {
