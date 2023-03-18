@@ -172,6 +172,7 @@ class AppStates extends ChangeNotifier {
     notifyListeners();
   }
 
+  // check if specific reminder is selected using its index or id
   bool selectedRead({int? index, String? id}) {
     if (index != null) {
       final id = _reminders[index].id;

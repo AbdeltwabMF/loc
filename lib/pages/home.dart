@@ -8,7 +8,7 @@ import 'package:loc/pages/favorites_list.dart';
 import 'package:loc/pages/reminders_search.dart';
 import 'package:loc/pages/settings.dart';
 import 'package:loc/pages/about.dart';
-import 'package:loc/pages/reminders_add.dart';
+import 'package:loc/pages/reminders_new.dart';
 import 'package:loc/utils/database_ops.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/widgets/bottom_nav_bar.dart';
@@ -144,6 +144,29 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                 appStates.selectedAll().isNotEmpty
                     ? IconButton(
                         onPressed: () {
+                          if (appStates.selectedAll().length == 1) {
+                            final reminder = appStates.reminderRead(
+                                id: appStates.selectedAll()[0])!;
+
+                            Navigator.of(context).push<void>(
+                              MaterialPageRoute<void>(
+                                builder: (context) {
+                                  return RemindersNew(
+                                    appBarTitle: 'Edit Reminder',
+                                    title: reminder.title,
+                                    latitude: reminder.place.position.latitude
+                                        .toString(),
+                                    longitude: reminder.place.position.longitude
+                                        .toString(),
+                                    radius: reminder.place.radius.toString(),
+                                    notes: reminder.notes,
+                                    id: reminder.id,
+                                  );
+                                },
+                              ),
+                            );
+                            appStates.selectedClear();
+                          }
                           appStates.selectedClear();
                         },
                         icon: const Icon(
@@ -193,23 +216,6 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                           size: 32,
                         ),
                       ),
-                appStates.selectedAll().isNotEmpty
-                    ? const SizedBox.shrink()
-                    : IconButton(
-                        onPressed: () {
-                          Navigator.of(context).push<void>(
-                            MaterialPageRoute<void>(
-                              builder: (context) {
-                                return const AboutPage();
-                              },
-                            ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.info_rounded,
-                          size: 32,
-                        ),
-                      ),
               ],
               elevation: 0,
               leading: null,
@@ -236,7 +242,7 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver {
                       Navigator.of(context).push<void>(
                         MaterialPageRoute<void>(
                           builder: (context) {
-                            return const RemindersAdd();
+                            return RemindersNew();
                           },
                         ),
                       );

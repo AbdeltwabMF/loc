@@ -11,31 +11,58 @@ import 'package:loc/utils/location.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
-class RemindersAdd extends StatefulWidget {
-  const RemindersAdd({super.key});
+class RemindersNew extends StatefulWidget {
+  RemindersNew({
+    Key? key,
+    this.title = '',
+    this.latitude = '',
+    this.longitude = '',
+    this.radius = '',
+    this.notes,
+    this.id,
+    this.appBarTitle = 'New Reminder',
+  }) : super(key: key);
+
+  String title;
+  String latitude;
+  String longitude;
+  String radius;
+  String? notes;
+  String? id;
+  String appBarTitle;
 
   @override
-  State<RemindersAdd> createState() => _RemindersAdd();
+  State<RemindersNew> createState() => _RemindersNew();
 }
 
-class _RemindersAdd extends State<RemindersAdd> {
+class _RemindersNew extends State<RemindersNew> {
   final _locationFormKey = GlobalKey<FormState>();
   final _titleFormKey = GlobalKey<FormState>();
 
-  final TextEditingController title = TextEditingController();
-  final TextEditingController latitude = TextEditingController();
-  final TextEditingController longitude = TextEditingController();
-  final TextEditingController radius = TextEditingController();
-  final TextEditingController notes = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _latitudeController = TextEditingController();
+  final TextEditingController _longitudeController = TextEditingController();
+  final TextEditingController _radiusController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
 
   @override
   void initState() {
+    _titleController.text = widget.title;
+    _latitudeController.text = widget.latitude;
+    _longitudeController.text = widget.longitude;
+    _radiusController.text = widget.radius;
+    _notesController.text = widget.notes ?? '';
     super.initState();
   }
 
   @override
   void dispose() {
     super.dispose();
+    _titleController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
+    _radiusController.dispose();
+    _notesController.dispose();
   }
 
   @override
@@ -45,7 +72,7 @@ class _RemindersAdd extends State<RemindersAdd> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        title: const Text('New Reminder'),
+        title: Text(widget.appBarTitle),
       ),
       body: SafeArea(
         child: Container(
@@ -66,7 +93,7 @@ class _RemindersAdd extends State<RemindersAdd> {
                       autovalidateMode: AutovalidateMode.onUserInteraction,
                       key: _titleFormKey,
                       child: TextFormField(
-                        controller: title,
+                        controller: _titleController,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(
                             borderSide: BorderSide.none,
@@ -117,7 +144,7 @@ class _RemindersAdd extends State<RemindersAdd> {
                         children: [
                           Expanded(
                             child: TextFormField(
-                              controller: latitude,
+                              controller: _latitudeController,
                               decoration: const InputDecoration(
                                 border: OutlineInputBorder(
                                   borderSide: BorderSide.none,
@@ -162,7 +189,7 @@ class _RemindersAdd extends State<RemindersAdd> {
                           ),
                           Expanded(
                             child: TextFormField(
-                              controller: longitude,
+                              controller: _longitudeController,
                               decoration: const InputDecoration(
                                 border: OutlineInputBorder(
                                   borderSide: BorderSide.none,
@@ -222,9 +249,9 @@ class _RemindersAdd extends State<RemindersAdd> {
                         if (pickedLocation != null) {
                           if (mounted) {
                             setState(() {
-                              latitude.text =
+                              _latitudeController.text =
                                   pickedLocation.position.latitude.toString();
-                              longitude.text =
+                              _longitudeController.text =
                                   pickedLocation.position.longitude.toString();
                             });
                           }
@@ -235,7 +262,7 @@ class _RemindersAdd extends State<RemindersAdd> {
                       height: 32,
                     ),
                     TextFormField(
-                      controller: radius,
+                      controller: _radiusController,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(
                           borderSide: BorderSide.none,
@@ -275,7 +302,7 @@ class _RemindersAdd extends State<RemindersAdd> {
                       height: 16,
                     ),
                     TextFormField(
-                      controller: notes,
+                      controller: _notesController,
                       decoration: const InputDecoration(
                           border: OutlineInputBorder(
                             borderSide: BorderSide.none,
@@ -306,19 +333,20 @@ class _RemindersAdd extends State<RemindersAdd> {
               AddReminderButton(
                 onPressed: () async {
                   // Validate inputs
-                  if (title.text.isEmpty) {
+                  if (_titleController.text.isEmpty) {
                     _titleFormKey.currentState!.validate();
                     return;
                   }
 
-                  if (latitude.text.isEmpty || longitude.text.isEmpty) {
+                  if (_latitudeController.text.isEmpty ||
+                      _longitudeController.text.isEmpty) {
                     _locationFormKey.currentState!.validate();
                     return;
                   }
 
                   Point position = Point(
-                    latitude: double.parse(latitude.text),
-                    longitude: double.parse(longitude.text),
+                    latitude: double.parse(_latitudeController.text),
+                    longitude: double.parse(_longitudeController.text),
                   );
 
                   final destination = await Maps()
@@ -327,28 +355,41 @@ class _RemindersAdd extends State<RemindersAdd> {
                     return Future.error(error!, stackTrace);
                   });
 
-                  if (radius.text.isEmpty) {
+                  if (_radiusController.text.isEmpty) {
                     if (mounted) {
                       setState(() {
-                        radius.text = destination.radius.toString();
+                        _radiusController.text = destination.radius.toString();
                       });
                     }
                   }
-                  destination.radius = int.parse(radius.text);
+                  destination.radius = int.parse(_radiusController.text);
 
-                  Reminder newReminder = Reminder(
-                    id: const Uuid().v4(),
-                    title: title.text,
-                    place: destination,
-                    initialDistance: 0.0,
-                    isTracking: true,
-                    isArrived: false,
-                    notes: notes.text,
-                  );
+                  if (widget.id == null) {
+                    Reminder newReminder = Reminder(
+                      id: const Uuid().v4(),
+                      title: _titleController.text,
+                      place: destination,
+                      initialDistance: 0.0,
+                      isTracking: true,
+                      isArrived: false,
+                      notes: _notesController.text,
+                    );
 
-                  // Update the initial distance
-                  newReminder.traveledDistance(position);
-                  appStates.reminderAdd(newReminder);
+                    // Update the initial distance
+                    newReminder.traveledDistance(position);
+                    appStates.reminderAdd(newReminder);
+                  } else {
+                    final oldReminder = appStates.reminderRead(id: widget.id)!;
+                    final newReminder = oldReminder.copy(
+                      title: _titleController.text,
+                      place: destination,
+                      initialDistance: 0.0,
+                      notes: _notesController.text,
+                    );
+
+                    newReminder.traveledDistance(position);
+                    appStates.reminderUpdate(newReminder);
+                  }
 
                   if (context.mounted) {
                     Navigator.of(context).pop<void>();

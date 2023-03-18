@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:loc/data/app_states.dart';
+import 'package:loc/pages/about.dart';
 import 'package:provider/provider.dart';
 
 class Settings extends StatelessWidget {
@@ -47,6 +48,31 @@ class Settings extends StatelessWidget {
               }
             },
             value: appStates.notify,
+          ),
+        ),
+        const Divider(
+          height: 16,
+          thickness: 1,
+          endIndent: 16,
+          indent: 16,
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (context) {
+                  return const AboutPage();
+                },
+              ),
+            );
+          },
+          child: ListTile(
+            dense: true,
+            title: const Text('About'),
+            leading: Icon(
+              Icons.info_rounded,
+              color: Theme.of(context).colorScheme.onBackground,
+            ),
           ),
         ),
       ],
