@@ -12,6 +12,7 @@ import 'package:loc/data/repository/maps.dart';
 import 'package:loc/themes/color_scheme.dart';
 import 'package:loc/utils/location.dart';
 import 'package:loc/widgets/buttons.dart';
+import 'package:loc/widgets/place_holders.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -309,7 +310,7 @@ class _MapPage extends State<MapPage> {
                 );
               } else {
                 return const Center(
-                  child: SizedBox(),
+                  child: EmptySpace(comment: 'Something went wrong'),
                 );
               }
             }),
