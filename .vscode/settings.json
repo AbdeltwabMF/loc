@@ -1,4 +1,4 @@
 {
   "dart.flutterSdkPath": ".flutter",
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "automatic"
 }

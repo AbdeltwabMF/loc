@@ -24,7 +24,7 @@ jobs:
       - run: flutter --version
 
       - name: Install dependencies
-        run: flutter create --org xyz.abdeltwabmf .
+        run: flutter create --org xyz.abdeltwabmf --platforms=android .
 
       - name: Build artifacts
         run: |
