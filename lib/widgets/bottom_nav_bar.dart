@@ -40,6 +40,7 @@ class AppBottomNavBar extends StatelessWidget {
       onTap: (index) {
         if (appStates.bottomNavBarIndex == index) return;
         appStates.setBottomNavBarIndex(index);
+        appStates.selectedClear();
       },
       type: BottomNavigationBarType.fixed,
       unselectedFontSize: 14.0,

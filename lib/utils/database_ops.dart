@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_states.dart';
-import 'package:loc/data/models/place.dart';
-import 'package:loc/data/models/reminder.dart';
 import 'package:provider/provider.dart';
 
 Future<void> writeData(BuildContext context) async {
@@ -10,7 +8,7 @@ Future<void> writeData(BuildContext context) async {
   // Write reminders
   await boxReminders.put('len', appStates.reminderAll().length);
   for (int i = 0; i < appStates.reminderAll().length; ++i) {
-    await boxReminders.put(i, appStates.reminderRead(i)!);
+    await boxReminders.put(i, appStates.reminderRead(index: i)!);
   }
 
   // Write favorites
@@ -40,5 +38,6 @@ Future<void> readData(BuildContext context) async {
   }
   // Read settings
   appStates.setNotify(boxPreferences.get('pre-notify', defaultValue: true));
-  appStates.setThemeMode(boxPreferences.get('pre-themeMode', defaultValue: 0));
+  appStates.setThemeMode(
+      boxPreferences.get('pre-themeMode', defaultValue: 'System'));
 }

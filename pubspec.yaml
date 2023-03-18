@@ -1,9 +1,9 @@
 name: loc
-description: Free and open-spurce location-based reminder for Android
+description: Free and open-source location-based reminder for Android
 repository: https://github.com/AbdeltwabMF/loc
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 0.5.9+59
+version: 0.6.4+64
 
 environment:
   flutter: 3.7.5
@@ -12,7 +12,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  connectivity_plus: ^3.0.3
   cupertino_icons: ^1.0.5
   flutter_map: ^3.1.0
   flutter_ringtone_player: ^3.2.0
@@ -22,8 +21,6 @@ dependencies:
   http: ^0.13.5
   latlong2: ^0.8.1
   provider: ^6.0.5
-  rive: ^0.10.2
-  sqflite: ^2.2.5
   url_launcher: ^6.1.8
   uuid: ^3.0.7
 
@@ -33,30 +30,24 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   hive_generator: ^2.0.0
   build_runner: ^2.3.3
+  flutter_launcher_icons: ^0.12.0
 
 flutter:
   assets:
     - assets/ca/lets-encrypt-r3.pem
     - assets/images/icon.png
     - assets/images/featureGraphic.png
-    - assets/raw/cat.riv
-    - assets/raw/spinner.riv
-    - assets/raw/404.riv
-    - assets/raw/fanoos.riv
+    - assets/images/background.jpg
   fonts:
       - family: Fantasque
         fonts:
           - asset: assets/fonts/Fantasque Sans Mono Regular Nerd Font.ttf
-          - asset: assets/fonts/Fantasque Sans Mono Bold Nerd Font.ttf
-          - asset: assets/fonts/Fantasque Sans Mono Italic Nerd Font.ttf
-            style: italic
       - family: NotoArabic
         fonts:
           - asset: assets/fonts/NotoSansArabic-Regular.ttf
-      - family: Quicksand
-        fonts:
-          - asset: assets/fonts/Quicksand-Regular.ttf
-      - family: TiltNeon
-        fonts:
-          - asset: assets/fonts/TiltNeon-Regular.ttf
   uses-material-design: true
+
+flutter_icons:
+  android: "ic_launcher"
+  image_path: "assets/images/icon.png"
+  min_sdk_android: 21

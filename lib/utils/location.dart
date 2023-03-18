@@ -73,17 +73,18 @@ void handlePositionUpdates(BuildContext context) {
               longitude: value.longitude,
             );
             appStates.setCurrent(currentPosition);
-            for (int i = 0; i < appStates.reminderAll().length; ++i) {
-              final remainderDistance = appStates
-                  .reminderRead(i)!
-                  .remainderDistance(appStates.getCurrent());
-              final radius = appStates.reminderRead(i)!.place.radius;
-              if (remainderDistance <= radius!) {
-                appStates.reminderUpdate(
-                    appStates.reminderRead(i)!.copy(isArrived: true));
-              } else {
-                appStates.reminderUpdate(
-                    appStates.reminderRead(i)!.copy(isArrived: false));
+
+            final reminders = appStates.reminderAll();
+            for (int i = 0; i < reminders.length; ++i) {
+              if (reminders[i].isTracking == true) {
+                final remainderDistance =
+                    reminders[i].remainderDistance(appStates.getCurrent());
+                final radius = reminders[i].place.radius;
+                if (remainderDistance <= radius!) {
+                  appStates.reminderUpdate(reminders[i].copy(isArrived: true));
+                } else {
+                  appStates.reminderUpdate(reminders[i].copy(isArrived: false));
+                }
               }
             }
             if (appStates.notify == true) {
