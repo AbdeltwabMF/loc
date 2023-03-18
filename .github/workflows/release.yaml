@@ -24,7 +24,9 @@ jobs:
       - run: flutter --version
 
       - name: Install dependencies
-        run: flutter create --platforms=android .
+        run: |
+          rm -rf android
+          flutter create --platforms=android .
 
       - name: Build artifacts
         run: |
