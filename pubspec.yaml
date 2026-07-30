@@ -38,13 +38,6 @@ flutter:
     - assets/images/icon.png
     - assets/images/featureGraphic.png
     - assets/images/background.jpg
-  fonts:
-      - family: Fantasque
-        fonts:
-          - asset: assets/fonts/Fantasque Sans Mono Regular Nerd Font.ttf
-      - family: NotoArabic
-        fonts:
-          - asset: assets/fonts/NotoSansArabic-Regular.ttf
   uses-material-design: true
 
 flutter_icons:
