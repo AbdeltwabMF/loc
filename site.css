@@ -9,6 +9,7 @@
   --yellow: #d79921;
   --orange: #d65d0e;
   --green: #689d6a;
+  --mint: #d6dcb0;
   --line: rgba(40, 40, 40, 0.25);
 }
 
@@ -264,6 +265,14 @@ h1 {
 .features,
 .screens {
   padding-block: 110px;
+}
+
+.features {
+  background: var(--paper-deep);
+}
+
+.screens {
+  background: var(--mint);
 }
 
 .section-heading {
