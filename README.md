@@ -13,7 +13,7 @@ backend.
 
 - Multiple independently enabled arrival reminders
 - Foreground-service tracking while reminders are active
-- Per-reminder brief notifications or repeating alarms
+- Per-reminder brief notifications, silent vibrations, or repeating alarms
 - Configurable 100 m to 5 km arrival radius
 - High-speed path-crossing detection between GPS samples
 - Immediate arrival checks after editing or enabling a reminder

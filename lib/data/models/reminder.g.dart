@@ -26,13 +26,14 @@ class ReminderAdapter extends TypeAdapter<Reminder> {
       notes: fields[6] as String?,
       isAcknowledged: fields[7] as bool? ?? false,
       isAlarm: fields[8] as bool? ?? false,
+      isVibration: fields[9] as bool? ?? false,
     );
   }
 
   @override
   void write(BinaryWriter writer, Reminder obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class ReminderAdapter extends TypeAdapter<Reminder> {
       ..writeByte(7)
       ..write(obj.isAcknowledged)
       ..writeByte(8)
-      ..write(obj.isAlarm);
+      ..write(obj.isAlarm)
+      ..writeByte(9)
+      ..write(obj.isVibration);
   }
 
   @override

@@ -7,6 +7,8 @@ import 'package:loc/data/models/point.dart';
 
 part 'reminder.g.dart';
 
+enum ReminderAlertStyle { brief, vibration, alarm }
+
 @HiveType(typeId: 1)
 class Reminder {
   @HiveField(0)
@@ -27,6 +29,8 @@ class Reminder {
   final bool isAcknowledged;
   @HiveField(8, defaultValue: false)
   final bool isAlarm;
+  @HiveField(9, defaultValue: false)
+  final bool isVibration;
 
   Reminder({
     required this.id,
@@ -38,7 +42,14 @@ class Reminder {
     this.notes,
     this.isAcknowledged = false,
     this.isAlarm = false,
+    this.isVibration = false,
   });
+
+  ReminderAlertStyle get alertStyle => isAlarm
+      ? ReminderAlertStyle.alarm
+      : isVibration
+      ? ReminderAlertStyle.vibration
+      : ReminderAlertStyle.brief;
 
   Map<String, dynamic> toJson() {
     return {
@@ -51,6 +62,7 @@ class Reminder {
       'notes': notes,
       'isAcknowledged': isAcknowledged,
       'isAlarm': isAlarm,
+      'isVibration': isVibration,
     };
   }
 
@@ -64,6 +76,7 @@ class Reminder {
     String? notes,
     bool? isAcknowledged,
     bool? isAlarm,
+    bool? isVibration,
   }) {
     return Reminder(
       id: id ?? this.id,
@@ -75,6 +88,7 @@ class Reminder {
       notes: notes ?? this.notes,
       isAcknowledged: isAcknowledged ?? this.isAcknowledged,
       isAlarm: isAlarm ?? this.isAlarm,
+      isVibration: isVibration ?? this.isVibration,
     );
   }
 
@@ -90,6 +104,7 @@ class Reminder {
     reminderStr = '$reminderStr\n  "notes": "$notes",';
     reminderStr = '$reminderStr\n  "isAcknowledged": $isAcknowledged,';
     reminderStr = '$reminderStr\n  "isAlarm": $isAlarm,';
+    reminderStr = '$reminderStr\n  "isVibration": $isVibration,';
     reminderStr = '$reminderStr\n}';
     return reminderStr;
   }

@@ -36,6 +36,7 @@ class NotificationService {
     required String title,
     required String body,
     required bool isAlarm,
+    required bool isVibration,
   }) => _plugin.show(
     id: _arrivalNotificationId,
     title: title,
@@ -57,6 +58,18 @@ class NotificationService {
               ongoing: true,
               autoCancel: false,
               additionalFlags: Int32List.fromList([4]),
+            )
+          : isVibration
+          ? AndroidNotificationDetails(
+              'arrival_vibrations_v1',
+              'Arrival vibrations',
+              channelDescription:
+                  'Silent vibration alerts when an active destination is reached.',
+              importance: Importance.high,
+              priority: Priority.high,
+              category: AndroidNotificationCategory.reminder,
+              playSound: false,
+              vibrationPattern: Int64List.fromList([0, 400, 200, 400]),
             )
           : const AndroidNotificationDetails(
               'arrival_reminders_v2',
