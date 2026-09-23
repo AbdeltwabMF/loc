@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:loc/app/app_metadata.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/services/app_diagnostics.dart';
@@ -16,15 +17,19 @@ class GeocodingException implements Exception {
 }
 
 class GeocodingService {
-  GeocodingService({http.Client? client}) : _client = client ?? http.Client();
+  GeocodingService({http.Client? client, AppMetadata? appMetadata})
+    : _client = client ?? http.Client(),
+      _appMetadata = appMetadata ?? AppMetadata.current;
 
   static const _host = 'nominatim.openstreetmap.org';
-  static const _headers = <String, String>{
-    'Accept': 'application/json',
-    'User-Agent': 'Loc Android/0.7 (https://loc.abdeltwab.xyz)',
-  };
 
   final http.Client _client;
+  final AppMetadata _appMetadata;
+
+  Map<String, String> get _headers => {
+    'Accept': 'application/json',
+    'User-Agent': _appMetadata.androidUserAgent,
+  };
 
   Future<Place> reverse(Point point) async {
     final uri = Uri.https(_host, '/reverse', {
