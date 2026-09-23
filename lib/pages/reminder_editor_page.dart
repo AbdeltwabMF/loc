@@ -27,7 +27,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   late final TextEditingController _latitude;
   late final TextEditingController _longitude;
   late double _radius;
-  late bool _isAlarm;
+  late ReminderAlertStyle _alertStyle;
   Place? _selectedPlace;
   bool _saving = false;
 
@@ -45,7 +45,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
       text: place?.position.longitude.toString(),
     );
     _radius = (place?.radius ?? 500).toDouble();
-    _isAlarm = widget.reminder?.isAlarm ?? false;
+    _alertStyle = widget.reminder?.alertStyle ?? ReminderAlertStyle.brief;
   }
 
   @override
@@ -180,28 +180,38 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             const SizedBox(height: 24),
             const _SectionTitle(label: 'Alert style'),
             const SizedBox(height: 10),
-            SegmentedButton<bool>(
+            SegmentedButton<ReminderAlertStyle>(
               segments: const [
                 ButtonSegment(
-                  value: false,
+                  value: ReminderAlertStyle.brief,
                   icon: Icon(Icons.notifications_outlined),
                   label: Text('Brief'),
                 ),
                 ButtonSegment(
-                  value: true,
+                  value: ReminderAlertStyle.vibration,
+                  icon: Icon(Icons.vibration_rounded),
+                  label: Text('Vibrate'),
+                ),
+                ButtonSegment(
+                  value: ReminderAlertStyle.alarm,
                   icon: Icon(Icons.alarm_rounded),
                   label: Text('Alarm'),
                 ),
               ],
-              selected: {_isAlarm},
+              selected: {_alertStyle},
               onSelectionChanged: (value) =>
-                  setState(() => _isAlarm = value.single),
+                  setState(() => _alertStyle = value.single),
             ),
             const SizedBox(height: 10),
             Text(
-              _isAlarm
-                  ? 'Repeats until dismissed to help wake you.'
-                  : 'Plays the notification sound once.',
+              switch (_alertStyle) {
+                ReminderAlertStyle.brief =>
+                  'Plays the notification sound once.',
+                ReminderAlertStyle.vibration =>
+                  'Vibrates without playing a notification sound.',
+                ReminderAlertStyle.alarm =>
+                  'Repeats until dismissed to help wake you.',
+              },
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -304,7 +314,8 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             ).remainderDistance(current),
       isTracking: existing?.isTracking ?? true,
       isArrived: false,
-      isAlarm: _isAlarm,
+      isAlarm: _alertStyle == ReminderAlertStyle.alarm,
+      isVibration: _alertStyle == ReminderAlertStyle.vibration,
     );
     try {
       await state.saveReminder(reminder);

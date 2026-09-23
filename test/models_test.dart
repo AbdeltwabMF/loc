@@ -74,22 +74,23 @@ void main() {
       );
     });
 
-    test(
-      'uses a brief alert by default and preserves alarm choice on copy',
-      () {
-        final reminder = Reminder(
-          id: 'id',
-          title: 'Station',
-          place: Place(position: Point(latitude: 10, longitude: 20)),
-          initialDistance: 100,
-          isTracking: true,
-          isArrived: false,
-        );
+    test('supports brief, vibration, and alarm alert styles', () {
+      final reminder = Reminder(
+        id: 'id',
+        title: 'Station',
+        place: Place(position: Point(latitude: 10, longitude: 20)),
+        initialDistance: 100,
+        isTracking: true,
+        isArrived: false,
+      );
 
-        expect(reminder.isAlarm, isFalse);
-        expect(reminder.copy(isAlarm: true).isAlarm, isTrue);
-      },
-    );
+      expect(reminder.alertStyle, ReminderAlertStyle.brief);
+      expect(
+        reminder.copy(isVibration: true).alertStyle,
+        ReminderAlertStyle.vibration,
+      );
+      expect(reminder.copy(isAlarm: true).alertStyle, ReminderAlertStyle.alarm);
+    });
 
     test('detects arrival inside the configured radius', () {
       final reminder = Reminder(

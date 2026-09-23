@@ -294,6 +294,7 @@ class AppController extends ChangeNotifier {
       title: 'You have arrived',
       body: arrivedReminders.map((item) => item.title).join(', '),
       isAlarm: arrivedReminders.any((item) => item.isAlarm),
+      isVibration: arrivedReminders.any((item) => item.isVibration),
     );
     _notifiedArrivalIds.addAll(pending.map((item) => item.id));
   }

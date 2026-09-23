@@ -54,10 +54,11 @@ the next position is outside the zone, keeping a repeating alarm active until
 the user dismisses it. After acknowledgement, leaving the zone clears the state
 and permits a future arrival.
 
-Each reminder selects either a brief notification or an insistent alarm. Brief
-alerts use normal notification audio once. Alarms use Android's alarm audio
-attributes and repeat until dismissed. Both remain subject to Android channel,
-permission, and Do Not Disturb settings.
+Each reminder selects a brief notification, a silent vibration, or an insistent
+alarm. Brief alerts use normal notification audio once. Vibration alerts use a
+silent channel with an explicit vibration pattern. Alarms use Android's alarm
+audio attributes and repeat until dismissed. All remain subject to Android
+channel, permission, and Do Not Disturb settings.
 
 Tracking uses an Android foreground service with a visible ongoing notification
 while at least one reminder is enabled. It requests high-accuracy updates with a
@@ -73,9 +74,9 @@ tested on physical OEM devices rather than hidden behind a workaround.
 
 ## Persistence compatibility
 
-Hive type IDs and existing field numbers are unchanged. Reminder field 8 stores
-the per-reminder alarm choice and defaults to a brief alert when absent. Old
-length metadata and numeric keys are ignored while typed values are loaded.
+Hive type IDs and existing field numbers are unchanged. Reminder fields 8 and 9
+store the alarm and vibration choices and default to a brief alert when absent.
+Old length metadata and numeric keys are ignored while typed values are loaded.
 Editing an old reminder removes its numeric entry and writes one ID-keyed entry,
 preventing duplicates. Saved places within 25 m are consolidated during
 migration and rejected as duplicate additions afterward.
