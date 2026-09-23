@@ -1,3 +1,4 @@
+import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 import 'package:loc/data/models/point.dart';
 
@@ -6,23 +7,19 @@ part 'place.g.dart';
 @HiveType(typeId: 2)
 class Place {
   @HiveField(0)
-  late Point position; // [Latitude] and [Longitude]
+  final Point position;
   @HiveField(1)
-  int? radius = 9999;
+  final int? radius;
   @HiveField(2)
-  String? displayName = 'Unknown';
+  final String? displayName;
 
   Place({
     required this.position,
-    this.radius,
-    this.displayName,
+    this.radius = 500,
+    this.displayName = 'Dropped pin',
   });
 
-  Place copy({
-    Point? position,
-    int? radius,
-    String? displayName,
-  }) {
+  Place copy({Point? position, int? radius, String? displayName}) {
     return Place(
       position: position ?? this.position,
       radius: radius ?? this.radius,
@@ -30,11 +27,11 @@ class Place {
     );
   }
 
-  Place.fromJson(Map<String, dynamic> json) {
-    position = Point.fromJson(json);
-    radius = json['radius'] ?? radius;
-    displayName = json['display_name'] ?? displayName;
-  }
+  factory Place.fromJson(Map<String, dynamic> json) => Place(
+    position: Point.fromJson(json),
+    radius: json['radius'] as int? ?? 500,
+    displayName: json['display_name'] as String? ?? 'Dropped pin',
+  );
 
   Map<String, dynamic> toJson() {
     return {
@@ -46,6 +43,22 @@ class Place {
       'display_name': displayName,
     };
   }
+
+  bool isSameLocation(Place other, {double toleranceMeters = 25}) =>
+      Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        other.position.latitude,
+        other.position.longitude,
+      ) <=
+      toleranceMeters;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Place && other.position == position;
+
+  @override
+  int get hashCode => position.hashCode;
 
   @override
   String toString() {

@@ -16,10 +16,7 @@ class PointAdapter extends TypeAdapter<Point> {
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return Point(
-      latitude: fields[0] as double,
-      longitude: fields[1] as double,
-    );
+    return Point(latitude: fields[0] as double, longitude: fields[1] as double);
   }
 
   @override

@@ -1,64 +1,118 @@
-<div align="center">
-  <img src="assets/images/icon.png" height="200px"></img>
-</div>
+# Loc
 
-<h1 align="center">Loc</h1>
-<h3 align="center">Free and open-source location-based reminder for Android.</h3>
+Loc is an open-source Android arrival reminder. Pick a destination, choose an
+arrival radius, and Loc sounds an alarm when the device enters that area.
 
+Project site: [loc.abdeltwab.xyz](https://loc.abdeltwab.xyz)
 
-<p align='center'>
-</p>
+The application uses OpenStreetMap tiles and Nominatim search. Reminders and
+saved places stay on the device in Hive. There is no Loc account or analytics
+backend.
 
-<p align='center'>
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="256"/>
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="256"/>
-  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="256"/>
-</p>
+## Features
 
-## ✨ Features
+- Multiple independently enabled arrival reminders
+- Foreground-service tracking while reminders are active
+- Per-reminder brief notifications or repeating alarms
+- Configurable 100 m to 5 km arrival radius
+- High-speed path-crossing detection between GPS samples
+- Immediate arrival checks after editing or enabling a reminder
+- Search, manual coordinates, and an interactive map picker
+- Saved destinations with nearby-duplicate prevention
+- Offline reminder editing and coordinate entry
+- Gruvbox light/dark themes with system mode
+- Persistent reminders and preferences
 
-- Based on the free and open-data Open Street Map.
-- Support multiple reminders.
-- Support title and notes for the reminder.
-- Disable/Enable specific reminders.
-- Delete/Edit/Search reminders.
-- Save favorite places for later usage.
-- Dark/Light theme.
-- Run in background.
-- Offline usage.
-- Online usage (Map navigation).
-- Live location.
-- Search for the destination.
-- Shows Eucliedian distance between current and destination locations.
-- Compass for bearing angle. (not yet)
-- Customizable radius of a circle around the destination.
-- Remind with sound when arriving.
-- Persistent data.
+## Architecture
 
-## Development
+The codebase deliberately uses a small, feature-oriented architecture:
 
-### Tools required
+```text
+lib/
+├── app/                 # Application state and orchestration
+├── data/
+│   ├── models/          # Hive-compatible domain models
+│   ├── services/        # Location and Nominatim boundaries
+│   └── app_repository.dart
+├── pages/               # Screens and route-specific UI
+├── themes/              # Semantic Gruvbox Material theme
+└── main.dart            # Composition root only
+```
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install/windows)
-- [Android studio](https://developer.android.com/studio). Follow the instructions [here](https://docs.flutter.dev/get-started/install/windows#android-setup) to get it work on windows.
-- VS Code (Optional). You need to install [Flutter plugin](https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter)
+`AppController` owns the application lifecycle and coordinates narrow services.
+Widgets do not open databases, create location streams, or call network APIs.
+Writes are persisted immediately and keyed by reminder ID. Existing Hive
+records remain readable, including reminders created before alert styles were
+introduced, and legacy numeric keys are migrated when edited.
 
-### Build
+See [`docs/architecture.md`](docs/architecture.md) for behavior and design
+decisions.
 
-```shell
-git clone https://github.com/AbdeltwabMF/loc.git
-cd loc
+## Development setup
+
+Android Studio does **not** bundle Flutter or a standalone Dart SDK. Dart is
+included inside Flutter, which is why the IDE reports that Dart is not
+downloaded when Flutter is missing.
+
+1. Install the current stable Flutter SDK from
+   [docs.flutter.dev/get-started/install/windows](https://docs.flutter.dev/get-started/install/windows).
+2. Extract it to a user-writable path such as `C:\dev\flutter`. Do not place it
+   under `Program Files`.
+3. Add `C:\dev\flutter\bin` to the user `PATH`, then restart Android Studio and
+   all terminals.
+4. Install the **Flutter** plugin in Android Studio. It installs/enables the Dart
+   IDE plugin; it does not install the SDK.
+5. In Android Studio, set **Settings > Languages & Frameworks > Flutter > Flutter
+   SDK path** to `C:\dev\flutter`. The Dart SDK should then resolve automatically
+   to `C:\dev\flutter\bin\cache\dart-sdk`.
+6. In **SDK Manager**, install Android SDK Platform 36, Android SDK Build-Tools,
+   Android SDK Command-line Tools, and Android SDK Platform-Tools.
+7. Accept licenses and validate the complete toolchain:
+
+```powershell
+flutter doctor -v
+flutter doctor --android-licenses
 flutter pub get
+flutter analyze
+flutter test
+flutter run
 ```
 
-Open `main.dart` and start from there and then click on the top-right play button to `RUN` the app.
+Do not download Dart separately and do not manually create `android/local.properties`.
+Flutter creates that local, ignored file when commands run with a valid SDK. The
+repository does not vendor or pin a project-local Flutter SDK; local development
+can use the latest stable release that satisfies `pubspec.yaml`. Distribution
+builders such as F-Droid should pin a tested Flutter release for reproducibility.
 
-## Release
+## F-Droid
 
-```shell
-flutter build apk --build-name=<vx.y.x> --build-number=<int> --release
+The listing metadata under `fastlane/metadata/android/en-US` follows F-Droid's
+supported Fastlane structure. Changelog filenames match Android version codes.
+Each release commit must be tagged with its version, for example `v1.0.0`.
+
+Official F-Droid inclusion also requires a build recipe in the external
+`fdroiddata` repository. The current `geolocator_android` dependency includes
+Google Play Services Location even though Loc selects Android's framework
+location manager at runtime. Replace that dependency with a fully free native
+location implementation before requesting inclusion in F-Droid's main repo.
+
+## OpenStreetMap usage
+
+The app identifies itself to Nominatim, URL-encodes parameters, limits results,
+debounces interactive search, and displays tile attribution. Nominatim is a
+community service, not an unlimited production API. A high-volume release
+should use a dedicated provider or self-hosted instance without changing the
+UI/domain layers.
+
+## Build
+
+```powershell
+flutter build apk --release
 ```
+
+Release builds currently use debug signing. Configure a private release keystore
+before publishing; never commit signing credentials.
 
 ## License
 
-Licensed under the [GPL-v3](LICENSE) License.
+[GPL-3.0](LICENSE)

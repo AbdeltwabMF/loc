@@ -1,0 +1,8 @@
+Loc 1.0.0
+
+- Rebuilt the reminder experience and map picker
+- Added brief and repeating alarm styles
+- Improved screen-off and high-speed arrival detection
+- Added saved places with nearby-duplicate prevention
+- Added light, dark, and system themes
+- Improved privacy, persistence, and Android compatibility
