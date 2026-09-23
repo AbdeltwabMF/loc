@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
+import 'package:loc/text_direction.dart';
 import 'package:provider/provider.dart';
 
 class SavedPlacesPage extends StatelessWidget {
@@ -19,12 +20,12 @@ class SavedPlacesPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Saved places',
+                  'Places',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Reuse destinations without searching again.',
+                  'Save destinations you use often.',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -59,10 +60,17 @@ class _PlaceCard extends StatelessWidget {
     child: ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       leading: const Icon(Icons.bookmark_rounded),
-      title: Text(place.displayName ?? 'Dropped pin', maxLines: 2),
-      subtitle: Text(
-        '${place.position.latitude.toStringAsFixed(5)}, '
-        '${place.position.longitude.toStringAsFixed(5)}',
+      title: Text(
+        place.displayName ?? 'Dropped pin',
+        maxLines: 2,
+        textDirection: textDirectionFor(place.displayName ?? 'Dropped pin'),
+      ),
+      subtitle: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Text(
+          '${place.position.latitude.toStringAsFixed(5)}, '
+          '${place.position.longitude.toStringAsFixed(5)}',
+        ),
       ),
       onTap: () => Navigator.of(context).push<void>(
         MaterialPageRoute(

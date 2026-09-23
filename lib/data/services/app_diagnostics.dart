@@ -48,14 +48,15 @@ class AppDiagnostics {
     return '''Loc diagnostics
 Generated: ${DateTime.now().toUtc().toIso8601String()}
 App: $appVersion
-Platform: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}
-Location service: $locationEnabled
+Platform: ${_platformLabel()} ${Platform.operatingSystemVersion}
+Location services: $locationEnabled
 Location permission: $permission
-Reminder tracking: ${isTracking ? 'active' : 'inactive'}
-OpenStreetMap tiles: $tiles
-Nominatim search: $search
+Reminder tracking: ${isTracking ? 'Active' : 'Inactive'}
+Map tiles: $tiles
+Search service: $search
 
-Recent issues (no locations, searches, or reminder content):
+Recent issues
+No location, search, or reminder content is included.
 $events''';
   }
 
@@ -65,25 +66,25 @@ $events''';
       return '${info.version} (${info.buildNumber})';
     } on Object catch (error) {
       record('diagnostics.app-version', error);
-      return 'unknown';
+      return 'Unknown';
     }
   }
 
   static Future<String> _locationServiceStatus() async {
     try {
-      return await Geolocator.isLocationServiceEnabled() ? 'on' : 'off';
+      return await Geolocator.isLocationServiceEnabled() ? 'On' : 'Off';
     } on Object catch (error) {
       record('diagnostics.location-service', error);
-      return 'check failed (${error.runtimeType})';
+      return 'Check failed (${error.runtimeType})';
     }
   }
 
   static Future<String> _locationPermissionStatus() async {
     try {
-      return (await Geolocator.checkPermission()).name;
+      return _permissionLabel(await Geolocator.checkPermission());
     } on Object catch (error) {
       record('diagnostics.location-permission', error);
-      return 'check failed (${error.runtimeType})';
+      return 'Check failed (${error.runtimeType})';
     }
   }
 
@@ -94,16 +95,30 @@ $events''';
           .get(uri, headers: _headers)
           .timeout(const Duration(seconds: 10));
       return response.statusCode >= 200 && response.statusCode < 400
-          ? 'reachable (${response.statusCode})'
-          : 'server returned ${response.statusCode}';
+          ? 'Available (${response.statusCode})'
+          : 'Server returned ${response.statusCode}';
     } on TimeoutException catch (error) {
       record('diagnostics.${uri.host}', error);
-      return 'timed out (check VPN or firewall)';
+      return 'Timed out (check VPN or firewall)';
     } on Object catch (error) {
       record('diagnostics.${uri.host}', error);
-      return 'unreachable (${error.runtimeType})';
+      return 'Unavailable (${error.runtimeType})';
     } finally {
       client.close();
     }
+  }
+
+  static String _permissionLabel(LocationPermission permission) =>
+      switch (permission) {
+        LocationPermission.always => 'Always',
+        LocationPermission.whileInUse => 'While in use',
+        LocationPermission.denied => 'Denied',
+        LocationPermission.deniedForever => 'Denied permanently',
+        LocationPermission.unableToDetermine => 'Unable to determine',
+      };
+
+  static String _platformLabel() {
+    final platform = Platform.operatingSystem;
+    return '${platform[0].toUpperCase()}${platform.substring(1)}';
   }
 }

@@ -28,6 +28,7 @@ void main() {
     final results = await service.search('Cairo central station');
 
     expect(captured.url.queryParameters['q'], 'Cairo central station');
+    expect(captured.url.queryParameters['accept-language'], 'en');
     expect(captured.headers['User-Agent'], contains('Loc Android'));
     expect(results.single.displayName, 'Cairo, Egypt');
     service.dispose();
@@ -36,17 +37,19 @@ void main() {
   test(
     'reverse geocoding preserves coordinates and uses a practical radius',
     () async {
+      late http.Request captured;
       final service = GeocodingService(
-        client: MockClient(
-          (request) async => http.Response(
+        client: MockClient((request) async {
+          captured = request;
+          return http.Response(
             jsonEncode({
               'lat': '51.5074',
               'lon': '-0.1278',
               'display_name': 'London, United Kingdom',
             }),
             200,
-          ),
-        ),
+          );
+        }),
       );
 
       final place = await service.reverse(
@@ -55,6 +58,7 @@ void main() {
 
       expect(place.position, Point(latitude: 51.5074, longitude: -0.1278));
       expect(place.radius, 500);
+      expect(captured.url.queryParameters['accept-language'], 'en');
       service.dispose();
     },
   );

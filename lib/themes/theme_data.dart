@@ -71,7 +71,7 @@ abstract final class LocTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
-        backgroundColor: colors.surfaceContainer,
+        backgroundColor: colors.surfaceContainerHigh,
         indicatorColor: colors.primaryContainer,
         height: 72,
       ),
@@ -80,6 +80,20 @@ abstract final class LocTheme {
         foregroundColor: colors.onPrimary,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbIcon: WidgetStateProperty.resolveWith(
+          (states) => Icon(
+            states.contains(WidgetState.selected)
+                ? Icons.check_rounded
+                : Icons.close_rounded,
+          ),
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? colors.primary
+              : colors.outline,
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,

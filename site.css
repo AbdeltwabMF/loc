@@ -233,13 +233,11 @@ h1 {
   transform: rotate(45deg);
 }
 
-.statement,
 .open-source {
   color: var(--cream);
   background: var(--ink);
 }
 
-.statement-grid,
 .open-source-grid {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr;
@@ -248,7 +246,6 @@ h1 {
   padding-block: 80px;
 }
 
-.statement h2,
 .section-heading h2,
 .open-source h2,
 .legal h1 {
@@ -258,7 +255,6 @@ h1 {
   letter-spacing: -0.045em;
 }
 
-.statement p,
 .open-source-grid > div:last-child > p {
   margin: 0;
   color: var(--paper-deep);
@@ -339,13 +335,6 @@ figcaption {
   color: #fabd2f;
 }
 
-.text-link {
-  display: inline-block;
-  margin-top: 24px;
-  color: #fabd2f;
-  font-weight: 700;
-}
-
 .site-footer {
   min-height: 110px;
   display: flex;
@@ -354,10 +343,6 @@ figcaption {
   gap: 24px;
   color: var(--muted);
   font-size: 0.9rem;
-}
-
-.site-footer p {
-  margin: 0;
 }
 
 .site-footer div {
@@ -418,7 +403,6 @@ figcaption {
     min-height: 390px;
   }
 
-  .statement-grid,
   .open-source-grid {
     grid-template-columns: 1fr;
     gap: 28px;

@@ -15,21 +15,14 @@ class SettingsPage extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 96),
       children: [
         Text('Settings', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 6),
-        Text(
-          'Keep Loc reliable for the journeys that matter.',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         _SettingsGroup(
           children: [
             SwitchListTile(
               secondary: const Icon(Icons.alarm_rounded),
               title: const Text('Arrival alerts'),
               subtitle: const Text(
-                'Allow each reminder to use its selected alert style.',
+                'Allow reminders to alert you when you\'re nearby.',
               ),
               value: state.alarmEnabled,
               onChanged: state.setAlarmEnabled,
@@ -38,10 +31,7 @@ class SettingsPage extends StatelessWidget {
               leading: const Icon(Icons.location_searching_rounded),
               title: const Text('Location access'),
               subtitle: Text(
-                state.isTrackingLocation
-                    ? 'Tracking active reminders'
-                    : state.locationError ??
-                          'Checked when a reminder is active',
+                state.locationError ?? 'Required for active reminders.',
               ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: Geolocator.openAppSettings,
@@ -77,8 +67,8 @@ class SettingsPage extends StatelessWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.health_and_safety_outlined),
-              title: const Text('Support diagnostics'),
-              subtitle: const Text('Check internet and location access'),
+              title: const Text('Diagnostics'),
+              subtitle: const Text('Check location and internet access.'),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () => Navigator.of(context).push<void>(
                 MaterialPageRoute(builder: (_) => const DiagnosticsPage()),
@@ -95,7 +85,7 @@ class SettingsPage extends StatelessWidget {
               leading: const Icon(Icons.map_outlined),
               title: const Text('Map data'),
               subtitle: const Text(
-                '© OpenStreetMap contributors · Search by Nominatim',
+                '© OpenStreetMap contributors · Search powered by Nominatim',
               ),
               trailing: const Icon(Icons.open_in_new_rounded),
               onTap: () =>
@@ -112,7 +102,8 @@ class SettingsPage extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         Text(
-          'Loc 1.0.0 · Location and search queries are processed by your device and OpenStreetMap services. Loc does not operate an account or analytics server.',
+          'Loc 1.0.0 · No account. No analytics. Location and search data are '
+          'processed on your device and by OpenStreetMap services.',
           style: Theme.of(context).textTheme.bodySmall,
           textAlign: TextAlign.center,
         ),
