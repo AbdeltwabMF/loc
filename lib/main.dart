@@ -1,78 +1,60 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:loc/app/app_controller.dart';
+import 'package:loc/data/app_repository.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
+import 'package:loc/data/services/location_service.dart';
+import 'package:loc/data/services/notification_service.dart';
 import 'package:loc/pages/home.dart';
 import 'package:loc/themes/theme_data.dart';
-import 'package:loc/data/app_states.dart';
 import 'package:provider/provider.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // For older browsers and devices trust Let’s Encrypt certificates.
-  // For more information: https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
-  ByteData data =
-      await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
-  SecurityContext.defaultContext
-      .setTrustedCertificatesBytes(data.buffer.asUint8List());
-
-  // Initialize hive databases
   await Hive.initFlutter('loc_db');
+  Hive
+    ..registerAdapter(ReminderAdapter())
+    ..registerAdapter(PlaceAdapter())
+    ..registerAdapter(PointAdapter());
 
-  Hive.registerAdapter<Reminder>(ReminderAdapter());
-  Hive.registerAdapter<Place>(PlaceAdapter());
-  Hive.registerAdapter<Point>(PointAdapter());
-
-  boxReminders = await Hive.openBox('reminders');
-  boxFavorites = await Hive.openBox('favorites');
-  boxPreferences = await Hive.openBox('settings');
-
-  runApp(const Root());
+  final repository = AppRepository(
+    await Hive.openBox<dynamic>('reminders'),
+    await Hive.openBox<dynamic>('favorites'),
+    await Hive.openBox<dynamic>('settings'),
+  );
+  await repository.migrateLegacyData();
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+  final controller = AppController(
+    repository: repository,
+    locationService: LocationService(),
+    notificationService: notificationService,
+  );
+  await controller.initialize();
+  runApp(LocApp(controller: controller));
 }
 
-class Root extends StatelessWidget {
-  const Root({super.key});
+class LocApp extends StatelessWidget {
+  const LocApp({required this.controller, super.key});
+
+  final AppController controller;
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<AppStates>(
-      create: (context) => AppStates(),
-      child: const Loc(),
-    );
-  }
-}
-
-class Loc extends StatelessWidget {
-  const Loc({super.key});
-
-  ThemeMode mode(String state) {
-    switch (state) {
-      case 'System':
-        return ThemeMode.system;
-      case 'Dark':
-        return ThemeMode.dark;
-      case 'Light':
-        return ThemeMode.light;
-      default:
-        return ThemeMode.system;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final appStates = Provider.of<AppStates>(context);
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: LocThemeData.lightThemeData,
-      darkTheme: LocThemeData.darkThemeData,
-      themeMode: mode(appStates.themeMode),
-      home: const HomePage(),
+    return ChangeNotifierProvider(
+      create: (_) => controller,
+      child: Consumer<AppController>(
+        builder: (context, state, child) => MaterialApp(
+          title: 'Loc',
+          debugShowCheckedModeBanner: false,
+          theme: LocTheme.light,
+          darkTheme: LocTheme.dark,
+          themeMode: state.themeMode,
+          home: const HomePage(),
+        ),
+      ),
     );
   }
 }

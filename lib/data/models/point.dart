@@ -5,36 +5,36 @@ part 'point.g.dart';
 @HiveType(typeId: 3)
 class Point {
   @HiveField(0)
-  late double latitude;
+  final double latitude;
   @HiveField(1)
-  late double longitude;
+  final double longitude;
 
-  Point({
-    required this.latitude,
-    required this.longitude,
-  });
+  Point({required this.latitude, required this.longitude});
 
-  Point copy({
-    double? latitude,
-    double? longitude,
-  }) {
+  Point copy({double? latitude, double? longitude}) {
     return Point(
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
     );
   }
 
-  Point.fromJson(Map<String, dynamic> json) {
-    latitude = double.parse(json['lat']);
-    longitude = double.parse(json['lon']);
-  }
+  factory Point.fromJson(Map<String, dynamic> json) => Point(
+    latitude: double.parse(json['lat'] as String),
+    longitude: double.parse(json['lon'] as String),
+  );
 
   Map<String, dynamic> toJson() {
-    return {
-      'latitude': latitude,
-      'longitude': longitude,
-    };
+    return {'latitude': latitude, 'longitude': longitude};
   }
+
+  @override
+  bool operator ==(Object other) =>
+      other is Point &&
+      latitude == other.latitude &&
+      longitude == other.longitude;
+
+  @override
+  int get hashCode => Object.hash(latitude, longitude);
 
   @override
   String toString() {

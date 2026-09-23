@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 import 'package:loc/data/models/place.dart';
@@ -8,19 +10,23 @@ part 'reminder.g.dart';
 @HiveType(typeId: 1)
 class Reminder {
   @HiveField(0)
-  late String id;
+  final String id;
   @HiveField(1)
-  late String title;
+  final String title;
   @HiveField(2)
-  late Place place;
+  final Place place;
   @HiveField(3)
-  late double initialDistance;
+  final double initialDistance;
   @HiveField(4)
-  late bool isTracking;
+  final bool isTracking;
   @HiveField(5)
-  late bool isArrived;
+  final bool isArrived;
   @HiveField(6)
-  String? notes = '';
+  final String? notes;
+  @HiveField(7, defaultValue: false)
+  final bool isAcknowledged;
+  @HiveField(8, defaultValue: false)
+  final bool isAlarm;
 
   Reminder({
     required this.id,
@@ -30,17 +36,9 @@ class Reminder {
     required this.isTracking,
     required this.isArrived,
     this.notes,
+    this.isAcknowledged = false,
+    this.isAlarm = false,
   });
-
-  Reminder.fromJson(Map<String, dynamic> json) {
-    id = json['id'] as String;
-    title = json['title'] as String;
-    place = json['place'] as Place;
-    initialDistance = json['initialDistance'] as double;
-    isTracking = json['isTracking'] as bool;
-    isArrived = json['isArrived'] as bool;
-    notes = json['notes'] as String;
-  }
 
   Map<String, dynamic> toJson() {
     return {
@@ -51,6 +49,8 @@ class Reminder {
       'isTracking': isTracking,
       'isArrived': isArrived,
       'notes': notes,
+      'isAcknowledged': isAcknowledged,
+      'isAlarm': isAlarm,
     };
   }
 
@@ -62,6 +62,8 @@ class Reminder {
     bool? isTracking,
     bool? isArrived,
     String? notes,
+    bool? isAcknowledged,
+    bool? isAlarm,
   }) {
     return Reminder(
       id: id ?? this.id,
@@ -71,6 +73,8 @@ class Reminder {
       isTracking: isTracking ?? this.isTracking,
       isArrived: isArrived ?? this.isArrived,
       notes: notes ?? this.notes,
+      isAcknowledged: isAcknowledged ?? this.isAcknowledged,
+      isAlarm: isAlarm ?? this.isAlarm,
     );
   }
 
@@ -84,32 +88,68 @@ class Reminder {
     reminderStr = '$reminderStr\n  "isTracking": $isTracking,';
     reminderStr = '$reminderStr\n  "isArrived": $isArrived,';
     reminderStr = '$reminderStr\n  "notes": "$notes",';
+    reminderStr = '$reminderStr\n  "isAcknowledged": $isAcknowledged,';
+    reminderStr = '$reminderStr\n  "isAlarm": $isAlarm,';
     reminderStr = '$reminderStr\n}';
     return reminderStr;
   }
 
   double remainderDistance(Point current) {
-    double inMeters = Geolocator.distanceBetween(current.latitude,
-        current.longitude, place.position.latitude, place.position.longitude);
+    final inMeters = Geolocator.distanceBetween(
+      current.latitude,
+      current.longitude,
+      place.position.latitude,
+      place.position.longitude,
+    );
     return inMeters;
   }
 
+  bool hasArrived(Point current) =>
+      remainderDistance(current) <= (place.radius ?? 500);
+
+  bool pathIntersectsArrivalZone(Point from, Point to) {
+    const earthRadius = 6371000.0;
+    final destination = place.position;
+    final latitudeScale = math.pi * earthRadius / 180;
+    final longitudeScale =
+        latitudeScale * math.cos(destination.latitude * math.pi / 180);
+    final startX = (from.longitude - destination.longitude) * longitudeScale;
+    final startY = (from.latitude - destination.latitude) * latitudeScale;
+    final endX = (to.longitude - destination.longitude) * longitudeScale;
+    final endY = (to.latitude - destination.latitude) * latitudeScale;
+    final deltaX = endX - startX;
+    final deltaY = endY - startY;
+    final segmentLengthSquared = deltaX * deltaX + deltaY * deltaY;
+    final progress = segmentLengthSquared == 0
+        ? 0.0
+        : (-(startX * deltaX + startY * deltaY) / segmentLengthSquared).clamp(
+            0.0,
+            1.0,
+          );
+    final closestX = startX + progress * deltaX;
+    final closestY = startY + progress * deltaY;
+    final radius = (place.radius ?? 500).toDouble();
+    return closestX * closestX + closestY * closestY <= radius * radius;
+  }
+
   double bearing(Point current) {
-    double inDegrees = Geolocator.bearingBetween(current.latitude,
-        current.longitude, place.position.latitude, place.position.longitude);
+    final inDegrees = Geolocator.bearingBetween(
+      current.latitude,
+      current.longitude,
+      place.position.latitude,
+      place.position.longitude,
+    );
     return inDegrees;
   }
 
   double traveledDistance(Point current) {
-    double remainder = remainderDistance(current);
-    if (initialDistance < remainder) initialDistance = remainder;
-
-    return (initialDistance - remainder);
+    return (initialDistance - remainderDistance(current))
+        .clamp(0, double.infinity)
+        .toDouble();
   }
 
   double? traveledDistancePercent(Point current) {
-    double traveled = traveledDistance(current);
-    if (initialDistance == 0.0) return 1;
-    return (traveled / initialDistance);
+    if (initialDistance <= 0) return 0;
+    return (traveledDistance(current) / initialDistance).clamp(0, 1).toDouble();
   }
 }

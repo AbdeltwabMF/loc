@@ -1,53 +1,33 @@
 name: loc
 description: Free and open-source location-based reminder for Android
 repository: https://github.com/AbdeltwabMF/loc
+homepage: https://loc.abdeltwab.xyz
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 0.6.4+64
+version: 1.0.0+100
 
 environment:
-  flutter: 3.7.5
-  sdk: '>=2.18.6 <3.0.0'
+  sdk: '>=3.10.0 <4.0.0'
+  flutter: '>=3.38.1'
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.5
-  flutter_map: ^3.1.0
-  flutter_ringtone_player: ^3.2.0
-  geolocator: ^9.0.2
+  flutter_map: ^8.3.2
+  flutter_local_notifications: ^22.3.1
+  geolocator: ^14.0.3
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  http: ^0.13.5
-  latlong2: ^0.8.1
-  provider: ^6.0.5
-  url_launcher: ^6.1.8
-  uuid: ^3.0.7
+  http: ^1.5.0
+  latlong2: ^0.10.1
+  provider: ^6.1.5+1
+  url_launcher: ^6.3.2
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
-  hive_generator: ^2.0.0
-  build_runner: ^2.3.3
-  flutter_launcher_icons: ^0.12.0
+  flutter_lints: ^6.0.0
 
 flutter:
-  assets:
-    - assets/ca/lets-encrypt-r3.pem
-    - assets/images/icon.png
-    - assets/images/featureGraphic.png
-    - assets/images/background.jpg
-  fonts:
-      - family: Fantasque
-        fonts:
-          - asset: assets/fonts/Fantasque Sans Mono Regular Nerd Font.ttf
-      - family: NotoArabic
-        fonts:
-          - asset: assets/fonts/NotoSansArabic-Regular.ttf
   uses-material-design: true
-
-flutter_icons:
-  android: "ic_launcher"
-  image_path: "assets/images/icon.png"
-  min_sdk_android: 21

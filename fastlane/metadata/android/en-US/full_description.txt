@@ -1,15 +1,15 @@
-<p>
-  <i>Loc</i> is a free and open-source location-based reminder for Android.
-</p>
+Loc is a private, free and open-source arrival reminder for Android. Choose a destination and Loc alerts you when you enter its arrival radius.
 
-<p>Features:</p>
+Features:
 <ul>
-  <li>Free and open-data embedded map (based on OSM).</li>
-  <li>Search for the destination.</li>
-  <li>Shows Eucliedian distance and bearing angle.</li>
-  <li>Shows Live location.</li>
-  <li>Customizable radius of a circle around the destination.</li>
-  <li>Remind you with sound when you arrive.</li>
-  <li>Offline/Online usage.</li>
-  <li>Displays location name.</li>
+  <li>Multiple independently enabled reminders</li>
+  <li>Configurable arrival radius from 100 m to 5 km</li>
+  <li>Brief notifications or repeating alarms per reminder</li>
+  <li>Foreground tracking with screen-off support</li>
+  <li>High-speed arrival-zone crossing detection</li>
+  <li>OpenStreetMap map and Nominatim place search</li>
+  <li>Manual coordinates and reusable saved places</li>
+  <li>Light, dark, and system themes</li>
 </ul>
+
+Reminders and saved places stay on your device. Loc has no account, advertising, analytics, or application backend.

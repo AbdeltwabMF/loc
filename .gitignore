@@ -10,7 +10,6 @@
 .svn/
 migrate_working_dir/
 .metadata
-pubspec.lock
 key.properties
 
 # IntelliJ related
@@ -33,7 +32,9 @@ key.properties
 .packages
 .pub-cache/
 .pub/
+/.flutter/
 /build/
+/android/build/
 
 # Symbolication related
 app.*.symbols
@@ -45,6 +46,3 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-
-# Test files
-test

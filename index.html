@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#79740e">
+    <meta
+      name="description"
+      content="Loc is a private, open-source arrival reminder for Android."
+    >
+    <meta property="og:title" content="Loc - Know when you're there">
+    <meta
+      property="og:description"
+      content="Choose a destination and let Loc alert you when you arrive."
+    >
+    <meta property="og:image" content="https://loc.abdeltwab.xyz/assets/icons/app_icon.png">
+    <meta property="og:url" content="https://loc.abdeltwab.xyz">
+    <title>Loc - Arrival reminders for Android</title>
+    <link rel="icon" href="assets/icons/app_icon.png">
+    <link rel="stylesheet" href="site.css">
+  </head>
+  <body>
+    <header class="site-header wrap">
+      <a class="brand" href="/" aria-label="Loc home">
+        <img src="assets/icons/app_icon.png" alt="" width="42" height="42">
+        <span>LOC</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/AbdeltwabMF/loc">Source</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero wrap">
+        <div class="hero-copy">
+          <p class="eyebrow">Android arrival reminders</p>
+          <h1>Know when<br>you're there.</h1>
+          <p class="intro">
+            Pick a destination, choose how close is close enough, and let Loc
+            notify you when you arrive.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="https://github.com/AbdeltwabMF/loc/releases/latest">
+              Get the latest release
+            </a>
+            <a class="button secondary" href="https://github.com/AbdeltwabMF/loc">
+              View source
+            </a>
+          </div>
+          <p class="platform-note">Free, open source, and built for Android.</p>
+        </div>
+        <div class="route-card" aria-label="A route ending at an arrival zone">
+          <span class="route-start"></span>
+          <span class="route-line"></span>
+          <span class="route-radius"></span>
+          <span class="route-pin"><span>LOC</span></span>
+          <p>Arrival radius reached</p>
+        </div>
+      </section>
+
+      <section class="statement">
+        <div class="wrap statement-grid">
+          <h2>Set it.<br>Go.</h2>
+          <p>
+            Loc watches your route only while a reminder is active. Choose a
+            brief notification for everyday trips or a repeating alarm when
+            you might fall asleep.
+          </p>
+        </div>
+      </section>
+
+      <section class="features wrap" id="features">
+        <div class="section-heading">
+          <p class="eyebrow">Focused by design</p>
+          <h2>Everything needed for the next stop.</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <span>01</span>
+            <h3>Flexible destinations</h3>
+            <p>Search, drop a pin, enter coordinates, or reuse a saved place.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Your alert, your choice</h3>
+            <p>Use a brief sound or a repeating alarm for each reminder.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Private by default</h3>
+            <p>No account, analytics, advertising, or Loc tracking server.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Travel-speed aware</h3>
+            <p>Detects arrival-zone crossings between GPS samples, even at speed.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="screens wrap" aria-labelledby="screens-title">
+        <div class="section-heading">
+          <p class="eyebrow">The app</p>
+          <h2 id="screens-title">Simple at every step.</h2>
+        </div>
+        <div class="screen-grid">
+          <figure>
+            <img
+              src="assets/screenshots/reminders.png"
+              alt="Loc reminders screen showing active destinations"
+              loading="lazy"
+            >
+            <figcaption>See active reminders at a glance.</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="assets/screenshots/reminder-editor.png"
+              alt="Loc reminder editor with radius and alert controls"
+              loading="lazy"
+            >
+            <figcaption>Choose the radius and alert style.</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="assets/screenshots/map-picker.png"
+              alt="Loc map picker showing a destination at the Giza Pyramids"
+              loading="lazy"
+            >
+            <figcaption>Put the destination exactly where it belongs.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="open-source">
+        <div class="wrap open-source-grid">
+          <div>
+            <p class="eyebrow">GPL-3.0</p>
+            <h2>Open all the way down.</h2>
+          </div>
+          <div>
+            <p>
+              Loc is free software. Inspect it, build it, improve it, or report
+              an issue on GitHub.
+            </p>
+            <a class="text-link" href="https://github.com/AbdeltwabMF/loc">
+              Explore the project &rarr;
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer wrap">
+      <p>Loc 1.0.0</p>
+      <div>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/AbdeltwabMF/loc/blob/main/LICENSE">GPL-3.0</a>
+        <a href="https://www.openstreetmap.org/copyright">&copy; OpenStreetMap contributors</a>
+      </div>
+    </footer>
+  </body>
+</html>
