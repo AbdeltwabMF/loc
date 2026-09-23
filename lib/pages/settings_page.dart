@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:loc/app/app_controller.dart';
+import 'package:loc/pages/diagnostics_page.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -74,6 +75,15 @@ class SettingsPage extends StatelessWidget {
         const SizedBox(height: 18),
         _SettingsGroup(
           children: [
+            ListTile(
+              leading: const Icon(Icons.health_and_safety_outlined),
+              title: const Text('Support diagnostics'),
+              subtitle: const Text('Check internet and location access'),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => Navigator.of(context).push<void>(
+                MaterialPageRoute(builder: (_) => const DiagnosticsPage()),
+              ),
+            ),
             ListTile(
               leading: const Icon(Icons.code_rounded),
               title: const Text('Source code'),

@@ -3,6 +3,7 @@ import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
+import 'package:loc/data/services/app_diagnostics.dart';
 import 'package:loc/data/services/geocoding_service.dart';
 import 'package:loc/pages/map_picker_page.dart';
 import 'package:provider/provider.dart';
@@ -310,10 +311,26 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
       if (mounted) Navigator.of(context).pop();
     } on Object catch (error) {
       if (mounted) {
+        AppDiagnostics.record('reminder.save', error);
         setState(() => _saving = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(error.toString())));
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.error_outline_rounded),
+            title: const Text('Reminder was not saved'),
+            content: const Text(
+              'Your entries are still here. Try again. If this keeps '
+              'happening, copy Support diagnostics from Settings when '
+              'reporting the issue.',
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Keep editing'),
+              ),
+            ],
+          ),
+        );
       }
     }
   }

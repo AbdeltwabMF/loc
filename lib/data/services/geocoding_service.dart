@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
+import 'package:loc/data/services/app_diagnostics.dart';
 
 class GeocodingException implements Exception {
   const GeocodingException(this.message);
@@ -53,13 +55,34 @@ class GeocodingService {
   }
 
   Future<Object?> _get(Uri uri) async {
-    final response = await _client
-        .get(uri, headers: _headers)
-        .timeout(const Duration(seconds: 12));
-    if (response.statusCode != 200) {
-      throw GeocodingException('Map service returned ${response.statusCode}.');
+    try {
+      final response = await _client
+          .get(uri, headers: _headers)
+          .timeout(const Duration(seconds: 12));
+      if (response.statusCode != 200) {
+        AppDiagnostics.record(
+          'geocoding.http-${response.statusCode}',
+          GeocodingException('HTTP ${response.statusCode}'),
+        );
+        throw GeocodingException(
+          'Map service returned ${response.statusCode}. Try again later.',
+        );
+      }
+      return jsonDecode(utf8.decode(response.bodyBytes));
+    } on GeocodingException {
+      rethrow;
+    } on TimeoutException catch (error) {
+      AppDiagnostics.record('geocoding.${uri.pathSegments.first}', error);
+      throw GeocodingException(AppDiagnostics.connectivityMessage());
+    } on http.ClientException catch (error) {
+      AppDiagnostics.record('geocoding.${uri.pathSegments.first}', error);
+      throw GeocodingException(AppDiagnostics.connectivityMessage());
+    } on FormatException catch (error) {
+      AppDiagnostics.record('geocoding.response', error);
+      throw const GeocodingException(
+        'OpenStreetMap returned an invalid response. Try again later.',
+      );
     }
-    return jsonDecode(utf8.decode(response.bodyBytes));
   }
 
   void dispose() => _client.close();
