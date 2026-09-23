@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
+import 'package:loc/data/models/place.dart';
+import 'package:loc/data/services/app_diagnostics.dart';
+import 'package:loc/data/services/geo_uri_service.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
 import 'package:loc/pages/reminders_page.dart';
 import 'package:loc/pages/saved_places_page.dart';
@@ -15,12 +20,42 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _index = 0;
+  late final StreamSubscription<Place> _geoIntentSubscription;
 
   static const _pages = <Widget>[
     RemindersPage(),
     SavedPlacesPage(),
     SettingsPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _geoIntentSubscription = GeoUriService.places.listen(
+      _openGeoPlace,
+      onError: (Object error, StackTrace stackTrace) {
+        AppDiagnostics.record('geo.intent', error);
+      },
+    );
+  }
+
+  void _openGeoPlace(Place place) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => ReminderEditorPage(initialPlace: place),
+        ),
+      );
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
+  @override
+  void dispose() {
+    unawaited(_geoIntentSubscription.cancel());
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
