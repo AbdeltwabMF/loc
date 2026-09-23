@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
+import 'package:loc/data/services/compass_service.dart';
 
 void main() {
   group('Place identity', () {
@@ -165,6 +166,43 @@ void main() {
         ),
         isFalse,
       );
+    });
+
+    test('reports compass bearings clockwise from north', () {
+      Reminder reminderAt(double latitude, double longitude) => Reminder(
+        id: 'id',
+        title: 'Destination',
+        place: Place(
+          position: Point(latitude: latitude, longitude: longitude),
+        ),
+        initialDistance: 0,
+        isTracking: true,
+        isArrived: false,
+      );
+
+      final origin = Point(latitude: 0, longitude: 0);
+
+      expect(reminderAt(1, 0).bearing(origin), closeTo(0, 0.01));
+      expect(reminderAt(0, 1).bearing(origin), closeTo(90, 0.01));
+      expect(reminderAt(-1, 0).bearing(origin), closeTo(180, 0.01));
+      expect(reminderAt(0, -1).bearing(origin), closeTo(270, 0.01));
+    });
+
+    test('points toward the destination relative to device heading', () {
+      final reminder = Reminder(
+        id: 'id',
+        title: 'Destination',
+        place: Place(position: Point(latitude: 0, longitude: 1)),
+        initialDistance: 0,
+        isTracking: true,
+        isArrived: false,
+      );
+      final origin = Point(latitude: 0, longitude: 0);
+
+      final bearing = reminder.bearing(origin);
+      expect(CompassService.directionTo(bearing, 90), closeTo(0, 0.01));
+      expect(CompassService.directionTo(bearing, 0), closeTo(90, 0.01));
+      expect(CompassService.directionTo(bearing, 180), closeTo(270, 0.01));
     });
   });
 }
