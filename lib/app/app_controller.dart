@@ -23,7 +23,7 @@ class AppController extends ChangeNotifier {
   final NotificationService _notificationService;
   final List<Reminder> _reminders = [];
   final List<Place> _favorites = [];
-  final Set<String> _notifiedArrivalIds = {};
+  String? _arrivalNotificationSignature;
   StreamSubscription<Point>? _positionSubscription;
   Future<void> _operationQueue = Future.value();
   Point? _currentPosition;
@@ -31,6 +31,7 @@ class AppController extends ChangeNotifier {
   bool _alarmEnabled = true;
   bool _isTrackingLocation = false;
   bool _isStartingTracking = false;
+  bool _isDisposed = false;
   String? _locationError;
 
   List<Reminder> get reminders => List.unmodifiable(_reminders);
@@ -67,13 +68,37 @@ class AppController extends ChangeNotifier {
       if (!canNotify) {
         _locationError = 'Notifications are disabled in Android settings.';
       } else if (await _locationService.hasPermission()) {
-        await _showPendingArrivals();
         await startTracking(requestPermission: false);
+        unawaited(_reconcileInitialPosition());
       } else {
         _locationError = await _locationService.unavailableReason();
       }
+    } else {
+      await _syncArrivalAlert();
     }
     notifyListeners();
+  }
+
+  Future<void> _reconcileInitialPosition() async {
+    Point point;
+    try {
+      point = await _locationService.current();
+    } on Object catch (error) {
+      AppDiagnostics.record('location.initial', error);
+      if (_isDisposed) return;
+      try {
+        await _enqueue(_syncArrivalAlert);
+      } on Object catch (fallbackError) {
+        AppDiagnostics.record('notification.initial', fallbackError);
+      }
+      return;
+    }
+    if (_isDisposed) return;
+    try {
+      await _enqueue(() => _handlePosition(point));
+    } on Object catch (error) {
+      AppDiagnostics.record('location.initial', error);
+    }
   }
 
   Future<void> startTracking({bool requestPermission = true}) async {
@@ -148,11 +173,25 @@ class AppController extends ChangeNotifier {
 
   Future<void> _saveReminder(Reminder reminder) async {
     final position = _currentPosition;
-    final savedReminder = position == null || !reminder.isTracking
-        ? reminder
-        : reminder.copy(isArrived: reminder.hasArrived(position));
+    final index = _reminders.indexWhere((item) => item.id == reminder.id);
+    final existing = index == -1 ? null : _reminders[index];
+    var savedReminder = reminder;
+    if (reminder.isTracking &&
+        existing != null &&
+        existing.isArrived &&
+        existing.place == reminder.place) {
+      final isArrived = position == null || !reminder.hasExited(position);
+      savedReminder = reminder.copy(
+        isArrived: isArrived,
+        isAcknowledged: isArrived ? existing.isAcknowledged : false,
+      );
+    } else if (position != null && reminder.isTracking) {
+      savedReminder = reminder.copy(
+        isArrived: reminder.hasArrived(position),
+        isAcknowledged: false,
+      );
+    }
     await _repository.saveReminder(savedReminder);
-    final index = _reminders.indexWhere((item) => item.id == savedReminder.id);
     if (index == -1) {
       _reminders.insert(0, savedReminder);
     } else {
@@ -165,17 +204,15 @@ class AppController extends ChangeNotifier {
         // The saved reminder remains visible with an actionable permission error.
       }
     }
-    await _showPendingArrivals();
-    await _reconcileArrivalAlert();
+    await _syncArrivalAlert();
     notifyListeners();
   }
 
   Future<void> deleteReminder(Reminder reminder) => _enqueue(() async {
     await _repository.deleteReminder(reminder.id);
     _reminders.removeWhere((item) => item.id == reminder.id);
-    _notifiedArrivalIds.remove(reminder.id);
     await _syncTrackingState();
-    await _reconcileArrivalAlert();
+    await _syncArrivalAlert();
     notifyListeners();
   });
 
@@ -188,7 +225,6 @@ class AppController extends ChangeNotifier {
         );
         await _saveReminder(updated);
         await _syncTrackingState();
-        await _reconcileArrivalAlert();
       });
 
   Future<bool> addFavorite(Place place) => _enqueue(() async {
@@ -217,7 +253,7 @@ class AppController extends ChangeNotifier {
     if (!value) {
       await dismissArrival();
     } else {
-      await _reconcileArrivalAlert();
+      await _syncArrivalAlert();
     }
     notifyListeners();
   }
@@ -229,13 +265,14 @@ class AppController extends ChangeNotifier {
       final updated = reminder.copy(isAcknowledged: true);
       await _repository.saveReminder(updated);
       _reminders[index] = updated;
-      _notifiedArrivalIds.remove(reminder.id);
     }
+    _arrivalNotificationSignature = null;
     await _notificationService.dismissArrival();
     notifyListeners();
   });
 
   Future<void> _handlePosition(Point point) async {
+    if (_isDisposed) return;
     final previousPosition = _currentPosition;
     _currentPosition = point;
     for (var index = 0; index < _reminders.length; index++) {
@@ -246,8 +283,8 @@ class AppController extends ChangeNotifier {
           reminder.hasArrived(point) ||
           (previousPosition != null &&
               reminder.pathIntersectsArrivalZone(previousPosition, point));
-      final arrived = reminder.isArrived && !reminder.isAcknowledged
-          ? true
+      final arrived = reminder.isArrived
+          ? !reminder.hasExited(point)
           : enteredArrivalZone;
       final needsInitialDistance = reminder.initialDistance <= 0;
       final resetAcknowledgement = !arrived && reminder.isAcknowledged;
@@ -267,36 +304,32 @@ class AppController extends ChangeNotifier {
       _reminders[index] = updated;
     }
 
-    await _showPendingArrivals();
-    await _reconcileArrivalAlert();
-    notifyListeners();
+    await _syncArrivalAlert();
+    if (!_isDisposed) notifyListeners();
   }
 
-  Future<void> _reconcileArrivalAlert({bool dismissWhenEmpty = true}) async {
-    final arrivedIds = _reminders
-        .where((item) => item.isArrived)
-        .map((item) => item.id)
-        .toSet();
-    _notifiedArrivalIds.removeWhere((id) => !arrivedIds.contains(id));
-    if (dismissWhenEmpty && !hasArrivalAlert) {
+  Future<void> _syncArrivalAlert() async {
+    if (_isDisposed) return;
+    final arrived = arrivedReminders;
+    if (!_alarmEnabled || arrived.isEmpty) {
+      _arrivalNotificationSignature = null;
       await _notificationService.dismissArrival();
+      return;
     }
-  }
 
-  Future<void> _showPendingArrivals() async {
-    if (!_alarmEnabled) return;
-    final pending = arrivedReminders
-        .where((item) => !_notifiedArrivalIds.contains(item.id))
-        .toList(growable: false);
-    if (pending.isEmpty) return;
+    final signature = arrived
+        .map((item) => '${item.id}:${item.title}:${item.alertStyle.name}')
+        .join('|');
+    if (_arrivalNotificationSignature == signature) return;
     if (!await _notificationService.isPermissionGranted()) return;
+    if (_isDisposed) return;
     await _notificationService.showArrival(
       title: 'You have arrived',
-      body: arrivedReminders.map((item) => item.title).join(', '),
-      isAlarm: arrivedReminders.any((item) => item.isAlarm),
-      isVibration: arrivedReminders.any((item) => item.isVibration),
+      body: arrived.map((item) => item.title).join(', '),
+      isAlarm: arrived.any((item) => item.isAlarm),
+      isVibration: arrived.any((item) => item.isVibration),
     );
-    _notifiedArrivalIds.addAll(pending.map((item) => item.id));
+    _arrivalNotificationSignature = signature;
   }
 
   Future<void> _syncTrackingState() async {
@@ -318,6 +351,7 @@ class AppController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _isDisposed = true;
     unawaited(_positionSubscription?.cancel());
     unawaited(_notificationService.dismissArrival());
     super.dispose();
