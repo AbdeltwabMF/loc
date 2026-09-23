@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
+import 'package:loc/data/services/app_diagnostics.dart';
 import 'package:loc/data/services/geocoding_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,11 +27,14 @@ class _MapPickerPageState extends State<MapPickerPage> {
   final _tileProvider = NetworkTileProvider(
     headers: {'User-Agent': 'Loc/1.0.0 (+https://loc.abdeltwab.xyz)'},
   );
+  final _tileReset = StreamController<void>.broadcast();
   Timer? _debounce;
   List<Place> _results = const [];
   late LatLng _center;
   bool _searching = false;
   bool _selecting = false;
+  bool _mapUnavailable = false;
+  bool _tileErrorPending = false;
   int _searchGeneration = 0;
 
   @override
@@ -48,6 +52,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
     _debounce?.cancel();
     _search.dispose();
     _map.dispose();
+    _tileReset.close();
     _geocoding.dispose();
     super.dispose();
   }
@@ -72,6 +77,9 @@ class _MapPickerPageState extends State<MapPickerPage> {
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 tileProvider: _tileProvider,
+                reset: _tileReset.stream,
+                evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+                errorTileCallback: (_, error, _) => _handleTileError(error),
               ),
               SimpleAttributionWidget(
                 source: const Text('OpenStreetMap contributors'),
@@ -116,6 +124,23 @@ class _MapPickerPageState extends State<MapPickerPage> {
                           : null,
                     ),
                   ),
+                  if (_mapUnavailable)
+                    Card(
+                      margin: const EdgeInsets.only(top: 8),
+                      color: colors.errorContainer,
+                      child: ListTile(
+                        leading: const Icon(Icons.wifi_off_rounded),
+                        title: const Text('Map is unavailable'),
+                        subtitle: const Text(
+                          'Check internet access and allow Loc through any VPN '
+                          'or firewall.',
+                        ),
+                        trailing: TextButton(
+                          onPressed: _retryTiles,
+                          child: const Text('Retry'),
+                        ),
+                      ),
+                    ),
                   if (_results.isNotEmpty)
                     Card(
                       margin: const EdgeInsets.only(top: 8),
@@ -223,6 +248,24 @@ class _MapPickerPageState extends State<MapPickerPage> {
     } on Object catch (error) {
       if (mounted) _showError(error);
     }
+  }
+
+  void _handleTileError(Object error) {
+    if (_mapUnavailable || _tileErrorPending) return;
+    _tileErrorPending = true;
+    AppDiagnostics.record('map.tiles', error);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_mapUnavailable) {
+        setState(() => _mapUnavailable = true);
+      }
+      _tileErrorPending = false;
+    });
+  }
+
+  void _retryTiles() {
+    _tileErrorPending = false;
+    setState(() => _mapUnavailable = false);
+    _tileReset.add(null);
   }
 
   Future<void> _select() async {

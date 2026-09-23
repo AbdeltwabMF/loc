@@ -5,6 +5,7 @@ import 'package:loc/data/app_repository.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
+import 'package:loc/data/services/app_diagnostics.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 
@@ -117,6 +118,7 @@ class AppController extends ChangeNotifier {
         },
       );
     } on Object catch (error) {
+      AppDiagnostics.record('location.tracking', error);
       _locationError = error.toString();
       _isTrackingLocation = false;
       notifyListeners();
@@ -134,6 +136,7 @@ class AppController extends ChangeNotifier {
       notifyListeners();
       return point;
     } on Object catch (error) {
+      AppDiagnostics.record('location.current', error);
       _locationError = error.toString();
       notifyListeners();
       rethrow;

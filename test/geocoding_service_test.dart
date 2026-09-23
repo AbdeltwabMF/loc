@@ -76,4 +76,40 @@ void main() {
     );
     service.dispose();
   });
+
+  test('explains that network filters can block map search', () async {
+    final service = GeocodingService(
+      client: MockClient(
+        (request) async => throw http.ClientException('blocked'),
+      ),
+    );
+
+    await expectLater(
+      service.search('Central station'),
+      throwsA(
+        isA<GeocodingException>()
+            .having((error) => error.message, 'message', contains('firewall'))
+            .having((error) => error.message, 'message', contains('VPN')),
+      ),
+    );
+    service.dispose();
+  });
+
+  test('surfaces an actionable error for an invalid response', () async {
+    final service = GeocodingService(
+      client: MockClient((request) async => http.Response('not json', 200)),
+    );
+
+    await expectLater(
+      service.search('Central station'),
+      throwsA(
+        isA<GeocodingException>().having(
+          (error) => error.message,
+          'message',
+          contains('invalid response'),
+        ),
+      ),
+    );
+    service.dispose();
+  });
 }
