@@ -13,6 +13,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_compass: ^0.8.1
   flutter_map: ^8.3.2
   flutter_local_notifications: ^22.3.1
   geolocator: ^14.0.3

@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
+import 'package:loc/data/services/compass_service.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
 import 'package:provider/provider.dart';
 
@@ -14,9 +19,52 @@ class RemindersPage extends StatefulWidget {
   State<RemindersPage> createState() => _RemindersPageState();
 }
 
-class _RemindersPageState extends State<RemindersPage> {
+class _RemindersPageState extends State<RemindersPage>
+    with WidgetsBindingObserver {
   String _query = '';
   ReminderFilter _filter = ReminderFilter.all;
+  final ValueNotifier<double?> _deviceHeading = ValueNotifier(null);
+  StreamSubscription<double?>? _headingSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startCompass();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _startCompass();
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _stopCompass();
+    }
+  }
+
+  void _startCompass() {
+    if (_headingSubscription != null) return;
+    _headingSubscription = const CompassService().updates.listen(
+      (heading) => _deviceHeading.value = heading,
+      onError: (_) => _deviceHeading.value = null,
+    );
+  }
+
+  void _stopCompass() {
+    unawaited(_headingSubscription?.cancel());
+    _headingSubscription = null;
+    _deviceHeading.value = null;
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _stopCompass();
+    _deviceHeading.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +143,7 @@ class _RemindersPageState extends State<RemindersPage> {
               itemBuilder: (context, index) => _ReminderCard(
                 reminder: reminders[index],
                 currentPosition: state.currentPosition,
+                deviceHeading: _deviceHeading,
               ),
             ),
           ),
@@ -163,10 +212,15 @@ class _Header extends StatelessWidget {
 }
 
 class _ReminderCard extends StatelessWidget {
-  const _ReminderCard({required this.reminder, required this.currentPosition});
+  const _ReminderCard({
+    required this.reminder,
+    required this.currentPosition,
+    required this.deviceHeading,
+  });
 
   final Reminder reminder;
   final Point? currentPosition;
+  final ValueListenable<double?> deviceHeading;
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +229,7 @@ class _ReminderCard extends StatelessWidget {
     final distance = position == null
         ? null
         : reminder.remainderDistance(position).round();
+    final bearing = position == null ? null : reminder.bearing(position);
     final colors = Theme.of(context).colorScheme;
     return Card(
       child: InkWell(
@@ -200,11 +255,16 @@ class _ReminderCard extends StatelessWidget {
                           : colors.primaryContainer,
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: Icon(
-                      reminder.isArrived
-                          ? Icons.flag_rounded
-                          : Icons.location_on_rounded,
-                    ),
+                    child: bearing == null
+                        ? Icon(
+                            reminder.isArrived
+                                ? Icons.flag_rounded
+                                : Icons.location_on_rounded,
+                          )
+                        : _Compass(
+                            bearing: bearing,
+                            deviceHeading: deviceHeading,
+                          ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -222,7 +282,9 @@ class _ReminderCard extends StatelessWidget {
                               ? 'Inside arrival zone'
                               : distance == null
                               ? '${reminder.place.radius ?? 500} m radius'
-                              : _distanceLabel(distance),
+                              : '${_distanceLabel(distance)} · '
+                                    '${_bearingLabel(bearing!)} '
+                                    '${bearing.round() % 360}°',
                           style: TextStyle(color: colors.onSurfaceVariant),
                         ),
                       ],
@@ -257,6 +319,87 @@ class _ReminderCard extends StatelessWidget {
   static String _distanceLabel(int meters) => meters < 1000
       ? '$meters m away'
       : '${(meters / 1000).toStringAsFixed(1)} km away';
+
+  static String _bearingLabel(double bearing) {
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return directions[((bearing + 22.5) ~/ 45) % directions.length];
+  }
+}
+
+class _Compass extends StatelessWidget {
+  const _Compass({required this.bearing, required this.deviceHeading});
+
+  final double bearing;
+  final ValueListenable<double?> deviceHeading;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return ValueListenableBuilder<double?>(
+      valueListenable: deviceHeading,
+      builder: (context, heading, _) {
+        final direction = CompassService.directionTo(bearing, heading ?? 0);
+        return Semantics(
+          label: heading == null
+              ? 'Destination bearing ${bearing.round() % 360} degrees'
+              : _relativeDirectionLabel(direction),
+          child: Container(
+            margin: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: colors.primary, width: 1.5),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  top: heading == null ? 0 : 3,
+                  child: heading == null
+                      ? Text(
+                          'N',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: colors.primary,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        )
+                      : Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: colors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Transform.rotate(
+                    angle: direction * math.pi / 180,
+                    child: Icon(
+                      Icons.navigation_rounded,
+                      size: 23,
+                      color: colors.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  static String _relativeDirectionLabel(double direction) {
+    final rounded = direction.round() % 360;
+    if (rounded == 0) return 'Destination straight ahead';
+    if (rounded <= 180) {
+      return 'Destination $rounded degrees to the right';
+    }
+    return 'Destination ${360 - rounded} degrees to the left';
+  }
 }
 
 class _LocationWarning extends StatelessWidget {

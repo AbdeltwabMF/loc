@@ -154,7 +154,7 @@ class Reminder {
       place.position.latitude,
       place.position.longitude,
     );
-    return inDegrees;
+    return (inDegrees + 360) % 360;
   }
 
   double traveledDistance(Point current) {

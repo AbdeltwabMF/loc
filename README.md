@@ -3,8 +3,6 @@
 Loc is an open-source Android arrival reminder. Pick a destination, choose an
 arrival radius, and Loc sounds an alarm when the device enters that area.
 
-Project site: [loc.abdeltwab.xyz](https://loc.abdeltwab.xyz)
-
 The application uses OpenStreetMap tiles and Nominatim search. Reminders and
 saved places stay on the device in Hive. There is no Loc account or analytics
 backend.
