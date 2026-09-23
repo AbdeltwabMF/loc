@@ -33,6 +33,7 @@ class GeocodingService {
       'lon': point.longitude.toString(),
       'zoom': '16',
       'addressdetails': '1',
+      'accept-language': 'en',
     });
     final json = await _get(uri);
     return Place.fromJson(json as Map<String, dynamic>);
@@ -46,6 +47,7 @@ class GeocodingService {
       'q': value,
       'addressdetails': '1',
       'limit': '6',
+      'accept-language': 'en',
     });
     final json = await _get(uri) as List<dynamic>;
     return json

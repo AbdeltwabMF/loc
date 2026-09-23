@@ -23,13 +23,13 @@ class _DiagnosticsPageState extends State<DiagnosticsPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Support diagnostics')),
+    appBar: AppBar(title: const Text('Diagnostics')),
     body: ListView(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       children: [
         const Text(
-          'The report contains no coordinates, search text, reminder names, '
-          'device identifiers, or automatic telemetry.',
+          'This report excludes your locations, searches, reminder names, and '
+          'device identifiers. Loc does not collect automatic telemetry.',
         ),
         const SizedBox(height: 20),
         Card(
@@ -44,7 +44,7 @@ class _DiagnosticsPageState extends State<DiagnosticsPage> {
                     ],
                   )
                 : SelectableText(
-                    _report!,
+                    _displayReport(_report!),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
           ),
@@ -64,11 +64,39 @@ class _DiagnosticsPageState extends State<DiagnosticsPage> {
         TextButton.icon(
           onPressed: _reportIssue,
           icon: const Icon(Icons.open_in_new_rounded),
-          label: const Text('Report an issue on GitHub'),
+          label: const Text('Report on GitHub'),
         ),
       ],
     ),
   );
+
+  String _displayReport(String report) {
+    final generated = RegExp(r'^Generated: (.+)$', multiLine: true);
+    return report.replaceFirstMapped(generated, (match) {
+      final timestamp = DateTime.tryParse(match.group(1)!);
+      if (timestamp == null) return match.group(0)!;
+      final local = timestamp.toLocal();
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+      final minute = local.minute.toString().padLeft(2, '0');
+      final period = local.hour < 12 ? 'AM' : 'PM';
+      return 'Generated: ${months[local.month - 1]} ${local.day}, '
+          '${local.year} at $hour:$minute $period';
+    });
+  }
 
   Future<void> _run() async {
     setState(() => _report = null);

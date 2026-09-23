@@ -8,6 +8,7 @@ import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/compass_service.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
+import 'package:loc/text_direction.dart';
 import 'package:provider/provider.dart';
 
 enum ReminderFilter { all, active, arrived, paused }
@@ -95,7 +96,7 @@ class _RemindersPageState extends State<RemindersPage>
             child: TextField(
               onChanged: (value) => setState(() => _query = value),
               decoration: const InputDecoration(
-                hintText: 'Search your destinations',
+                hintText: 'Search reminders',
                 prefixIcon: Icon(Icons.search_rounded),
               ),
             ),
@@ -113,10 +114,7 @@ class _RemindersPageState extends State<RemindersPage>
                       padding: const EdgeInsets.only(right: 8),
                       child: FilterChip(
                         selected: _filter == filter,
-                        label: Text(
-                          filter.name[0].toUpperCase() +
-                              filter.name.substring(1),
-                        ),
+                        label: Text(_filterLabel(filter)),
                         onSelected: (_) => setState(() => _filter = filter),
                       ),
                     ),
@@ -150,6 +148,13 @@ class _RemindersPageState extends State<RemindersPage>
       ],
     );
   }
+
+  String _filterLabel(ReminderFilter filter) => switch (filter) {
+    ReminderFilter.all => 'All',
+    ReminderFilter.active => 'Active',
+    ReminderFilter.arrived => 'Triggered',
+    ReminderFilter.paused => 'Paused',
+  };
 }
 
 class _Header extends StatelessWidget {
@@ -179,7 +184,7 @@ class _Header extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Know when you\'re there.',
+                  'Get alerted when you\'re close.',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ],
@@ -279,9 +284,9 @@ class _ReminderCard extends StatelessWidget {
                         ),
                         Text(
                           reminder.isArrived
-                              ? 'Inside arrival zone'
+                              ? 'Alert triggered'
                               : distance == null
-                              ? '${reminder.place.radius ?? 500} m radius'
+                              ? '${reminder.place.radius ?? 500} m alert distance'
                               : '${_distanceLabel(distance)} · '
                                     '${_bearingLabel(bearing!)} '
                                     '${bearing.round() % 360}°',
@@ -290,15 +295,27 @@ class _ReminderCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Switch(
-                    value: reminder.isTracking,
-                    onChanged: (value) async {
-                      try {
-                        await state.setReminderTracking(reminder, value);
-                      } on Object catch (error) {
-                        if (context.mounted) _showError(context, error);
-                      }
-                    },
+                  Column(
+                    children: [
+                      Switch(
+                        value: reminder.isTracking,
+                        onChanged: (value) async {
+                          try {
+                            await state.setReminderTracking(reminder, value);
+                          } on Object catch (error) {
+                            if (context.mounted) _showError(context, error);
+                          }
+                        },
+                      ),
+                      Text(
+                        reminder.isArrived
+                            ? 'Triggered'
+                            : reminder.isTracking
+                            ? 'Active'
+                            : 'Paused',
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -307,6 +324,9 @@ class _ReminderCard extends StatelessWidget {
                 reminder.place.displayName ?? 'Dropped pin',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
+                textDirection: textDirectionFor(
+                  reminder.place.displayName ?? 'Dropped pin',
+                ),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ],

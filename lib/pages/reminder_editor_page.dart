@@ -6,6 +6,7 @@ import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/app_diagnostics.dart';
 import 'package:loc/data/services/geocoding_service.dart';
 import 'package:loc/pages/map_picker_page.dart';
+import 'package:loc/text_direction.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -29,6 +30,8 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   late double _radius;
   late ReminderAlertStyle _alertStyle;
   Place? _selectedPlace;
+  String? _destinationError;
+  bool _showCoordinates = false;
   bool _saving = false;
 
   @override
@@ -66,7 +69,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         actions: [
           if (widget.reminder != null)
             IconButton(
-              tooltip: 'Save destination',
+              tooltip: 'Save place',
               onPressed: () async {
                 final added = await context.read<AppController>().addFavorite(
                   widget.reminder!.place,
@@ -75,9 +78,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
-                        added
-                            ? 'Destination saved.'
-                            : 'Destination already saved.',
+                        added ? 'Place saved.' : 'Place already saved.',
                       ),
                     ),
                   );
@@ -96,25 +97,25 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 112),
           children: [
             Text(
-              'Where should we wake you?',
+              'Where are you going?',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(
-              'Choose a pin, then set how close you want to be before the alarm starts.',
+              'Choose a destination and when you want to be alerted.',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             TextFormField(
               controller: _title,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
-                labelText: 'Reminder name',
+                labelText: 'Name',
                 hintText: 'Central station',
               ),
               validator: (value) => value == null || value.trim().isEmpty
@@ -125,40 +126,86 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             TextFormField(
               controller: _notes,
               textCapitalization: TextCapitalization.sentences,
-              maxLines: 3,
+              maxLines: 2,
               decoration: const InputDecoration(
                 labelText: 'Note (optional)',
                 hintText: 'Exit on the east side',
               ),
             ),
-            const SizedBox(height: 24),
-            _SectionTitle(
-              label: 'Destination',
-              action: TextButton.icon(
+            const SizedBox(height: 20),
+            const _SectionTitle(label: 'Destination'),
+            const SizedBox(height: 10),
+            if (_selectedPlace != null)
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.place_outlined),
+                  title: Text(
+                    _selectedPlace!.displayName ?? 'Dropped pin',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: textDirectionFor(
+                      _selectedPlace!.displayName ?? 'Dropped pin',
+                    ),
+                  ),
+                  subtitle: Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Text(
+                      '${_selectedPlace!.position.latitude.toStringAsFixed(5)}, '
+                      '${_selectedPlace!.position.longitude.toStringAsFixed(5)}',
+                    ),
+                  ),
+                  trailing: TextButton(
+                    onPressed: _pickOnMap,
+                    child: const Text('Change'),
+                  ),
+                ),
+              )
+            else
+              OutlinedButton.icon(
                 onPressed: _pickOnMap,
                 icon: const Icon(Icons.map_outlined),
-                label: const Text('Open map'),
+                label: const Text('Choose on map'),
               ),
-            ),
-            if (_selectedPlace?.displayName != null)
+            if (_destinationError != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(_selectedPlace!.displayName!, maxLines: 2),
+                padding: const EdgeInsets.only(top: 8, left: 12),
+                child: Text(
+                  _destinationError!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontSize: 12,
+                  ),
+                ),
               ),
-            Row(
-              children: [
-                Expanded(
-                  child: _coordinateField(_latitude, 'Latitude', -90, 90),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () =>
+                    setState(() => _showCoordinates = !_showCoordinates),
+                child: Text(
+                  _showCoordinates
+                      ? 'Hide coordinates'
+                      : 'Enter coordinates manually',
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _coordinateField(_longitude, 'Longitude', -180, 180),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 24),
+            if (_showCoordinates) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _coordinateField(_latitude, 'Latitude', -90, 90),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _coordinateField(_longitude, 'Longitude', -180, 180),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+            ],
+            const SizedBox(height: 12),
             _SectionTitle(
-              label: 'Arrival radius',
+              label: 'Alert distance',
               value: '${_radius.round()} m',
             ),
             Slider(
@@ -170,22 +217,27 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
               onChanged: (value) => setState(() => _radius = value),
             ),
             Text(
-              _radius < 500
-                  ? 'Precise, best for walking or slow traffic.'
-                  : 'Wider radius, better for fast roads or weak GPS reception.',
+              'Get alerted when you\'re within this distance of your destination.',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 24),
-            const _SectionTitle(label: 'Alert style'),
+            const SizedBox(height: 4),
+            Text(
+              'A larger radius works better on fast roads or with weak GPS.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const _SectionTitle(label: 'Alert type'),
             const SizedBox(height: 10),
             SegmentedButton<ReminderAlertStyle>(
               segments: const [
                 ButtonSegment(
                   value: ReminderAlertStyle.brief,
                   icon: Icon(Icons.notifications_outlined),
-                  label: Text('Brief'),
+                  label: Text('Sound'),
                 ),
                 ButtonSegment(
                   value: ReminderAlertStyle.vibration,
@@ -205,12 +257,10 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             const SizedBox(height: 10),
             Text(
               switch (_alertStyle) {
-                ReminderAlertStyle.brief =>
-                  'Plays the notification sound once.',
+                ReminderAlertStyle.brief => 'Plays one notification sound.',
                 ReminderAlertStyle.vibration =>
-                  'Vibrates without playing a notification sound.',
-                ReminderAlertStyle.alarm =>
-                  'Repeats until dismissed to help wake you.',
+                  'Vibrates without playing a sound.',
+                ReminderAlertStyle.alarm => 'Repeats until dismissed.',
               },
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -248,6 +298,10 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         signed: true,
       ),
       decoration: InputDecoration(labelText: label),
+      onChanged: (_) => setState(() {
+        _selectedPlace = null;
+        _destinationError = null;
+      }),
       validator: (value) {
         final number = double.tryParse(value?.trim() ?? '');
         if (number == null || number < minimum || number > maximum) {
@@ -268,19 +322,31 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     if (!mounted) return;
     setState(() {
       _selectedPlace = place;
+      _destinationError = null;
       _latitude.text = place.position.latitude.toStringAsFixed(6);
       _longitude.text = place.position.longitude.toStringAsFixed(6);
     });
   }
 
   Future<void> _save() async {
+    final latitude = double.tryParse(_latitude.text.trim());
+    final longitude = double.tryParse(_longitude.text.trim());
+    if (latitude == null ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude == null ||
+        longitude < -180 ||
+        longitude > 180) {
+      setState(() {
+        _destinationError = 'Choose a destination or enter valid coordinates.';
+        _showCoordinates = true;
+      });
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     final state = context.read<AppController>();
-    final point = Point(
-      latitude: double.parse(_latitude.text.trim()),
-      longitude: double.parse(_longitude.text.trim()),
-    );
+    final point = Point(latitude: latitude, longitude: longitude);
     var place = Place(
       position: point,
       radius: _radius.round(),
@@ -331,7 +397,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             title: const Text('Reminder was not saved'),
             content: const Text(
               'Your entries are still here. Try again. If this keeps '
-              'happening, copy Support diagnostics from Settings when '
+              'happening, copy Diagnostics from Settings when '
               'reporting the issue.',
             ),
             actions: [
@@ -371,10 +437,9 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.label, this.action, this.value});
+  const _SectionTitle({required this.label, this.value});
 
   final String label;
-  final Widget? action;
   final String? value;
 
   @override
@@ -385,7 +450,6 @@ class _SectionTitle extends StatelessWidget {
       ),
       if (value != null)
         Text(value!, style: Theme.of(context).textTheme.titleMedium),
-      ?action,
     ],
   );
 }
