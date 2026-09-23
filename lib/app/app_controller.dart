@@ -11,12 +11,10 @@ import 'package:loc/data/services/notification_service.dart';
 
 class AppController extends ChangeNotifier {
   AppController({
-    required AppRepository repository,
-    required LocationService locationService,
-    required NotificationService notificationService,
-  }) : _repository = repository,
-       _locationService = locationService,
-       _notificationService = notificationService;
+    required this._repository,
+    required this._locationService,
+    required this._notificationService,
+  });
 
   final AppRepository _repository;
   final LocationService _locationService;
