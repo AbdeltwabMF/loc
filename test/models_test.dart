@@ -115,6 +115,29 @@ void main() {
       );
     });
 
+    test('uses an exit buffer after arrival', () {
+      final reminder = Reminder(
+        id: 'id',
+        title: 'Station',
+        place: Place(
+          position: Point(latitude: 0, longitude: 0),
+          radius: 100,
+        ),
+        initialDistance: 0,
+        isTracking: true,
+        isArrived: true,
+      );
+
+      expect(
+        reminder.hasExited(Point(latitude: 120 / 111320, longitude: 0)),
+        isFalse,
+      );
+      expect(
+        reminder.hasExited(Point(latitude: 130 / 111320, longitude: 0)),
+        isTrue,
+      );
+    });
+
     test('detects crossing the arrival zone between location samples', () {
       final reminder = Reminder(
         id: 'id',

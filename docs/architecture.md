@@ -49,10 +49,12 @@ samples without detection. Only enabled reminders participate.
 
 Saving or enabling a reminder immediately evaluates the latest in-memory
 position, so editing a destination while stationary does not wait for movement
-to produce another GPS event. An unacknowledged arrival remains latched even if
-the next position is outside the zone, keeping a repeating alarm active until
-the user dismisses it. After acknowledgement, leaving the zone clears the state
-and permits a future arrival.
+to produce another GPS event. Once arrived, a reminder remains in that state
+until the measured position is more than 25 m beyond its configured radius.
+This exit buffer prevents GPS jitter near the boundary from repeatedly clearing
+and retriggering an alert. Leaving clears the arrival and acknowledgement state,
+stops that visit's alert, and permits a future arrival. Location tracking itself
+continues until every reminder is disabled or deleted.
 
 Each reminder selects a brief notification, a silent vibration, or an insistent
 alarm. Brief alerts use normal notification audio once. Vibration alerts use a
