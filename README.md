@@ -1,118 +1,71 @@
 # Loc
 
-Loc is an open-source Android arrival reminder. Pick a destination, choose an
-arrival radius, and Loc sounds an alarm when the device enters that area.
-
-Project site: [loc.abdeltwab.xyz](https://loc.abdeltwab.xyz)
-
-The application uses OpenStreetMap tiles and Nominatim search. Reminders and
-saved places stay on the device in Hive. There is no Loc account or analytics
-backend.
+Loc is a free and open-source arrival reminder for Android. Choose a destination,
+set how close you want to be, and Loc alerts you when you get there.
 
 ## Features
 
-- Multiple independently enabled arrival reminders
-- Foreground-service tracking while reminders are active
-- Per-reminder brief notifications, silent vibrations, or repeating alarms
-- Configurable 100 m to 5 km arrival radius
-- High-speed path-crossing detection between GPS samples
-- Immediate arrival checks after editing or enabling a reminder
-- Search, manual coordinates, and an interactive map picker
-- Saved destinations with nearby-duplicate prevention
-- Offline reminder editing and coordinate entry
-- Gruvbox light/dark themes with system mode
-- Persistent reminders and preferences
+- Multiple independently enabled reminders
+- Background tracking while reminders are active
+- Notification, vibration, or repeating alarm for each reminder
+- Arrival radius from 100 m to 5 km
+- High-speed crossing detection between GPS updates
+- Place search, manual coordinates, and map selection
+- Reusable saved places
+- Light, dark, and system themes
 
-## Architecture
+## Privacy
 
-The codebase deliberately uses a small, feature-oriented architecture:
+Reminders, saved places, and preferences stay on your device. Loc has no
+accounts, ads, or analytics.
+
+While reminders are active, Loc uses your location in the background to check
+whether you have reached a destination.
+
+Place searches use Nominatim, and map tiles come from OpenStreetMap. These
+services receive the request data and standard network information such as your
+IP address.
+
+See the full [Privacy Policy](https://loc.abdeltwab.xyz/privacy.html).
+
+## Download
+
+Get the latest APK from [GitHub Releases](https://github.com/AbdeltwabMF/loc/releases).
+
+The official signing certificate has this SHA-256 fingerprint:
 
 ```text
-lib/
-├── app/                 # Application state and orchestration
-├── data/
-│   ├── models/          # Hive-compatible domain models
-│   ├── services/        # Location and Nominatim boundaries
-│   └── app_repository.dart
-├── pages/               # Screens and route-specific UI
-├── themes/              # Semantic Gruvbox Material theme
-└── main.dart            # Composition root only
+9e437ae632a5ea07688de12e0a0ea56eb6e5b4184585c86a27f5a4201ae4cc42
 ```
 
-`AppController` owns the application lifecycle and coordinates narrow services.
-Widgets do not open databases, create location streams, or call network APIs.
-Writes are persisted immediately and keyed by reminder ID. Existing Hive
-records remain readable, including reminders created before alert styles were
-introduced, and legacy numeric keys are migrated when edited.
+Older APKs were signed with a debug key and cannot be upgraded in place.
+Uninstall the old version before installing a current release. This also removes
+your saved reminders and settings.
 
-See [`docs/architecture.md`](docs/architecture.md) for behavior and design
-decisions.
+## Development
 
-## Development setup
-
-Android Studio does **not** bundle Flutter or a standalone Dart SDK. Dart is
-included inside Flutter, which is why the IDE reports that Dart is not
-downloaded when Flutter is missing.
-
-1. Install the current stable Flutter SDK from
-   [docs.flutter.dev/get-started/install/windows](https://docs.flutter.dev/get-started/install/windows).
-2. Extract it to a user-writable path such as `C:\dev\flutter`. Do not place it
-   under `Program Files`.
-3. Add `C:\dev\flutter\bin` to the user `PATH`, then restart Android Studio and
-   all terminals.
-4. Install the **Flutter** plugin in Android Studio. It installs/enables the Dart
-   IDE plugin; it does not install the SDK.
-5. In Android Studio, set **Settings > Languages & Frameworks > Flutter > Flutter
-   SDK path** to `C:\dev\flutter`. The Dart SDK should then resolve automatically
-   to `C:\dev\flutter\bin\cache\dart-sdk`.
-6. In **SDK Manager**, install Android SDK Platform 36, Android SDK Build-Tools,
-   Android SDK Command-line Tools, and Android SDK Platform-Tools.
-7. Accept licenses and validate the complete toolchain:
+Install [Flutter](https://docs.flutter.dev/get-started/install) and Android SDK
+Platform 36, then run:
 
 ```powershell
 flutter doctor -v
-flutter doctor --android-licenses
 flutter pub get
 flutter analyze
 flutter test
 flutter run
 ```
 
-Do not download Dart separately and do not manually create `android/local.properties`.
-Flutter creates that local, ignored file when commands run with a valid SDK. The
-repository does not vendor or pin a project-local Flutter SDK; local development
-can use the latest stable release that satisfies `pubspec.yaml`. Distribution
-builders such as F-Droid should pin a tested Flutter release for reproducibility.
-
-## F-Droid
-
-The listing metadata under `fastlane/metadata/android/en-US` follows F-Droid's
-supported Fastlane structure. Changelog filenames match Android version codes.
-Each release commit must be tagged with its version, for example `v1.0.0`.
-
-Official F-Droid inclusion also requires a build recipe in the external
-`fdroiddata` repository. The current `geolocator_android` dependency includes
-Google Play Services Location even though Loc selects Android's framework
-location manager at runtime. Replace that dependency with a fully free native
-location implementation before requesting inclusion in F-Droid's main repo.
-
-## OpenStreetMap usage
-
-The app identifies itself to Nominatim, URL-encodes parameters, limits results,
-debounces interactive search, and displays tile attribution. Nominatim is a
-community service, not an unlimited production API. A high-volume release
-should use a dedicated provider or self-hosted instance without changing the
-UI/domain layers.
-
 ## Build
 
+Create a local APK with:
+
 ```powershell
-flutter build apk --release
+flutter build apk --debug
 ```
 
-Release builds currently use debug signing. Configure a private release keystore
-before publishing; never commit signing credentials.
+See [`docs/architecture.md`](docs/architecture.md) for implementation details
+and design decisions.
 
 ## License
 
-[GPL-3.0](LICENSE)
+Loc is licensed under the [GNU General Public License v3.0](LICENSE).
