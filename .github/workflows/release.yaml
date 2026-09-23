@@ -4,36 +4,129 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag, for example v1.0.1
+        required: true
+        type: string
   push:
     tags:
-    - 'v[0-9].[0-9].[0-9]*'
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - name: Checkout the code
-        uses: actions/checkout@v3
-
-      - name: Setup Flutter environment
-        uses: subosito/flutter-action@v2
+      - name: Check out release tag
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          flutter-version: '3.7.5'
-          channel: 'stable'
-      - run: flutter --version
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
 
-      - name: Build artifacts
+      - name: Set up Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.38.1'
+          channel: 'stable'
+          cache: true
+
+      - name: Validate release version
+        run: |
+          pubspec_version=$(awk '$1 == "version:" { print $2 }' pubspec.yaml)
+          app_version=${pubspec_version%%+*}
+
+          if [[ "$RELEASE_TAG" != "v$app_version" ]]; then
+            echo "::error::Tag $RELEASE_TAG does not match pubspec version $app_version"
+            exit 1
+          fi
+
+      - name: Install dependencies and test
         run: |
           flutter pub get
-          build_number=$(awk -F+ '/version:/ {print $2}' pubspec.yaml)
-          echo $build_number
-          flutter build apk --split-per-abi --build-name=${{github.ref_name}} --build-number=$build_number --release
+          flutter analyze
+          flutter test
 
-      - name: Release artifacts and source code
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: build/app/outputs/flutter-apk/*.apk
-          name: ${{github.ref_name}}
-          makeLatest: true
-          generateReleaseNotes: true
+      - name: Prepare release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_STORE_PASSWORD ANDROID_KEY_PASSWORD ANDROID_KEY_ALIAS; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::GitHub Actions secret $name is not configured"
+              exit 1
+            fi
+          done
+
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/loc-release.jks"
+
+      - name: Build signed APKs
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/loc-release.jks
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: flutter build apk --split-per-abi --release
+
+      - name: Verify APK signatures
+        env:
+          EXPECTED_CERT_SHA256: 9e437ae632a5ea07688de12e0a0ea56eb6e5b4184585c86a27f5a4201ae4cc42
+        run: |
+          apksigner=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+
+          if [[ -z "$apksigner" ]]; then
+            echo "::error::apksigner was not found"
+            exit 1
+          fi
+
+          for apk in build/app/outputs/flutter-apk/*.apk; do
+            verification=$("$apksigner" verify --verbose --print-certs "$apk")
+            echo "$verification"
+            fingerprint=$(printf '%s\n' "$verification" | sed -n 's/.*certificate SHA-256 digest: //p' | head -n 1)
+
+            if [[ "$fingerprint" != "$EXPECTED_CERT_SHA256" ]]; then
+              echo "::error::$apk has unexpected signing certificate $fingerprint"
+              exit 1
+            fi
+          done
+
+          cd build/app/outputs/flutter-apk
+          sha256sum *.apk > SHA256SUMS
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          args=(--verify-tag --title "$RELEASE_TAG" --generate-notes)
+
+          if [[ "$RELEASE_TAG" == *-* ]]; then
+            args+=(--prerelease)
+          else
+            args+=(--latest)
+          fi
+
+          gh release create "$RELEASE_TAG" \
+            build/app/outputs/flutter-apk/*.apk \
+            build/app/outputs/flutter-apk/SHA256SUMS \
+            "${args[@]}"

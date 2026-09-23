@@ -11,6 +11,8 @@ enum ReminderAlertStyle { brief, vibration, alarm }
 
 @HiveType(typeId: 1)
 class Reminder {
+  static const arrivalExitBufferMeters = 25.0;
+
   @HiveField(0)
   final String id;
   @HiveField(1)
@@ -121,6 +123,10 @@ class Reminder {
 
   bool hasArrived(Point current) =>
       remainderDistance(current) <= (place.radius ?? 500);
+
+  bool hasExited(Point current) =>
+      remainderDistance(current) >
+      (place.radius ?? 500) + arrivalExitBufferMeters;
 
   bool pathIntersectsArrivalZone(Point from, Point to) {
     const earthRadius = 6371000.0;
