@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:loc/app/app_controller.dart';
+import 'package:loc/app/app_metadata.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/services/app_diagnostics.dart';
@@ -26,7 +27,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
   final _search = TextEditingController();
   final _geocoding = GeocodingService();
   final _tileProvider = NetworkTileProvider(
-    headers: {'User-Agent': 'Loc/1.0.0 (+https://loc.abdeltwab.xyz)'},
+    headers: {'User-Agent': AppMetadata.current.mapUserAgent},
   );
   final _tileReset = StreamController<void>.broadcast();
   List<Place> _results = const [];

@@ -3,13 +3,17 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:loc/app/app_metadata.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/services/geocoding_service.dart';
+
+const _appMetadata = AppMetadata(version: 'test', buildNumber: '1');
 
 void main() {
   test('search identifies the app and encodes query parameters', () async {
     late http.Request captured;
     final service = GeocodingService(
+      appMetadata: _appMetadata,
       client: MockClient((request) async {
         captured = request;
         return http.Response(
@@ -29,7 +33,7 @@ void main() {
 
     expect(captured.url.queryParameters['q'], 'Cairo central station');
     expect(captured.url.queryParameters['accept-language'], 'en');
-    expect(captured.headers['User-Agent'], contains('Loc Android'));
+    expect(captured.headers['User-Agent'], contains('Loc Android/test'));
     expect(results.single.displayName, 'Cairo, Egypt');
     service.dispose();
   });
@@ -39,6 +43,7 @@ void main() {
     () async {
       late http.Request captured;
       final service = GeocodingService(
+        appMetadata: _appMetadata,
         client: MockClient((request) async {
           captured = request;
           return http.Response(
@@ -65,6 +70,7 @@ void main() {
 
   test('surfaces an actionable error for a failed response', () async {
     final service = GeocodingService(
+      appMetadata: _appMetadata,
       client: MockClient((request) async => http.Response('Unavailable', 503)),
     );
 
@@ -83,6 +89,7 @@ void main() {
 
   test('explains that network filters can block map search', () async {
     final service = GeocodingService(
+      appMetadata: _appMetadata,
       client: MockClient(
         (request) async => throw http.ClientException('blocked'),
       ),
@@ -101,6 +108,7 @@ void main() {
 
   test('surfaces an actionable error for an invalid response', () async {
     final service = GeocodingService(
+      appMetadata: _appMetadata,
       client: MockClient((request) async => http.Response('not json', 200)),
     );
 

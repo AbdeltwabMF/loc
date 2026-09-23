@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:loc/app/app_controller.dart';
+import 'package:loc/app/app_metadata.dart';
 import 'package:loc/pages/diagnostics_page.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -102,7 +103,8 @@ class SettingsPage extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         Text(
-          'Loc 1.0.0 · No account. No analytics. Location and search data are '
+          'Loc ${AppMetadata.current.version} · No account. No analytics. '
+          'Location and search data are '
           'processed on your device and by OpenStreetMap services.',
           style: Theme.of(context).textTheme.bodySmall,
           textAlign: TextAlign.center,

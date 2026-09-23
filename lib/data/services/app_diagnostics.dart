@@ -3,14 +3,14 @@ import 'dart:io';
 
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
-import 'package:package_info_plus/package_info_plus.dart';
+import 'package:loc/app/app_metadata.dart';
 
 class AppDiagnostics {
   AppDiagnostics._();
 
-  static const _headers = <String, String>{
+  static Map<String, String> get _headers => {
     'Accept': 'application/json',
-    'User-Agent': 'Loc Android/1.0.0 (+https://loc.abdeltwab.xyz)',
+    'User-Agent': AppMetadata.current.androidUserAgent,
   };
   static final List<String> _events = [];
 
@@ -32,7 +32,6 @@ class AppDiagnostics {
 
   static Future<String> createReport({required bool isTracking}) async {
     final results = await Future.wait([
-      _appVersion(),
       _locationServiceStatus(),
       _locationPermissionStatus(),
       _networkStatus(Uri.parse('https://tile.openstreetmap.org/0/0/0.png')),
@@ -40,14 +39,14 @@ class AppDiagnostics {
         Uri.https('nominatim.openstreetmap.org', '/status', {'format': 'json'}),
       ),
     ]);
-    final [appVersion, locationEnabled, permission, tiles, search] = results;
+    final [locationEnabled, permission, tiles, search] = results;
     final events = _events.isEmpty
         ? 'None recorded this session'
         : _events.join('\n');
 
     return '''Loc diagnostics
 Generated: ${DateTime.now().toUtc().toIso8601String()}
-App: $appVersion
+App: ${AppMetadata.current.displayVersion}
 Platform: ${_platformLabel()} ${Platform.operatingSystemVersion}
 Location services: $locationEnabled
 Location permission: $permission
@@ -58,16 +57,6 @@ Search service: $search
 Recent issues
 No location, search, or reminder content is included.
 $events''';
-  }
-
-  static Future<String> _appVersion() async {
-    try {
-      final info = await PackageInfo.fromPlatform();
-      return '${info.version} (${info.buildNumber})';
-    } on Object catch (error) {
-      record('diagnostics.app-version', error);
-      return 'Unknown';
-    }
   }
 
   static Future<String> _locationServiceStatus() async {
