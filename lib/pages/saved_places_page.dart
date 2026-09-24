@@ -10,7 +10,7 @@ class SavedPlacesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final places = context.watch<AppController>().favorites;
+    final places = context.watch<AppController>().savedPlaces;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -79,7 +79,7 @@ class _PlaceCard extends StatelessWidget {
       ),
       trailing: IconButton(
         tooltip: 'Remove saved place',
-        onPressed: () => context.read<AppController>().deleteFavorite(place),
+        onPressed: () => context.read<AppController>().deleteSavedPlace(place),
         icon: const Icon(Icons.close_rounded),
       ),
     ),

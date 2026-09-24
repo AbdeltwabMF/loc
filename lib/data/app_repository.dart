@@ -3,24 +3,24 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/reminder.dart';
 
 class AppRepository {
-  AppRepository(this._reminders, this._favorites, this._preferences);
+  AppRepository(this._reminders, this._savedPlaces, this._preferences);
 
   final Box<dynamic> _reminders;
-  final Box<dynamic> _favorites;
+  final Box<dynamic> _savedPlaces;
   final Box<dynamic> _preferences;
 
   Future<void> migrateLegacyData() async {
     final reminders = loadReminders();
-    final favorites = <Place>[];
-    for (final place in loadFavorites()) {
-      if (!favorites.any((item) => item.isSameLocation(place))) {
-        favorites.add(place);
+    final savedPlaces = <Place>[];
+    for (final place in loadSavedPlaces()) {
+      if (!savedPlaces.any((item) => item.isSameLocation(place))) {
+        savedPlaces.add(place);
       }
     }
     await _reminders.putAll({for (final item in reminders) item.id: item});
-    await _favorites.clear();
-    await _favorites.putAll({
-      for (final item in favorites) _placeKey(item): item,
+    await _savedPlaces.clear();
+    await _savedPlaces.putAll({
+      for (final item in savedPlaces) _placeKey(item): item,
     });
     await _reminders.deleteAll(
       _reminders.keys.where((key) => key is! String || key == 'len'),
@@ -30,8 +30,8 @@ class AppRepository {
   List<Reminder> loadReminders() =>
       _reminders.values.whereType<Reminder>().toList(growable: false);
 
-  List<Place> loadFavorites() =>
-      _favorites.values.whereType<Place>().toList(growable: false);
+  List<Place> loadSavedPlaces() =>
+      _savedPlaces.values.whereType<Place>().toList(growable: false);
 
   Future<void> saveReminder(Reminder reminder) async {
     final legacyKeys = _reminders.keys.where(
@@ -53,14 +53,14 @@ class AppRepository {
     await _reminders.deleteAll(legacyKeys);
   }
 
-  Future<void> saveFavorite(Place place) =>
-      _favorites.put(_placeKey(place), place);
+  Future<void> saveSavedPlace(Place place) =>
+      _savedPlaces.put(_placeKey(place), place);
 
-  Future<void> deleteFavorite(Place place) async {
-    final keys = _favorites.keys.where(
-      (key) => _favorites.get(key) is Place && _favorites.get(key) == place,
+  Future<void> deleteSavedPlace(Place place) async {
+    final keys = _savedPlaces.keys.where(
+      (key) => _savedPlaces.get(key) is Place && _savedPlaces.get(key) == place,
     );
-    await _favorites.deleteAll(keys);
+    await _savedPlaces.deleteAll(keys);
   }
 
   String loadThemeMode() {

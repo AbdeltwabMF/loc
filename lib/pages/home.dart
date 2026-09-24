@@ -18,7 +18,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _index = 0;
   late final StreamSubscription<Place> _geoIntentSubscription;
 
@@ -31,12 +31,20 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _geoIntentSubscription = GeoUriService.places.listen(
       _openGeoPlace,
       onError: (Object error, StackTrace stackTrace) {
         AppDiagnostics.record('geo.intent', error);
       },
     );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(context.read<AppController>().refreshAttention());
+    }
   }
 
   void _openGeoPlace(Place place) {
@@ -53,20 +61,21 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     unawaited(_geoIntentSubscription.cancel());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasArrivalAlert = context.select<AppController, bool>(
-      (state) => state.hasArrivalAlert,
-    );
+    final state = context.watch<AppController>();
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            if (hasArrivalAlert) const _ArrivalBanner(),
+            if (state.hasArrivalAlert) const _ArrivalBanner(),
+            if (state.locationError != null && state.activeCount > 0)
+              const _AttentionBanner(),
             Expanded(
               child: IndexedStack(index: _index, children: _pages),
             ),
@@ -101,6 +110,32 @@ class _HomePageState extends State<HomePage> {
             label: 'Settings',
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AttentionBanner extends StatelessWidget {
+  const _AttentionBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppController>();
+    return Material(
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: SafeArea(
+        bottom: false,
+        child: ListTile(
+          leading: const Icon(Icons.warning_amber_rounded),
+          title: const Text('Attention needed'),
+          subtitle: Text(state.locationError!),
+          trailing: TextButton(
+            onPressed: state.attentionAction == null
+                ? null
+                : state.resolveAttention,
+            child: Text(state.attentionActionLabel),
+          ),
+        ),
       ),
     );
   }

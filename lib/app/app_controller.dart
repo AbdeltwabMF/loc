@@ -9,6 +9,14 @@ import 'package:loc/data/services/app_diagnostics.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 
+enum AttentionAction {
+  requestNotifications,
+  enableLocation,
+  requestLocation,
+  openAppSettings,
+  retry,
+}
+
 class AppController extends ChangeNotifier {
   AppController({
     required this._repository,
@@ -20,7 +28,7 @@ class AppController extends ChangeNotifier {
   final LocationService _locationService;
   final NotificationService _notificationService;
   final List<Reminder> _reminders = [];
-  final List<Place> _favorites = [];
+  final List<Place> _savedPlaces = [];
   String? _arrivalNotificationSignature;
   StreamSubscription<Point>? _positionSubscription;
   Future<void> _operationQueue = Future.value();
@@ -31,14 +39,24 @@ class AppController extends ChangeNotifier {
   bool _isStartingTracking = false;
   bool _isDisposed = false;
   String? _locationError;
+  AttentionAction? _attentionAction;
 
   List<Reminder> get reminders => List.unmodifiable(_reminders);
-  List<Place> get favorites => List.unmodifiable(_favorites);
+  List<Place> get savedPlaces => List.unmodifiable(_savedPlaces);
   Point? get currentPosition => _currentPosition;
   ThemeMode get themeMode => _themeMode;
   bool get alarmEnabled => _alarmEnabled;
   bool get isTrackingLocation => _isTrackingLocation;
   String? get locationError => _locationError;
+  AttentionAction? get attentionAction => _attentionAction;
+  String get attentionActionLabel => switch (_attentionAction) {
+    AttentionAction.requestNotifications => 'Allow',
+    AttentionAction.enableLocation => 'Turn on',
+    AttentionAction.requestLocation => 'Allow',
+    AttentionAction.openAppSettings => 'Open settings',
+    AttentionAction.retry => 'Retry',
+    null => '',
+  };
   int get activeCount => _reminders.where((item) => item.isTracking).length;
   List<Reminder> get arrivedReminders => _reminders
       .where(
@@ -51,9 +69,9 @@ class AppController extends ChangeNotifier {
     _reminders
       ..clear()
       ..addAll(_repository.loadReminders());
-    _favorites
+    _savedPlaces
       ..clear()
-      ..addAll(_repository.loadFavorites().toSet());
+      ..addAll(_repository.loadSavedPlaces().toSet());
     _themeMode = switch (_repository.loadThemeMode()) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
@@ -62,15 +80,8 @@ class AppController extends ChangeNotifier {
     _alarmEnabled = _repository.loadAlarmEnabled();
 
     if (activeCount > 0) {
-      final canNotify = await _notificationService.isPermissionGranted();
-      if (!canNotify) {
-        _locationError = 'Notifications are disabled in Android settings.';
-      } else if (await _locationService.hasPermission()) {
-        await startTracking(requestPermission: false);
-        unawaited(_reconcileInitialPosition());
-      } else {
-        _locationError = await _locationService.unavailableReason();
-      }
+      await _refreshAttentionState(startTrackingWhenReady: true);
+      if (_attentionAction == null) unawaited(_reconcileInitialPosition());
     } else {
       await _syncArrivalAlert();
     }
@@ -113,6 +124,7 @@ class AppController extends ChangeNotifier {
         );
       }
       _locationError = null;
+      _attentionAction = null;
       _isTrackingLocation = true;
       notifyListeners();
       _positionSubscription = _locationService.updates.listen(
@@ -123,6 +135,7 @@ class AppController extends ChangeNotifier {
               StackTrace stackTrace,
             ) {
               _locationError = error.toString();
+              _attentionAction = AttentionAction.retry;
               notifyListeners();
             }),
           );
@@ -130,6 +143,7 @@ class AppController extends ChangeNotifier {
         cancelOnError: true,
         onError: (Object error, StackTrace stackTrace) {
           _locationError = error.toString();
+          _attentionAction = AttentionAction.retry;
           _isTrackingLocation = false;
           _positionSubscription = null;
           notifyListeners();
@@ -142,8 +156,11 @@ class AppController extends ChangeNotifier {
       );
     } on Object catch (error) {
       AppDiagnostics.record('location.tracking', error);
-      _locationError = error.toString();
       _isTrackingLocation = false;
+      await _refreshAttentionState(
+        startTrackingWhenReady: false,
+        fallbackError: error.toString(),
+      );
       notifyListeners();
       rethrow;
     } finally {
@@ -155,12 +172,18 @@ class AppController extends ChangeNotifier {
     try {
       final point = await _locationService.current();
       _currentPosition = point;
-      _locationError = null;
+      if (activeCount == 0) {
+        _locationError = null;
+        _attentionAction = null;
+      }
       notifyListeners();
       return point;
     } on Object catch (error) {
       AppDiagnostics.record('location.current', error);
-      _locationError = error.toString();
+      await _refreshAttentionState(
+        startTrackingWhenReady: false,
+        fallbackError: error.toString(),
+      );
       notifyListeners();
       rethrow;
     }
@@ -225,17 +248,17 @@ class AppController extends ChangeNotifier {
         await _syncTrackingState();
       });
 
-  Future<bool> addFavorite(Place place) => _enqueue(() async {
-    if (_favorites.any((item) => item.isSameLocation(place))) return false;
-    await _repository.saveFavorite(place);
-    _favorites.add(place);
+  Future<bool> addSavedPlace(Place place) => _enqueue(() async {
+    if (_savedPlaces.any((item) => item.isSameLocation(place))) return false;
+    await _repository.saveSavedPlace(place);
+    _savedPlaces.add(place);
     notifyListeners();
     return true;
   });
 
-  Future<void> deleteFavorite(Place place) => _enqueue(() async {
-    await _repository.deleteFavorite(place);
-    _favorites.remove(place);
+  Future<void> deleteSavedPlace(Place place) => _enqueue(() async {
+    await _repository.deleteSavedPlace(place);
+    _savedPlaces.remove(place);
     notifyListeners();
   });
 
@@ -254,6 +277,45 @@ class AppController extends ChangeNotifier {
       await _syncArrivalAlert();
     }
     notifyListeners();
+  }
+
+  Future<void> refreshAttention() async {
+    await _refreshAttentionState(startTrackingWhenReady: true);
+    notifyListeners();
+  }
+
+  Future<void> resolveAttention() async {
+    switch (_attentionAction) {
+      case AttentionAction.requestNotifications:
+        if (!await _notificationService.requestPermission()) {
+          await _locationService.openAppSettings();
+          return;
+        }
+        await refreshAttention();
+        return;
+      case AttentionAction.enableLocation:
+        await _locationService.openLocationSettings();
+        return;
+      case AttentionAction.requestLocation:
+        try {
+          await startTracking();
+        } on Object {
+          // The refreshed banner presents the next required action.
+        }
+        return;
+      case AttentionAction.openAppSettings:
+        await _locationService.openAppSettings();
+        return;
+      case AttentionAction.retry:
+        try {
+          await startTracking(requestPermission: false);
+        } on Object {
+          // The refreshed banner presents the next required action.
+        }
+        return;
+      case null:
+        return;
+    }
   }
 
   Future<void> dismissArrival() => _enqueue(() async {
@@ -336,6 +398,49 @@ class AppController extends ChangeNotifier {
     _positionSubscription = null;
     _isTrackingLocation = false;
     _locationError = null;
+    _attentionAction = null;
+  }
+
+  Future<void> _refreshAttentionState({
+    required bool startTrackingWhenReady,
+    String? fallbackError,
+  }) async {
+    if (activeCount == 0) {
+      _locationError = null;
+      _attentionAction = null;
+      return;
+    }
+    if (!await _notificationService.isPermissionGranted()) {
+      _locationError = 'Allow notifications so Loc can alert you on arrival.';
+      _attentionAction = AttentionAction.requestNotifications;
+      return;
+    }
+    switch (await _locationService.accessStatus()) {
+      case LocationAccessStatus.serviceDisabled:
+        _locationError = 'Device location is turned off.';
+        _attentionAction = AttentionAction.enableLocation;
+        return;
+      case LocationAccessStatus.permissionDenied:
+        _locationError = 'Location access is required for active reminders.';
+        _attentionAction = AttentionAction.requestLocation;
+        return;
+      case LocationAccessStatus.settingsRequired:
+        _locationError =
+            'Allow location all the time for screen-off reminders.';
+        _attentionAction = AttentionAction.openAppSettings;
+        return;
+      case LocationAccessStatus.ready:
+        _locationError = fallbackError;
+        _attentionAction = fallbackError == null ? null : AttentionAction.retry;
+        if (startTrackingWhenReady && _positionSubscription == null) {
+          try {
+            await startTracking(requestPermission: false);
+          } on Object {
+            // startTracking updates the attention state with the failure.
+          }
+        }
+        return;
+    }
   }
 
   Future<T> _enqueue<T>(Future<T> Function() operation) {
