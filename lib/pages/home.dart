@@ -41,7 +41,7 @@ class _HomePageState extends State<HomePage> {
 
   void _openGeoPlace(Place place) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
       Navigator.of(context).push<void>(
         MaterialPageRoute(
           builder: (_) => ReminderEditorPage(initialPlace: place),

@@ -7,19 +7,19 @@ import io.flutter.plugin.common.EventChannel
 
 class MainActivity : FlutterActivity() {
     private var geoIntentSink: EventChannel.EventSink? = null
-    private var pendingGeoUri: String? = null
+    private var pendingLocation: String? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        pendingGeoUri = geoUri(intent)
+        pendingLocation = sharedLocation(intent)
         EventChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "xyz.abdeltwab.loc/geo_intents",
         ).setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
                 geoIntentSink = events
-                pendingGeoUri?.let(events::success)
-                pendingGeoUri = null
+                pendingLocation?.let(events::success)
+                pendingLocation = null
             }
 
             override fun onCancel(arguments: Any?) {
@@ -31,18 +31,21 @@ class MainActivity : FlutterActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        geoUri(intent)?.let { uri ->
+        sharedLocation(intent)?.let { location ->
             val sink = geoIntentSink
             if (sink == null) {
-                pendingGeoUri = uri
+                pendingLocation = location
             } else {
-                sink.success(uri)
+                sink.success(location)
             }
         }
     }
 
-    private fun geoUri(intent: Intent?): String? = intent
-        ?.takeIf { it.action == Intent.ACTION_VIEW && it.data?.scheme == "geo" }
-        ?.data
-        ?.toString()
+    private fun sharedLocation(intent: Intent?): String? = when {
+        intent?.action == Intent.ACTION_VIEW && intent.data?.scheme == "geo" ->
+            intent.data?.toString()
+        intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("text/") == true ->
+            intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+        else -> null
+    }
 }
