@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/app_diagnostics.dart';
+import 'package:loc/data/services/geo_uri_service.dart';
 import 'package:loc/data/services/geocoding_service.dart';
 import 'package:loc/pages/map_picker_page.dart';
 import 'package:loc/text_direction.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 class ReminderEditorPage extends StatefulWidget {
@@ -23,6 +27,7 @@ class ReminderEditorPage extends StatefulWidget {
 class _ReminderEditorPageState extends State<ReminderEditorPage> {
   final _formKey = GlobalKey<FormState>();
   final _geocoding = GeocodingService();
+  late final StreamSubscription<Place> _geoIntentSubscription;
   late final TextEditingController _title;
   late final TextEditingController _notes;
   late final TextEditingController _latitude;
@@ -49,10 +54,17 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     );
     _radius = (place?.radius ?? 500).toDouble();
     _alertStyle = widget.reminder?.alertStyle ?? ReminderAlertStyle.brief;
+    _geoIntentSubscription = GeoUriService.places.listen(
+      _usePlace,
+      onError: (Object error, StackTrace stackTrace) {
+        AppDiagnostics.record('geo.intent.editor', error);
+      },
+    );
   }
 
   @override
   void dispose() {
+    unawaited(_geoIntentSubscription.cancel());
     _geocoding.dispose();
     _title.dispose();
     _notes.dispose();
@@ -161,11 +173,40 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                 ),
               )
             else
-              OutlinedButton.icon(
-                onPressed: _pickOnMap,
-                icon: const Icon(Icons.map_outlined),
-                label: const Text('Choose on map'),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _pickOnMap,
+                    icon: const Icon(Icons.map_outlined),
+                    label: const Text('Search or pick on Loc map'),
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    onPressed: _pickWithExternalMap,
+                    icon: const Icon(Icons.open_in_new_rounded),
+                    label: const Text('Pick with external map app'),
+                  ),
+                ],
               ),
+            if (_selectedPlace != null)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _pickWithExternalMap,
+                  icon: const Icon(Icons.open_in_new_rounded),
+                  label: const Text('Choose in another map app'),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(left: 12, right: 12, top: 4),
+              child: Text(
+                'To return, share or open the selected location with Loc.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
             if (_destinationError != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8, left: 12),
@@ -320,6 +361,31 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     );
     if (place == null) return;
     if (!mounted) return;
+    _usePlace(place);
+  }
+
+  Future<void> _pickWithExternalMap() async {
+    final center =
+        context.read<AppController>().currentPosition ??
+        _selectedPlace?.position;
+    final uri = center == null
+        ? Uri.parse('geo:0,0')
+        : Uri.parse('geo:${center.latitude},${center.longitude}?z=14');
+    var opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on Object catch (error) {
+      AppDiagnostics.record('geo.external', error);
+    }
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No compatible map app is installed.')),
+      );
+    }
+  }
+
+  void _usePlace(Place place) {
+    if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     setState(() {
       _selectedPlace = place;
       _destinationError = null;

@@ -31,5 +31,12 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
 
+dependency_overrides:
+  geolocator_android:
+    git:
+      url: https://github.com/Zverik/flutter-geolocator.git
+      ref: floss
+      path: geolocator_android
+
 flutter:
   uses-material-design: true
