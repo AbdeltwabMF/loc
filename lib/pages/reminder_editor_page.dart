@@ -29,7 +29,6 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   final _geocoding = GeocodingService();
   late final StreamSubscription<Place> _geoIntentSubscription;
   late final TextEditingController _title;
-  late final TextEditingController _notes;
   late final TextEditingController _latitude;
   late final TextEditingController _longitude;
   late double _radius;
@@ -37,6 +36,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   Place? _selectedPlace;
   String? _destinationError;
   bool _showCoordinates = false;
+  bool _titleWasAutoFilled = false;
   bool _saving = false;
 
   @override
@@ -44,8 +44,10 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     super.initState();
     final place = widget.initialPlace ?? widget.reminder?.place;
     _selectedPlace = place;
-    _title = TextEditingController(text: widget.reminder?.title);
-    _notes = TextEditingController(text: widget.reminder?.notes);
+    final initialTitle =
+        widget.reminder?.title ?? (place == null ? '' : _placeTitle(place));
+    _title = TextEditingController(text: initialTitle);
+    _titleWasAutoFilled = widget.reminder == null && place != null;
     _latitude = TextEditingController(
       text: place?.position.latitude.toString(),
     );
@@ -67,7 +69,6 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     unawaited(_geoIntentSubscription.cancel());
     _geocoding.dispose();
     _title.dispose();
-    _notes.dispose();
     _latitude.dispose();
     _longitude.dispose();
     super.dispose();
@@ -75,6 +76,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.reminder == null ? 'New reminder' : 'Edit reminder'),
@@ -83,7 +85,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             IconButton(
               tooltip: 'Save place',
               onPressed: () async {
-                final added = await context.read<AppController>().addFavorite(
+                final added = await context.read<AppController>().addSavedPlace(
                   widget.reminder!.place,
                 );
                 if (context.mounted) {
@@ -109,220 +111,274 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 112),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
-            Text(
-              'Where are you going?',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Choose a destination and when you want to be alerted.',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _title,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                hintText: 'Central station',
-              ),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? 'Enter a reminder name.'
-                  : null,
+            _EditorSection(
+              icon: Icons.location_on_outlined,
+              title: 'Destination',
+              child: _buildDestination(context),
             ),
             const SizedBox(height: 14),
-            TextFormField(
-              controller: _notes,
-              textCapitalization: TextCapitalization.sentences,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                labelText: 'Note (optional)',
-                hintText: 'Exit on the east side',
-              ),
-            ),
-            const SizedBox(height: 20),
-            const _SectionTitle(label: 'Destination'),
-            const SizedBox(height: 10),
-            if (_selectedPlace != null)
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.place_outlined),
-                  title: Text(
-                    _selectedPlace!.displayName ?? 'Dropped pin',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textDirection: textDirectionFor(
-                      _selectedPlace!.displayName ?? 'Dropped pin',
-                    ),
-                  ),
-                  subtitle: Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Text(
-                      '${_selectedPlace!.position.latitude.toStringAsFixed(5)}, '
-                      '${_selectedPlace!.position.longitude.toStringAsFixed(5)}',
-                    ),
-                  ),
-                  trailing: TextButton(
-                    onPressed: _pickOnMap,
-                    child: const Text('Change'),
-                  ),
-                ),
-              )
-            else
-              Column(
+            _EditorSection(
+              icon: Icons.notifications_none_rounded,
+              title: 'Alert',
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: _pickOnMap,
-                    icon: const Icon(Icons.map_outlined),
-                    label: const Text('Search or pick on Loc map'),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Notify me when I’m within',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 7,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.secondaryContainer,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '${_radius.round()}m',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: colors.onPrimaryContainer,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Slider(
+                          value: _radius,
+                          min: 100,
+                          max: 5000,
+                          divisions: 49,
+                          onChanged: (value) => setState(() => _radius = value),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '100m',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            Text(
+                              '5km',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _distanceHint,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: _pickWithExternalMap,
-                    icon: const Icon(Icons.open_in_new_rounded),
-                    label: const Text('Pick with external map app'),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Notification',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        SegmentedButton<ReminderAlertStyle>(
+                          expandedInsets: EdgeInsets.zero,
+                          segments: const [
+                            ButtonSegment(
+                              value: ReminderAlertStyle.brief,
+                              icon: Icon(Icons.volume_up_outlined),
+                              label: Text('Sound'),
+                            ),
+                            ButtonSegment(
+                              value: ReminderAlertStyle.vibration,
+                              icon: Icon(Icons.vibration_rounded),
+                              label: Text('Vibrate'),
+                            ),
+                            ButtonSegment(
+                              value: ReminderAlertStyle.alarm,
+                              icon: Icon(Icons.alarm_rounded),
+                              label: Text('Alarm'),
+                            ),
+                          ],
+                          selected: {_alertStyle},
+                          showSelectedIcon: false,
+                          onSelectionChanged: (value) =>
+                              setState(() => _alertStyle = value.single),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          switch (_alertStyle) {
+                            ReminderAlertStyle.brief =>
+                              'Plays a notification sound once.',
+                            ReminderAlertStyle.vibration =>
+                              'Vibrates without playing a sound.',
+                            ReminderAlertStyle.alarm =>
+                              'Rings repeatedly until dismissed.',
+                          },
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
-              ),
-            if (_selectedPlace != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: _pickWithExternalMap,
-                  icon: const Icon(Icons.open_in_new_rounded),
-                  label: const Text('Choose in another map app'),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.only(left: 12, right: 12, top: 4),
-              child: Text(
-                'To return, share or open the selected location with Loc.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            if (_destinationError != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8, left: 12),
-                child: Text(
-                  _destinationError!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () =>
-                    setState(() => _showCoordinates = !_showCoordinates),
-                child: Text(
-                  _showCoordinates
-                      ? 'Hide coordinates'
-                      : 'Enter coordinates manually',
-                ),
-              ),
-            ),
-            if (_showCoordinates) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: _coordinateField(_latitude, 'Latitude', -90, 90),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _coordinateField(_longitude, 'Longitude', -180, 180),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-            const SizedBox(height: 12),
-            _SectionTitle(
-              label: 'Alert distance',
-              value: '${_radius.round()} m',
-            ),
-            Slider(
-              value: _radius,
-              min: 100,
-              max: 5000,
-              divisions: 49,
-              label: '${_radius.round()} m',
-              onChanged: (value) => setState(() => _radius = value),
-            ),
-            Text(
-              'Get alerted when you\'re within this distance of your destination.',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'A larger radius works better on fast roads or with weak GPS.',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const _SectionTitle(label: 'Alert type'),
-            const SizedBox(height: 10),
-            SegmentedButton<ReminderAlertStyle>(
-              segments: const [
-                ButtonSegment(
-                  value: ReminderAlertStyle.brief,
-                  icon: Icon(Icons.notifications_outlined),
-                  label: Text('Sound'),
-                ),
-                ButtonSegment(
-                  value: ReminderAlertStyle.vibration,
-                  icon: Icon(Icons.vibration_rounded),
-                  label: Text('Vibrate'),
-                ),
-                ButtonSegment(
-                  value: ReminderAlertStyle.alarm,
-                  icon: Icon(Icons.alarm_rounded),
-                  label: Text('Alarm'),
-                ),
-              ],
-              selected: {_alertStyle},
-              onSelectionChanged: (value) =>
-                  setState(() => _alertStyle = value.single),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              switch (_alertStyle) {
-                ReminderAlertStyle.brief => 'Plays one notification sound.',
-                ReminderAlertStyle.vibration =>
-                  'Vibrates without playing a sound.',
-                ReminderAlertStyle.alarm => 'Repeats until dismissed.',
-              },
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(20),
-        child: FilledButton.icon(
-          onPressed: _saving ? null : _save,
-          icon: _saving
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.notifications_active_outlined),
-          label: Text(_saving ? 'Saving…' : 'Save reminder'),
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          border: Border(top: BorderSide(color: colors.outlineVariant)),
+        ),
+        child: SafeArea(
+          minimum: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          child: FilledButton.icon(
+            onPressed: _saving ? null : _save,
+            icon: _saving
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.notifications_none_rounded),
+            label: Text(
+              _saving
+                  ? 'Saving…'
+                  : widget.reminder == null
+                  ? 'Create reminder'
+                  : 'Save changes',
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDestination(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final place = _selectedPlace;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextFormField(
+          controller: _title,
+          textCapitalization: TextCapitalization.sentences,
+          onChanged: (_) => setState(() => _titleWasAutoFilled = false),
+          decoration: InputDecoration(
+            labelText: 'Reminder name',
+            hintText: 'Central station',
+            suffixIcon: _title.text.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear reminder name',
+                    onPressed: () => setState(() {
+                      _title.clear();
+                      _titleWasAutoFilled = false;
+                    }),
+                    icon: const Icon(Icons.cancel_rounded),
+                  ),
+          ),
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'Enter a reminder name.'
+              : null,
+        ),
+        const SizedBox(height: 10),
+        if (place != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              border: Border.all(color: colors.outlineVariant),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.location_on_outlined, color: colors.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    _placeSubtitle(place),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: textDirectionFor(_placeSubtitle(place)),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                TextButton(onPressed: _pickOnMap, child: const Text('Change')),
+              ],
+            ),
+          )
+        else
+          FilledButton.tonalIcon(
+            onPressed: _pickOnMap,
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('Pick on Loc map'),
+          ),
+        const SizedBox(height: 10),
+        _ActionTile(
+          icon: Icons.open_in_new_rounded,
+          label: 'Choose with another map app',
+          onTap: _pickWithExternalMap,
+        ),
+        const SizedBox(height: 8),
+        _ActionTile(
+          icon: Icons.location_on_outlined,
+          label: _showCoordinates
+              ? 'Hide manual coordinates'
+              : 'Enter coordinates manually',
+          trailing: _showCoordinates
+              ? Icons.keyboard_arrow_up_rounded
+              : Icons.chevron_right_rounded,
+          onTap: () => setState(() => _showCoordinates = !_showCoordinates),
+        ),
+        if (_showCoordinates) ...[
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: _coordinateField(_latitude, 'Latitude', -90, 90)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _coordinateField(_longitude, 'Longitude', -180, 180),
+              ),
+            ],
+          ),
+        ],
+        if (_destinationError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 12),
+            child: Text(
+              _destinationError!,
+              style: TextStyle(color: colors.error, fontSize: 12),
+            ),
+          ),
+      ],
     );
   }
 
@@ -351,6 +407,27 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         return null;
       },
     );
+  }
+
+  String get _distanceHint {
+    if (_radius <= 250) return 'Best for walking or precise destinations.';
+    if (_radius <= 1000) return 'Good for driving or public transport.';
+    return 'Useful on fast roads or where GPS coverage is weaker.';
+  }
+
+  String _placeTitle(Place? place) {
+    final name = place?.displayName?.trim();
+    if (name == null || name.isEmpty) return 'Dropped pin';
+    return name.split(',').first.trim();
+  }
+
+  String _placeSubtitle(Place place) {
+    final name = place.displayName?.trim();
+    if (name != null && name.contains(',')) {
+      return name.substring(name.indexOf(',') + 1).trim();
+    }
+    return '${place.position.latitude.toStringAsFixed(5)}, '
+        '${place.position.longitude.toStringAsFixed(5)}';
   }
 
   Future<void> _pickOnMap() async {
@@ -387,6 +464,11 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   void _usePlace(Place place) {
     if (!mounted || ModalRoute.of(context)?.isCurrent != true) return;
     setState(() {
+      if (widget.reminder == null &&
+          (_title.text.trim().isEmpty || _titleWasAutoFilled)) {
+        _title.text = _placeTitle(place);
+        _titleWasAutoFilled = true;
+      }
       _selectedPlace = place;
       _destinationError = null;
       _latitude.text = place.position.latitude.toStringAsFixed(6);
@@ -432,7 +514,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     final reminder = Reminder(
       id: existing?.id ?? const Uuid().v4(),
       title: _title.text.trim(),
-      notes: _notes.text.trim(),
+      notes: existing?.notes,
       place: place,
       initialDistance: current == null
           ? existing?.initialDistance ?? 0
@@ -502,20 +584,95 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.label, this.value});
+class _EditorSection extends StatelessWidget {
+  const _EditorSection({
+    required this.icon,
+    required this.title,
+    required this.child,
+  });
 
-  final String label;
-  final String? value;
+  final IconData icon;
+  final String title;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(
-        child: Text(label, style: Theme.of(context).textTheme.titleMedium),
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, color: colors.primary, size: 28),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            child,
+          ],
+        ),
       ),
-      if (value != null)
-        Text(value!, style: Theme.of(context).textTheme.titleMedium),
-    ],
-  );
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.trailing = Icons.chevron_right_rounded,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final IconData trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      color: colors.surface.withValues(alpha: 0.45),
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: colors.outlineVariant),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              Icon(icon, color: colors.primary, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+              Icon(trailing, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

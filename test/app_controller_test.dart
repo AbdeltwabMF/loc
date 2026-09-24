@@ -86,10 +86,10 @@ void main() {
           title: 'Second',
           latitude: _latitudeAtMeters(200),
         );
-        final harness = await _Harness.create(
-          [first, second],
-          initialMeters: -200,
-        );
+        final harness = await _Harness.create([
+          first,
+          second,
+        ], initialMeters: -200);
         addTearDown(harness.dispose);
 
         harness.location.emit(_pointAtMeters(0));
@@ -108,9 +108,7 @@ void main() {
     );
 
     test('clears a stale persisted arrival before startup alerts', () async {
-      final harness = await _Harness.create([
-        _reminder(isArrived: true),
-      ]);
+      final harness = await _Harness.create([_reminder(isArrived: true)]);
       addTearDown(harness.dispose);
 
       await _waitFor(() => !harness.reminder.isArrived);
@@ -118,6 +116,81 @@ void main() {
       expect(harness.reminder.isArrived, isFalse);
       expect(harness.notifications.shown, isEmpty);
       expect(harness.controller.isTrackingLocation, isTrue);
+    });
+  });
+
+  group('AppController attention actions', () {
+    test(
+      'opens app settings when notification permission stays denied',
+      () async {
+        final location = _FakeLocationService(_pointAtMeters(200));
+        final notifications = _FakeNotificationService(
+          permissionGranted: false,
+          requestResult: false,
+        );
+        final controller = AppController(
+          repository: _FakeRepository([_reminder()]),
+          locationService: location,
+          notificationService: notifications,
+        );
+        addTearDown(() {
+          controller.dispose();
+          unawaited(location.close());
+        });
+
+        await controller.initialize();
+        expect(
+          controller.attentionAction,
+          AttentionAction.requestNotifications,
+        );
+
+        await controller.resolveAttention();
+        expect(location.appSettingsOpens, 1);
+      },
+    );
+
+    test('opens device settings when location services are disabled', () async {
+      final location = _FakeLocationService(
+        _pointAtMeters(200),
+        status: LocationAccessStatus.serviceDisabled,
+      );
+      final controller = AppController(
+        repository: _FakeRepository([_reminder()]),
+        locationService: location,
+        notificationService: _FakeNotificationService(),
+      );
+      addTearDown(() {
+        controller.dispose();
+        unawaited(location.close());
+      });
+
+      await controller.initialize();
+      expect(controller.attentionAction, AttentionAction.enableLocation);
+
+      await controller.resolveAttention();
+      expect(location.locationSettingsOpens, 1);
+    });
+
+    test('opens app settings when background location is required', () async {
+      final location = _FakeLocationService(
+        _pointAtMeters(200),
+        status: LocationAccessStatus.settingsRequired,
+      );
+      final controller = AppController(
+        repository: _FakeRepository([_reminder()]),
+        locationService: location,
+        notificationService: _FakeNotificationService(),
+      );
+      addTearDown(() {
+        controller.dispose();
+        unawaited(location.close());
+      });
+
+      await controller.initialize();
+      expect(controller.attentionAction, AttentionAction.openAppSettings);
+
+      await controller.resolveAttention();
+      expect(location.appSettingsOpens, 1);
     });
   });
 }
@@ -131,10 +204,7 @@ Reminder _reminder({
 }) => Reminder(
   id: id,
   title: title,
-  place: Place(
-    position: Point(latitude: latitude, longitude: 0),
-    radius: 100,
-  ),
+  place: Place(position: Point(latitude: latitude, longitude: 0), radius: 100),
   initialDistance: 0,
   isTracking: true,
   isArrived: isArrived,
@@ -213,13 +283,13 @@ class _FakeRepository implements AppRepository {
     : _reminders = {for (final reminder in reminders) reminder.id: reminder};
 
   final Map<String, Reminder> _reminders;
-  final List<Place> _favorites = [];
+  final List<Place> _savedPlaces = [];
   String _themeMode = 'system';
   bool _alarmEnabled = true;
 
   @override
-  Future<void> deleteFavorite(Place place) async {
-    _favorites.remove(place);
+  Future<void> deleteSavedPlace(Place place) async {
+    _savedPlaces.remove(place);
   }
 
   @override
@@ -228,7 +298,7 @@ class _FakeRepository implements AppRepository {
   }
 
   @override
-  List<Place> loadFavorites() => List.of(_favorites);
+  List<Place> loadSavedPlaces() => List.of(_savedPlaces);
 
   @override
   bool loadAlarmEnabled() => _alarmEnabled;
@@ -248,8 +318,8 @@ class _FakeRepository implements AppRepository {
   }
 
   @override
-  Future<void> saveFavorite(Place place) async {
-    _favorites.add(place);
+  Future<void> saveSavedPlace(Place place) async {
+    _savedPlaces.add(place);
   }
 
   @override
@@ -264,10 +334,20 @@ class _FakeRepository implements AppRepository {
 }
 
 class _FakeLocationService implements LocationService {
-  _FakeLocationService(this.currentPoint);
+  _FakeLocationService(
+    this.currentPoint, {
+    this.status = LocationAccessStatus.ready,
+  });
 
   final StreamController<Point> _updates = StreamController<Point>();
   Point currentPoint;
+  LocationAccessStatus status;
+  int appSettingsOpens = 0;
+  int locationSettingsOpens = 0;
+
+  @override
+  Future<LocationAccessStatus> accessStatus({bool background = true}) async =>
+      status;
 
   @override
   Future<Point> current() async => currentPoint;
@@ -284,6 +364,18 @@ class _FakeLocationService implements LocationService {
   @override
   Future<String> unavailableReason() async => '';
 
+  @override
+  Future<bool> openAppSettings() async {
+    appSettingsOpens++;
+    return true;
+  }
+
+  @override
+  Future<bool> openLocationSettings() async {
+    locationSettingsOpens++;
+    return true;
+  }
+
   void emit(Point point) {
     currentPoint = point;
     _updates.add(point);
@@ -293,8 +385,15 @@ class _FakeLocationService implements LocationService {
 }
 
 class _FakeNotificationService implements NotificationService {
+  _FakeNotificationService({
+    this.permissionGranted = true,
+    this.requestResult = true,
+  });
+
   final List<_ArrivalNotification> shown = [];
   _ArrivalNotification? current;
+  bool permissionGranted;
+  bool requestResult;
 
   @override
   Future<void> dismissArrival() async {
@@ -305,10 +404,13 @@ class _FakeNotificationService implements NotificationService {
   Future<void> initialize() async {}
 
   @override
-  Future<bool> isPermissionGranted() async => true;
+  Future<bool> isPermissionGranted() async => permissionGranted;
 
   @override
-  Future<bool> requestPermission() async => true;
+  Future<bool> requestPermission() async {
+    permissionGranted = requestResult;
+    return requestResult;
+  }
 
   @override
   Future<void> showArrival({

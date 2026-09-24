@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/app/app_metadata.dart';
-import 'package:loc/pages/diagnostics_page.dart';
+import 'package:loc/data/services/update_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final UpdateService _updates = UpdateService();
+  AppUpdate? _availableUpdate;
+  bool _checkingForUpdate = false;
+  bool _checkedForUpdate = false;
+  String? _updateError;
+
+  @override
+  void dispose() {
+    _updates.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,15 +43,6 @@ class SettingsPage extends StatelessWidget {
               ),
               value: state.alarmEnabled,
               onChanged: state.setAlarmEnabled,
-            ),
-            ListTile(
-              leading: const Icon(Icons.location_searching_rounded),
-              title: const Text('Location access'),
-              subtitle: Text(
-                state.locationError ?? 'Required for active reminders.',
-              ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: Geolocator.openAppSettings,
             ),
           ],
         ),
@@ -64,17 +71,10 @@ class SettingsPage extends StatelessWidget {
           onSelectionChanged: (value) => state.setThemeMode(value.single),
         ),
         const SizedBox(height: 18),
+        Text('About', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 10),
         _SettingsGroup(
           children: [
-            ListTile(
-              leading: const Icon(Icons.health_and_safety_outlined),
-              title: const Text('Diagnostics'),
-              subtitle: const Text('Check location and internet access.'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => Navigator.of(context).push<void>(
-                MaterialPageRoute(builder: (_) => const DiagnosticsPage()),
-              ),
-            ),
             ListTile(
               leading: const Icon(Icons.code_rounded),
               title: const Text('Source code'),
@@ -83,41 +83,88 @@ class SettingsPage extends StatelessWidget {
               onTap: () => _open(context, 'https://github.com/AbdeltwabMF/loc'),
             ),
             ListTile(
-              leading: const Icon(Icons.map_outlined),
-              title: const Text('Map data'),
-              subtitle: const Text(
-                '© OpenStreetMap contributors · Search powered by Nominatim',
-              ),
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: const Text('Privacy'),
+              subtitle: const Text('Read the privacy policy'),
               trailing: const Icon(Icons.open_in_new_rounded),
               onTap: () =>
-                  _open(context, 'https://www.openstreetmap.org/copyright'),
+                  _open(context, 'https://loc.abdeltwab.xyz/privacy.html'),
             ),
             ListTile(
-              leading: const Icon(Icons.report_outlined),
-              title: const Text('Report a map issue'),
-              trailing: const Icon(Icons.open_in_new_rounded),
-              onTap: () =>
-                  _open(context, 'https://www.openstreetmap.org/fixthemap'),
+              leading: const Icon(Icons.info_outline_rounded),
+              title: const Text('App version'),
+              subtitle: Text(AppMetadata.current.displayVersion),
+            ),
+            ListTile(
+              leading: const Icon(Icons.system_update_alt_rounded),
+              title: Text(
+                _availableUpdate == null
+                    ? 'Check for updates'
+                    : 'Update available',
+              ),
+              subtitle: Text(_updateSubtitle),
+              trailing: _checkingForUpdate
+                  ? const SizedBox.square(
+                      dimension: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      _availableUpdate == null
+                          ? Icons.refresh_rounded
+                          : Icons.download_rounded,
+                    ),
+              onTap: _checkingForUpdate ? null : _handleUpdateTap,
             ),
           ],
-        ),
-        const SizedBox(height: 20),
-        Text(
-          'Loc ${AppMetadata.current.version} · No account. No analytics. '
-          'Location and search data are '
-          'processed on your device and by OpenStreetMap services.',
-          style: Theme.of(context).textTheme.bodySmall,
-          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
+  String get _updateSubtitle {
+    if (_checkingForUpdate) return 'Checking GitHub Releases…';
+    if (_availableUpdate != null) {
+      return 'Version ${_availableUpdate!.version} is ready to download.';
+    }
+    if (_updateError != null) return _updateError!;
+    if (_checkedForUpdate) return 'You have the latest version.';
+    return 'Installed version: ${AppMetadata.current.version}';
+  }
+
+  Future<void> _handleUpdateTap() async {
+    final update = _availableUpdate;
+    if (update != null) {
+      await _openUri(context, update.downloadUri);
+      return;
+    }
+    setState(() {
+      _checkingForUpdate = true;
+      _updateError = null;
+    });
+    try {
+      final result = await _updates.check();
+      if (!mounted) return;
+      setState(() {
+        _availableUpdate = result;
+        _checkedForUpdate = true;
+      });
+    } on UpdateException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _updateError = error.message;
+        _checkedForUpdate = true;
+      });
+    } finally {
+      if (mounted) setState(() => _checkingForUpdate = false);
+    }
+  }
+
   Future<void> _open(BuildContext context, String value) async {
-    final opened = await launchUrl(
-      Uri.parse(value),
-      mode: LaunchMode.externalApplication,
-    );
+    await _openUri(context, Uri.parse(value));
+  }
+
+  Future<void> _openUri(BuildContext context, Uri uri) async {
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not open that link.')),

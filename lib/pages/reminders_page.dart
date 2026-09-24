@@ -123,10 +123,6 @@ class _RemindersPageState extends State<RemindersPage>
             ),
           ),
         ),
-        if (state.locationError != null && state.activeCount > 0)
-          SliverToBoxAdapter(
-            child: _LocationWarning(message: state.locationError!),
-          ),
         if (reminders.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
@@ -420,36 +416,6 @@ class _Compass extends StatelessWidget {
     }
     return 'Destination ${360 - rounded} degrees to the left';
   }
-}
-
-class _LocationWarning extends StatelessWidget {
-  const _LocationWarning({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-    child: Material(
-      color: Theme.of(context).colorScheme.errorContainer,
-      borderRadius: BorderRadius.circular(18),
-      child: ListTile(
-        leading: const Icon(Icons.location_disabled_rounded),
-        title: const Text('Attention needed'),
-        subtitle: Text(message),
-        trailing: TextButton(
-          onPressed: () async {
-            try {
-              await context.read<AppController>().startTracking();
-            } on Object catch (error) {
-              if (context.mounted) _showError(context, error);
-            }
-          },
-          child: const Text('Retry'),
-        ),
-      ),
-    ),
-  );
 }
 
 class _EmptyReminders extends StatelessWidget {

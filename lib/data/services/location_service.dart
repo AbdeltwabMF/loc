@@ -12,8 +12,34 @@ class LocationException implements Exception {
   String toString() => message;
 }
 
+enum LocationAccessStatus {
+  ready,
+  serviceDisabled,
+  permissionDenied,
+  settingsRequired,
+}
+
 class LocationService {
   Stream<Point> get updates => _positionUpdates();
+
+  Future<LocationAccessStatus> accessStatus({bool background = true}) async {
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      return LocationAccessStatus.serviceDisabled;
+    }
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      return LocationAccessStatus.permissionDenied;
+    }
+    if (permission == LocationPermission.deniedForever ||
+        (background && permission != LocationPermission.always)) {
+      return LocationAccessStatus.settingsRequired;
+    }
+    return LocationAccessStatus.ready;
+  }
+
+  Future<bool> openLocationSettings() => Geolocator.openLocationSettings();
+
+  Future<bool> openAppSettings() => Geolocator.openAppSettings();
 
   Future<bool> hasPermission() async {
     if (!await Geolocator.isLocationServiceEnabled()) return false;

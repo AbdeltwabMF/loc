@@ -24,7 +24,7 @@ Future<void> main() async {
 
   final repository = AppRepository(
     await Hive.openBox<dynamic>('reminders'),
-    await Hive.openBox<dynamic>('favorites'),
+    await Hive.openBox<dynamic>('places'),
     await Hive.openBox<dynamic>('settings'),
   );
   await repository.migrateLegacyData();
