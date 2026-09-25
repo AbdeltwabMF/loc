@@ -87,7 +87,19 @@ jobs:
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        run: flutter build apk --split-per-abi --release
+        run: |
+          mkdir -p build/release build/symbols
+
+          flutter build apk --split-per-abi --release \
+            --split-debug-info=build/symbols
+          for abi in armeabi-v7a arm64-v8a x86_64; do
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" \
+              "build/release/Loc-$RELEASE_TAG-$abi.apk"
+          done
+
+          flutter build apk --release --split-debug-info=build/symbols
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "build/release/Loc-$RELEASE_TAG-universal.apk"
 
       - name: Verify APK signatures
         env:
@@ -100,7 +112,7 @@ jobs:
             exit 1
           fi
 
-          for apk in build/app/outputs/flutter-apk/*.apk; do
+          for apk in build/release/*.apk; do
             verification=$("$apksigner" verify --verbose --print-certs "$apk")
             echo "$verification"
             fingerprint=$(printf '%s\n' "$verification" | sed -n 's/.*certificate SHA-256 digest: //p' | head -n 1)
@@ -111,14 +123,27 @@ jobs:
             fi
           done
 
-          cd build/app/outputs/flutter-apk
+          cd build/release
           sha256sum *.apk > SHA256SUMS
+
+      - name: Preserve Dart symbols
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dart-symbols-${{ env.RELEASE_TAG }}
+          path: build/symbols/
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          args=(--verify-tag --title "$RELEASE_TAG" --generate-notes)
+          args=(
+            --verify-tag
+            --title "$RELEASE_TAG"
+            --generate-notes
+            --notes "Most users should download the universal APK. The ABI-specific APKs are smaller alternatives for users who know their device architecture."
+          )
 
           if [[ "$RELEASE_TAG" == *-* ]]; then
             args+=(--prerelease)
@@ -127,6 +152,9 @@ jobs:
           fi
 
           gh release create "$RELEASE_TAG" \
-            build/app/outputs/flutter-apk/*.apk \
-            build/app/outputs/flutter-apk/SHA256SUMS \
+            "build/release/Loc-$RELEASE_TAG-universal.apk#Universal APK (recommended)" \
+            "build/release/Loc-$RELEASE_TAG-arm64-v8a.apk#arm64-v8a APK (smaller)" \
+            "build/release/Loc-$RELEASE_TAG-armeabi-v7a.apk#armeabi-v7a APK (smaller)" \
+            "build/release/Loc-$RELEASE_TAG-x86_64.apk#x86_64 APK (smaller)" \
+            build/release/SHA256SUMS \
             "${args[@]}"

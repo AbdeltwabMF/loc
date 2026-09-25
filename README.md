@@ -31,6 +31,9 @@ See the full [Privacy Policy](https://loc.abdeltwab.xyz/privacy.html).
 ## Download
 
 Get the latest APK from [GitHub Releases](https://github.com/AbdeltwabMF/loc/releases).
+The `universal` APK works on all supported Android devices and is the recommended
+download. Architecture-specific APKs are also available if you prefer a smaller
+download and know which ABI your device uses.
 
 The official signing certificate has this SHA-256 fingerprint:
 

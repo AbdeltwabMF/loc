@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:loc/app/app_metadata.dart';
+
+typedef SupportedAbisLoader = Future<List<String>> Function();
 
 class UpdateException implements Exception {
   const UpdateException(this.message);
@@ -21,12 +24,17 @@ class AppUpdate {
 }
 
 class UpdateService {
-  UpdateService({http.Client? client, AppMetadata? appMetadata})
-    : _client = client ?? http.Client(),
-      _appMetadata = appMetadata ?? AppMetadata.current;
+  UpdateService({
+    http.Client? client,
+    AppMetadata? appMetadata,
+    SupportedAbisLoader? supportedAbisLoader,
+  }) : _client = client ?? http.Client(),
+       _appMetadata = appMetadata ?? AppMetadata.current,
+       _supportedAbisLoader = supportedAbisLoader ?? _loadSupportedAbis;
 
   final http.Client _client;
   final AppMetadata _appMetadata;
+  final SupportedAbisLoader _supportedAbisLoader;
 
   Future<AppUpdate?> check() async {
     try {
@@ -63,17 +71,42 @@ class UpdateService {
       final assets = release['assets'];
       String? downloadUrl;
       if (assets is List<dynamic>) {
-        for (final asset in assets.whereType<Map<String, dynamic>>()) {
-          final name = asset['name'];
-          final url = asset['browser_download_url'];
-          if (name is String &&
-              name.toLowerCase().endsWith('.apk') &&
-              url is String) {
-            downloadUrl = url;
-            break;
+        final apkAssets = assets
+            .whereType<Map<String, dynamic>>()
+            .where(
+              (asset) =>
+                  asset['name'] is String &&
+                  (asset['name'] as String).toLowerCase().endsWith('.apk') &&
+                  asset['browser_download_url'] is String,
+            )
+            .toList(growable: false);
+
+        if (apkAssets.isNotEmpty) {
+          final supportedAbis = await _supportedAbisOrEmpty();
+          for (final abi in supportedAbis) {
+            final suffix = '-${abi.toLowerCase()}.apk';
+            for (final asset in apkAssets) {
+              if ((asset['name'] as String).toLowerCase().endsWith(suffix)) {
+                downloadUrl = asset['browser_download_url'] as String;
+                break;
+              }
+            }
+            if (downloadUrl != null) break;
+          }
+
+          if (downloadUrl == null) {
+            for (final asset in apkAssets) {
+              if ((asset['name'] as String).toLowerCase().endsWith(
+                '-universal.apk',
+              )) {
+                downloadUrl = asset['browser_download_url'] as String;
+                break;
+              }
+            }
           }
         }
       }
+
       return AppUpdate(
         version: version,
         downloadUri: Uri.parse(downloadUrl ?? releaseUrl),
@@ -113,6 +146,17 @@ class UpdateService {
       .split('.')
       .map((part) => int.tryParse(part) ?? 0)
       .toList(growable: false);
+
+  Future<List<String>> _supportedAbisOrEmpty() async {
+    try {
+      return await _supportedAbisLoader();
+    } on Exception {
+      return const [];
+    }
+  }
+
+  static Future<List<String>> _loadSupportedAbis() async =>
+      (await DeviceInfoPlugin().androidInfo).supportedAbis;
 
   void dispose() => _client.close();
 }
