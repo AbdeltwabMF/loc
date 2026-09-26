@@ -5,46 +5,31 @@ import 'package:hive/hive.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 
-part 'reminder.g.dart';
-
 enum ReminderAlertStyle { brief, vibration, alarm }
 
-@HiveType(typeId: 1)
 class Reminder {
   static const arrivalExitBufferMeters = 25.0;
 
-  @HiveField(0)
   final String id;
-  @HiveField(1)
   final String title;
-  @HiveField(2)
   final Place place;
-  @HiveField(3)
-  final double initialDistance;
-  @HiveField(4)
   final bool isTracking;
-  @HiveField(5)
   final bool isArrived;
-  @HiveField(6)
-  final String? notes;
-  @HiveField(7, defaultValue: false)
   final bool isAcknowledged;
-  @HiveField(8, defaultValue: false)
   final bool isAlarm;
-  @HiveField(9, defaultValue: false)
   final bool isVibration;
+  final bool isPinned;
 
   Reminder({
     required this.id,
     required this.title,
     required this.place,
-    required this.initialDistance,
     required this.isTracking,
     required this.isArrived,
-    this.notes,
     this.isAcknowledged = false,
     this.isAlarm = false,
     this.isVibration = false,
+    this.isPinned = false,
   });
 
   ReminderAlertStyle get alertStyle => isAlarm
@@ -53,44 +38,27 @@ class Reminder {
       ? ReminderAlertStyle.vibration
       : ReminderAlertStyle.brief;
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'place': place,
-      'initialDistance': initialDistance,
-      'isTracking': isTracking,
-      'isArrived': isArrived,
-      'notes': notes,
-      'isAcknowledged': isAcknowledged,
-      'isAlarm': isAlarm,
-      'isVibration': isVibration,
-    };
-  }
-
   Reminder copy({
     String? id,
     String? title,
     Place? place,
-    double? initialDistance,
     bool? isTracking,
     bool? isArrived,
-    String? notes,
     bool? isAcknowledged,
     bool? isAlarm,
     bool? isVibration,
+    bool? isPinned,
   }) {
     return Reminder(
       id: id ?? this.id,
       title: title ?? this.title,
       place: place ?? this.place,
-      initialDistance: initialDistance ?? this.initialDistance,
       isTracking: isTracking ?? this.isTracking,
       isArrived: isArrived ?? this.isArrived,
-      notes: notes ?? this.notes,
       isAcknowledged: isAcknowledged ?? this.isAcknowledged,
       isAlarm: isAlarm ?? this.isAlarm,
       isVibration: isVibration ?? this.isVibration,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 
@@ -100,13 +68,12 @@ class Reminder {
     reminderStr = '$reminderStr\n  "id": "$id",';
     reminderStr = '$reminderStr\n  "title": "$title",';
     reminderStr = '$reminderStr\n  "place": $place,';
-    reminderStr = '$reminderStr\n  "initialDistance": $initialDistance,';
     reminderStr = '$reminderStr\n  "isTracking": $isTracking,';
     reminderStr = '$reminderStr\n  "isArrived": $isArrived,';
-    reminderStr = '$reminderStr\n  "notes": "$notes",';
     reminderStr = '$reminderStr\n  "isAcknowledged": $isAcknowledged,';
     reminderStr = '$reminderStr\n  "isAlarm": $isAlarm,';
     reminderStr = '$reminderStr\n  "isVibration": $isVibration,';
+    reminderStr = '$reminderStr\n  "isPinned": $isPinned,';
     reminderStr = '$reminderStr\n}';
     return reminderStr;
   }
@@ -122,11 +89,11 @@ class Reminder {
   }
 
   bool hasArrived(Point current) =>
-      remainderDistance(current) <= (place.radius ?? 500);
+      remainderDistance(current) <= (place.radius ?? Place.defaultRadius);
 
   bool hasExited(Point current) =>
       remainderDistance(current) >
-      (place.radius ?? 500) + arrivalExitBufferMeters;
+      (place.radius ?? Place.defaultRadius) + arrivalExitBufferMeters;
 
   bool pathIntersectsArrivalZone(Point from, Point to) {
     const earthRadius = 6371000.0;
@@ -149,7 +116,7 @@ class Reminder {
           );
     final closestX = startX + progress * deltaX;
     final closestY = startY + progress * deltaY;
-    final radius = (place.radius ?? 500).toDouble();
+    final radius = (place.radius ?? Place.defaultRadius).toDouble();
     return closestX * closestX + closestY * closestY <= radius * radius;
   }
 
@@ -162,15 +129,56 @@ class Reminder {
     );
     return (inDegrees + 360) % 360;
   }
+}
 
-  double traveledDistance(Point current) {
-    return (initialDistance - remainderDistance(current))
-        .clamp(0, double.infinity)
-        .toDouble();
+// Type and field IDs are persisted and must never be reused. Legacy fields 3
+// (initial distance) and 6 (notes) are read and discarded; field 10 stores the
+// pinned state.
+class ReminderAdapter extends TypeAdapter<Reminder> {
+  @override
+  final int typeId = 1;
+
+  @override
+  Reminder read(BinaryReader reader) {
+    final fieldCount = reader.readByte();
+    final fields = <int, dynamic>{
+      for (var index = 0; index < fieldCount; index++)
+        reader.readByte(): reader.read(),
+    };
+    return Reminder(
+      id: fields[0] as String,
+      title: fields[1] as String,
+      place: fields[2] as Place,
+      isTracking: fields[4] as bool,
+      isArrived: fields[5] as bool,
+      isAcknowledged: fields[7] as bool? ?? false,
+      isAlarm: fields[8] as bool? ?? false,
+      isVibration: fields[9] as bool? ?? false,
+      isPinned: fields[10] as bool? ?? false,
+    );
   }
 
-  double? traveledDistancePercent(Point current) {
-    if (initialDistance <= 0) return 0;
-    return (traveledDistance(current) / initialDistance).clamp(0, 1).toDouble();
+  @override
+  void write(BinaryWriter writer, Reminder object) {
+    writer
+      ..writeByte(9)
+      ..writeByte(0)
+      ..write(object.id)
+      ..writeByte(1)
+      ..write(object.title)
+      ..writeByte(2)
+      ..write(object.place)
+      ..writeByte(4)
+      ..write(object.isTracking)
+      ..writeByte(5)
+      ..write(object.isArrived)
+      ..writeByte(7)
+      ..write(object.isAcknowledged)
+      ..writeByte(8)
+      ..write(object.isAlarm)
+      ..writeByte(9)
+      ..write(object.isVibration)
+      ..writeByte(10)
+      ..write(object.isPinned);
   }
 }

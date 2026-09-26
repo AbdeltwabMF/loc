@@ -4,17 +4,22 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
+import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/compass_service.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
-import 'package:loc/text_direction.dart';
+import 'package:loc/place_presentation.dart';
 import 'package:provider/provider.dart';
 
-enum ReminderFilter { all, active, arrived, paused }
+enum ReminderFilter { all, pinned, active, arrived, paused }
+
+enum _ReminderAction { pin, delete }
 
 class RemindersPage extends StatefulWidget {
-  const RemindersPage({super.key});
+  const RemindersPage({this.isActive = true, super.key});
+
+  final bool isActive;
 
   @override
   State<RemindersPage> createState() => _RemindersPageState();
@@ -26,21 +31,37 @@ class _RemindersPageState extends State<RemindersPage>
   ReminderFilter _filter = ReminderFilter.all;
   final ValueNotifier<double?> _deviceHeading = ValueNotifier(null);
   StreamSubscription<double?>? _headingSubscription;
+  AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _startCompass();
+    _lifecycleState =
+        WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
+    if (widget.isActive && _lifecycleState == AppLifecycleState.resumed) {
+      _startCompass();
+    }
+  }
+
+  @override
+  void didUpdateWidget(RemindersPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive &&
+        !oldWidget.isActive &&
+        _lifecycleState == AppLifecycleState.resumed) {
+      _startCompass();
+    } else if (!widget.isActive && oldWidget.isActive) {
+      _stopCompass();
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    _lifecycleState = state;
+    if (state == AppLifecycleState.resumed && widget.isActive) {
       _startCompass();
-    } else if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+    } else {
       _stopCompass();
     }
   }
@@ -70,14 +91,15 @@ class _RemindersPageState extends State<RemindersPage>
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppController>();
-    final reminders = state.reminders
+    final query = _query.trim().toLowerCase();
+    final matchingReminders = state.reminders
         .where((item) {
-          final query = _query.trim().toLowerCase();
           final matchesQuery =
               query.isEmpty ||
               item.title.toLowerCase().contains(query) ||
-              (item.place.displayName ?? '').toLowerCase().contains(query);
+              item.place.displayLabel.toLowerCase().contains(query);
           final matchesFilter = switch (_filter) {
+            ReminderFilter.pinned => item.isPinned,
             ReminderFilter.active => item.isTracking,
             ReminderFilter.arrived => item.isArrived,
             ReminderFilter.paused => !item.isTracking,
@@ -86,10 +108,13 @@ class _RemindersPageState extends State<RemindersPage>
           return matchesQuery && matchesFilter;
         })
         .toList(growable: false);
+    final reminders = [
+      ...matchingReminders.where((item) => item.isPinned),
+      ...matchingReminders.where((item) => !item.isPinned),
+    ];
 
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(child: _Header(state: state)),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
@@ -147,69 +172,11 @@ class _RemindersPageState extends State<RemindersPage>
 
   String _filterLabel(ReminderFilter filter) => switch (filter) {
     ReminderFilter.all => 'All',
+    ReminderFilter.pinned => 'Pinned',
     ReminderFilter.active => 'Active',
     ReminderFilter.arrived => 'Triggered',
     ReminderFilter.paused => 'Paused',
   };
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.state});
-
-  final AppController state;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'LOC',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: colors.primary,
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Get alerted when you\'re close.',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: colors.surfaceContainer,
-              borderRadius: BorderRadius.circular(99),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.circle,
-                  size: 9,
-                  color: state.isTrackingLocation
-                      ? colors.secondary
-                      : colors.outline,
-                ),
-                const SizedBox(width: 7),
-                Text('${state.activeCount} active'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _ReminderCard extends StatelessWidget {
@@ -232,6 +199,9 @@ class _ReminderCard extends StatelessWidget {
         : reminder.remainderDistance(position).round();
     final bearing = position == null ? null : reminder.bearing(position);
     final colors = Theme.of(context).colorScheme;
+    final markerColor = reminder.isArrived
+        ? colors.onSecondary
+        : colors.onTertiaryContainer;
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(22),
@@ -240,6 +210,7 @@ class _ReminderCard extends StatelessWidget {
             builder: (_) => ReminderEditorPage(reminder: reminder),
           ),
         ),
+        onLongPress: () => _showActions(context),
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Column(
@@ -252,8 +223,8 @@ class _ReminderCard extends StatelessWidget {
                     height: 46,
                     decoration: BoxDecoration(
                       color: reminder.isArrived
-                          ? colors.tertiaryContainer
-                          : colors.primaryContainer,
+                          ? colors.secondary
+                          : colors.tertiaryContainer,
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: bearing == null
@@ -261,10 +232,12 @@ class _ReminderCard extends StatelessWidget {
                             reminder.isArrived
                                 ? Icons.flag_rounded
                                 : Icons.location_on_rounded,
+                            color: markerColor,
                           )
                         : _Compass(
                             bearing: bearing,
                             deviceHeading: deviceHeading,
+                            color: markerColor,
                           ),
                   ),
                   const SizedBox(width: 14),
@@ -282,7 +255,7 @@ class _ReminderCard extends StatelessWidget {
                           reminder.isArrived
                               ? 'Alert triggered'
                               : distance == null
-                              ? '${reminder.place.radius ?? 500} m alert distance'
+                              ? '${reminder.place.radius ?? Place.defaultRadius} m alert distance'
                               : '${_distanceLabel(distance)} · '
                                     '${_bearingLabel(bearing!)} '
                                     '${bearing.round() % 360}°',
@@ -316,20 +289,96 @@ class _ReminderCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 14),
-              Text(
-                reminder.place.displayName ?? 'Dropped pin',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textDirection: textDirectionFor(
-                  reminder.place.displayName ?? 'Dropped pin',
-                ),
-                style: Theme.of(context).textTheme.bodyMedium,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Text(
+                      reminder.place.displayLabel,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textDirection: reminder.place.displayLabelDirection,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
+                  if (reminder.isPinned) ...[
+                    const SizedBox(width: 8),
+                    Semantics(
+                      label: 'Pinned reminder',
+                      child: Icon(
+                        Icons.push_pin_rounded,
+                        size: 12,
+                        color: colors.primary,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _showActions(BuildContext context) async {
+    final action = await showModalBottomSheet<_ReminderAction>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(
+                reminder.isPinned
+                    ? Icons.push_pin_outlined
+                    : Icons.push_pin_rounded,
+              ),
+              title: Text(
+                reminder.isPinned ? 'Unpin reminder' : 'Pin reminder',
+              ),
+              onTap: () => Navigator.pop(context, _ReminderAction.pin),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline_rounded),
+              title: const Text('Delete reminder'),
+              onTap: () => Navigator.pop(context, _ReminderAction.delete),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (action == null || !context.mounted) return;
+
+    final state = context.read<AppController>();
+    try {
+      switch (action) {
+        case _ReminderAction.pin:
+          await state.setReminderPinned(reminder, !reminder.isPinned);
+        case _ReminderAction.delete:
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Delete this reminder?'),
+              content: const Text('This cannot be undone.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Delete'),
+                ),
+              ],
+            ),
+          );
+          if (confirmed == true) await state.deleteReminder(reminder);
+      }
+    } on Object catch (error) {
+      if (context.mounted) _showError(context, error);
+    }
   }
 
   static String _distanceLabel(int meters) => meters < 1000
@@ -343,14 +392,18 @@ class _ReminderCard extends StatelessWidget {
 }
 
 class _Compass extends StatelessWidget {
-  const _Compass({required this.bearing, required this.deviceHeading});
+  const _Compass({
+    required this.bearing,
+    required this.deviceHeading,
+    required this.color,
+  });
 
   final double bearing;
   final ValueListenable<double?> deviceHeading;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     return ValueListenableBuilder<double?>(
       valueListenable: deviceHeading,
       builder: (context, heading, _) {
@@ -363,7 +416,7 @@ class _Compass extends StatelessWidget {
             margin: const EdgeInsets.all(5),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: colors.primary, width: 1.5),
+              border: Border.all(color: color, width: 1.5),
             ),
             child: Stack(
               alignment: Alignment.center,
@@ -375,7 +428,7 @@ class _Compass extends StatelessWidget {
                           'N',
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
-                                color: colors.primary,
+                                color: color,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -384,7 +437,7 @@ class _Compass extends StatelessWidget {
                           width: 4,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: colors.primary,
+                            color: color,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -396,7 +449,7 @@ class _Compass extends StatelessWidget {
                     child: Icon(
                       Icons.navigation_rounded,
                       size: 23,
-                      color: colors.onPrimaryContainer,
+                      color: color,
                     ),
                   ),
                 ),
@@ -439,13 +492,6 @@ class _EmptyReminders extends StatelessWidget {
           Text(
             hasAny ? 'No matching reminders' : 'Your next stop starts here',
             style: Theme.of(context).textTheme.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hasAny
-                ? 'Try a different search or filter.'
-                : 'Create a destination and Loc will watch the distance for you.',
             textAlign: TextAlign.center,
           ),
         ],

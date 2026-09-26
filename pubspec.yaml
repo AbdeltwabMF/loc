@@ -36,7 +36,7 @@ dependency_overrides:
   geolocator_android:
     git:
       url: https://github.com/Zverik/flutter-geolocator.git
-      ref: floss
+      ref: e3991f9e63514933e96b57a8f839ad6511c4afc2
       path: geolocator_android
 
 flutter:

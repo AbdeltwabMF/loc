@@ -5,11 +5,10 @@ import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
-import 'package:loc/data/services/app_diagnostics.dart';
 import 'package:loc/data/services/geo_uri_service.dart';
 import 'package:loc/data/services/geocoding_service.dart';
 import 'package:loc/pages/map_picker_page.dart';
-import 'package:loc/text_direction.dart';
+import 'package:loc/place_presentation.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
@@ -25,6 +24,39 @@ class ReminderEditorPage extends StatefulWidget {
 }
 
 class _ReminderEditorPageState extends State<ReminderEditorPage> {
+  static const _radiusValues = [
+    20,
+    50,
+    100,
+    200,
+    300,
+    400,
+    500,
+    600,
+    700,
+    800,
+    900,
+    1000,
+    1500,
+    2000,
+    3000,
+    4000,
+    5000,
+    6000,
+    7000,
+    8000,
+    9000,
+    10000,
+    15000,
+    20000,
+    25000,
+    30000,
+    35000,
+    40000,
+    45000,
+    50000,
+  ];
+
   final _formKey = GlobalKey<FormState>();
   final _geocoding = GeocodingService();
   late final StreamSubscription<Place> _geoIntentSubscription;
@@ -45,7 +77,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     final place = widget.initialPlace ?? widget.reminder?.place;
     _selectedPlace = place;
     final initialTitle =
-        widget.reminder?.title ?? (place == null ? '' : _placeTitle(place));
+        widget.reminder?.title ?? (place == null ? '' : place.displayTitle);
     _title = TextEditingController(text: initialTitle);
     _titleWasAutoFilled = widget.reminder == null && place != null;
     _latitude = TextEditingController(
@@ -54,13 +86,11 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     _longitude = TextEditingController(
       text: place?.position.longitude.toString(),
     );
-    _radius = (place?.radius ?? 500).toDouble();
+    _radius = (place?.radius ?? Place.defaultRadius).toDouble();
     _alertStyle = widget.reminder?.alertStyle ?? ReminderAlertStyle.brief;
     _geoIntentSubscription = GeoUriService.places.listen(
       _usePlace,
-      onError: (Object error, StackTrace stackTrace) {
-        AppDiagnostics.record('geo.intent.editor', error);
-      },
+      onError: (Object _, StackTrace _) {},
     );
   }
 
@@ -77,36 +107,12 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final radiusIndex = _radiusIndex;
+    final compactAlertSegments =
+        MediaQuery.textScalerOf(context).scale(16) >= 24;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.reminder == null ? 'New reminder' : 'Edit reminder'),
-        actions: [
-          if (widget.reminder != null)
-            IconButton(
-              tooltip: 'Save place',
-              onPressed: () async {
-                final added = await context.read<AppController>().addSavedPlace(
-                  widget.reminder!.place,
-                );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        added ? 'Place saved.' : 'Place already saved.',
-                      ),
-                    ),
-                  );
-                }
-              },
-              icon: const Icon(Icons.bookmark_add_outlined),
-            ),
-          if (widget.reminder != null)
-            IconButton(
-              tooltip: 'Delete reminder',
-              onPressed: _delete,
-              icon: const Icon(Icons.delete_outline_rounded),
-            ),
-        ],
       ),
       body: Form(
         key: _formKey,
@@ -125,124 +131,99 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Notify me when I’m within',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 7,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.secondaryContainer,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '${_radius.round()}m',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: colors.onPrimaryContainer,
-                                    ),
-                              ),
-                            ),
-                          ],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Notify me when I\'m within',
+                          style: Theme.of(context).textTheme.bodyLarge,
                         ),
-                        Slider(
-                          value: _radius,
-                          min: 100,
-                          max: 5000,
-                          divisions: 49,
-                          onChanged: (value) => setState(() => _radius = value),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 7,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '100m',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            Text(
-                              '5km',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
+                        decoration: BoxDecoration(
+                          color: colors.secondaryContainer,
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _distanceHint,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: colors.onSurfaceVariant),
+                        child: Text(
+                          _formatDistance(_radius.round()),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: colors.onSecondaryContainer),
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: radiusIndex.toDouble(),
+                    max: (_radiusValues.length - 1).toDouble(),
+                    divisions: _radiusValues.length - 1,
+                    label: _formatDistance(_radiusValues[radiusIndex]),
+                    semanticFormatterCallback: (value) =>
+                        _formatDistanceSemantic(_radiusValues[value.round()]),
+                    onChanged: (value) => setState(
+                      () => _radius = _radiusValues[value.round()].toDouble(),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Notification',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 8),
-                        SegmentedButton<ReminderAlertStyle>(
-                          expandedInsets: EdgeInsets.zero,
-                          segments: const [
-                            ButtonSegment(
-                              value: ReminderAlertStyle.brief,
-                              icon: Icon(Icons.volume_up_outlined),
-                              label: Text('Sound'),
-                            ),
-                            ButtonSegment(
-                              value: ReminderAlertStyle.vibration,
-                              icon: Icon(Icons.vibration_rounded),
-                              label: Text('Vibrate'),
-                            ),
-                            ButtonSegment(
-                              value: ReminderAlertStyle.alarm,
-                              icon: Icon(Icons.alarm_rounded),
-                              label: Text('Alarm'),
-                            ),
-                          ],
-                          selected: {_alertStyle},
-                          showSelectedIcon: false,
-                          onSelectionChanged: (value) =>
-                              setState(() => _alertStyle = value.single),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          switch (_alertStyle) {
-                            ReminderAlertStyle.brief =>
-                              'Plays a notification sound once.',
-                            ReminderAlertStyle.vibration =>
-                              'Vibrates without playing a sound.',
-                            ReminderAlertStyle.alarm =>
-                              'Rings repeatedly until dismissed.',
-                          },
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: colors.onSurfaceVariant),
-                        ),
-                      ],
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatDistance(_radiusValues.first),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      Text(
+                        _formatDistance(_radiusValues.last),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 28),
+                  SegmentedButton<ReminderAlertStyle>(
+                    expandedInsets: EdgeInsets.zero,
+                    segments: [
+                      ButtonSegment(
+                        value: ReminderAlertStyle.brief,
+                        icon: compactAlertSegments
+                            ? null
+                            : const Icon(Icons.volume_up_outlined),
+                        label: const Text('Sound'),
+                      ),
+                      ButtonSegment(
+                        value: ReminderAlertStyle.vibration,
+                        icon: compactAlertSegments
+                            ? null
+                            : const Icon(Icons.vibration_rounded),
+                        label: const Text('Vibrate'),
+                      ),
+                      ButtonSegment(
+                        value: ReminderAlertStyle.alarm,
+                        icon: compactAlertSegments
+                            ? null
+                            : const Icon(Icons.alarm_rounded),
+                        label: const Text('Alarm'),
+                      ),
+                    ],
+                    selected: {_alertStyle},
+                    selectedIcon: const Icon(Icons.check_rounded, size: 18),
+                    showSelectedIcon: !compactAlertSegments,
+                    onSelectionChanged: (value) =>
+                        setState(() => _alertStyle = value.single),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    switch (_alertStyle) {
+                      ReminderAlertStyle.brief =>
+                        'Plays a notification sound once.',
+                      ReminderAlertStyle.vibration =>
+                        'Vibrates without playing a sound.',
+                      ReminderAlertStyle.alarm =>
+                        'Rings repeatedly until dismissed.',
+                    },
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -282,6 +263,23 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   Widget _buildDestination(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final place = _selectedPlace;
+    final stackActions = MediaQuery.textScalerOf(context).scale(16) >= 24;
+    final otherMapButton = OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+      onPressed: _pickWithExternalMap,
+      icon: const Icon(Icons.open_in_new_rounded),
+      label: const Text('Other map'),
+    );
+    final coordinatesButton = OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+      onPressed: () => setState(() => _showCoordinates = !_showCoordinates),
+      icon: Icon(
+        _showCoordinates
+            ? Icons.keyboard_arrow_up_rounded
+            : Icons.location_on_outlined,
+      ),
+      label: Text(_showCoordinates ? 'Hide coords' : 'Coords'),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -321,10 +319,10 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    _placeSubtitle(place),
+                    place.displaySubtitle,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    textDirection: textDirectionFor(_placeSubtitle(place)),
+                    textDirection: place.displaySubtitleDirection,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
@@ -337,27 +335,33 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
           )
         else
           FilledButton.tonalIcon(
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              backgroundColor: colors.tertiary,
+              foregroundColor: colors.onTertiary,
+            ),
             onPressed: _pickOnMap,
             icon: const Icon(Icons.map_outlined),
             label: const Text('Pick on Loc map'),
           ),
-        const SizedBox(height: 10),
-        _ActionTile(
-          icon: Icons.open_in_new_rounded,
-          label: 'Choose with another map app',
-          onTap: _pickWithExternalMap,
-        ),
         const SizedBox(height: 8),
-        _ActionTile(
-          icon: Icons.location_on_outlined,
-          label: _showCoordinates
-              ? 'Hide manual coordinates'
-              : 'Enter coordinates manually',
-          trailing: _showCoordinates
-              ? Icons.keyboard_arrow_up_rounded
-              : Icons.chevron_right_rounded,
-          onTap: () => setState(() => _showCoordinates = !_showCoordinates),
-        ),
+        if (stackActions)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              otherMapButton,
+              const SizedBox(height: 8),
+              coordinatesButton,
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(child: otherMapButton),
+              const SizedBox(width: 8),
+              Expanded(child: coordinatesButton),
+            ],
+          ),
         if (_showCoordinates) ...[
           const SizedBox(height: 10),
           Row(
@@ -409,25 +413,36 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     );
   }
 
-  String get _distanceHint {
-    if (_radius <= 250) return 'Best for walking or precise destinations.';
-    if (_radius <= 1000) return 'Good for driving or public transport.';
-    return 'Useful on fast roads or where GPS coverage is weaker.';
-  }
-
-  String _placeTitle(Place? place) {
-    final name = place?.displayName?.trim();
-    if (name == null || name.isEmpty) return 'Dropped pin';
-    return name.split(',').first.trim();
-  }
-
-  String _placeSubtitle(Place place) {
-    final name = place.displayName?.trim();
-    if (name != null && name.contains(',')) {
-      return name.substring(name.indexOf(',') + 1).trim();
+  int get _radiusIndex {
+    var closestIndex = 0;
+    var closestDistance = (_radiusValues.first - _radius).abs();
+    for (var index = 1; index < _radiusValues.length; index++) {
+      final distance = (_radiusValues[index] - _radius).abs();
+      if (distance < closestDistance) {
+        closestIndex = index;
+        closestDistance = distance;
+      }
     }
-    return '${place.position.latitude.toStringAsFixed(5)}, '
-        '${place.position.longitude.toStringAsFixed(5)}';
+    return closestIndex;
+  }
+
+  String _formatDistance(int meters) {
+    if (meters < 1000) return '$meters m';
+    final kilometers = meters / 1000;
+    final value = kilometers == kilometers.roundToDouble()
+        ? kilometers.round().toString()
+        : kilometers.toString();
+    return '$value km';
+  }
+
+  String _formatDistanceSemantic(int meters) {
+    if (meters < 1000) return '$meters meters';
+    if (meters == 1000) return '1 kilometer';
+    final kilometers = meters / 1000;
+    final value = kilometers == kilometers.roundToDouble()
+        ? kilometers.round().toString()
+        : kilometers.toString();
+    return '$value kilometers';
   }
 
   Future<void> _pickOnMap() async {
@@ -451,8 +466,8 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     var opened = false;
     try {
       opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } on Object catch (error) {
-      AppDiagnostics.record('geo.external', error);
+    } on Object {
+      // The fallback message below also covers platform launch failures.
     }
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -466,7 +481,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     setState(() {
       if (widget.reminder == null &&
           (_title.text.trim().isEmpty || _titleWasAutoFilled)) {
-        _title.text = _placeTitle(place);
+        _title.text = place.displayTitle;
         _titleWasAutoFilled = true;
       }
       _selectedPlace = place;
@@ -509,34 +524,22 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         // Coordinates are sufficient when reverse geocoding is unavailable.
       }
     }
-    final current = state.currentPosition;
     final existing = widget.reminder;
     final reminder = Reminder(
       id: existing?.id ?? const Uuid().v4(),
       title: _title.text.trim(),
-      notes: existing?.notes,
       place: place,
-      initialDistance: current == null
-          ? existing?.initialDistance ?? 0
-          : Reminder(
-              id: '',
-              title: '',
-              place: place,
-              initialDistance: 0,
-              isTracking: true,
-              isArrived: false,
-            ).remainderDistance(current),
       isTracking: existing?.isTracking ?? true,
       isArrived: false,
       isAlarm: _alertStyle == ReminderAlertStyle.alarm,
       isVibration: _alertStyle == ReminderAlertStyle.vibration,
+      isPinned: existing?.isPinned ?? false,
     );
     try {
       await state.saveReminder(reminder);
       if (mounted) Navigator.of(context).pop();
-    } on Object catch (error) {
+    } on Object {
       if (mounted) {
-        AppDiagnostics.record('reminder.save', error);
         setState(() => _saving = false);
         await showDialog<void>(
           context: context,
@@ -544,9 +547,8 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             icon: const Icon(Icons.error_outline_rounded),
             title: const Text('Reminder was not saved'),
             content: const Text(
-              'Your entries are still here. Try again. If this keeps '
-              'happening, copy Diagnostics from Settings when '
-              'reporting the issue.',
+              'Your entries are still here. Check your connection and try '
+              'again.',
             ),
             actions: [
               FilledButton(
@@ -558,29 +560,6 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         );
       }
     }
-  }
-
-  Future<void> _delete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete this reminder?'),
-        content: const Text('This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    await context.read<AppController>().deleteReminder(widget.reminder!);
-    if (mounted) Navigator.of(context).pop();
   }
 }
 
@@ -600,15 +579,15 @@ class _EditorSection extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: colors.primary, size: 28),
-                const SizedBox(width: 12),
+                Icon(icon, color: colors.primary, size: 24),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -622,55 +601,9 @@ class _EditorSection extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             child,
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionTile extends StatelessWidget {
-  const _ActionTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.trailing = Icons.chevron_right_rounded,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final IconData trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Material(
-      color: colors.surface.withValues(alpha: 0.45),
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: colors.outlineVariant),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          child: Row(
-            children: [
-              Icon(icon, color: colors.primary, size: 22),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ),
-              Icon(trailing, size: 20),
-            ],
-          ),
         ),
       ),
     );

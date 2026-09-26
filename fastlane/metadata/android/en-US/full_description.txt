@@ -4,12 +4,12 @@ Features:
 <ul>
   <li>Multiple independently enabled reminders</li>
   <li>Configurable arrival radius from 100 m to 5 km</li>
-  <li>Brief notifications or repeating alarms per reminder</li>
-  <li>Foreground tracking with screen-off support</li>
+  <li>Brief sound, vibration-only, or repeating alarm alerts</li>
+  <li>Background tracking with a visible ongoing notification</li>
   <li>High-speed arrival-zone crossing detection</li>
-  <li>OpenStreetMap map and Nominatim place search</li>
-  <li>Manual coordinates and reusable saved places</li>
+  <li>Built-in OpenStreetMap picker and external map selection</li>
+  <li>Shared location imports, manual coordinates, and pinned reminders</li>
   <li>Light, dark, and system themes</li>
 </ul>
 
-Reminders and saved places stay on your device. Loc has no account, advertising, analytics, or application backend.
+Reminders stay on your device. Loc has no account, advertising, analytics, or application backend. Update checks are manual and use GitHub Releases.

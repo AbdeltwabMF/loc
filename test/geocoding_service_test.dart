@@ -10,34 +10,6 @@ import 'package:loc/data/services/geocoding_service.dart';
 const _appMetadata = AppMetadata(version: 'test', buildNumber: '1');
 
 void main() {
-  test('search identifies the app and encodes query parameters', () async {
-    late http.Request captured;
-    final service = GeocodingService(
-      appMetadata: _appMetadata,
-      client: MockClient((request) async {
-        captured = request;
-        return http.Response(
-          jsonEncode([
-            {
-              'lat': '30.0444',
-              'lon': '31.2357',
-              'display_name': 'Cairo, Egypt',
-            },
-          ]),
-          200,
-        );
-      }),
-    );
-
-    final results = await service.search('Cairo central station');
-
-    expect(captured.url.queryParameters['q'], 'Cairo central station');
-    expect(captured.url.queryParameters['accept-language'], 'en');
-    expect(captured.headers['User-Agent'], contains('Loc Android/test'));
-    expect(results.single.displayName, 'Cairo, Egypt');
-    service.dispose();
-  });
-
   test(
     'reverse geocoding preserves coordinates and uses a practical radius',
     () async {
@@ -64,6 +36,7 @@ void main() {
       expect(place.position, Point(latitude: 51.5074, longitude: -0.1278));
       expect(place.radius, 500);
       expect(captured.url.queryParameters['accept-language'], 'en');
+      expect(captured.headers['User-Agent'], contains('Loc Android/test'));
       service.dispose();
     },
   );
@@ -75,7 +48,7 @@ void main() {
     );
 
     await expectLater(
-      service.search('Central station'),
+      service.reverse(Point(latitude: 0, longitude: 0)),
       throwsA(
         isA<GeocodingException>().having(
           (error) => error.message,
@@ -87,7 +60,7 @@ void main() {
     service.dispose();
   });
 
-  test('explains that network filters can block map search', () async {
+  test('explains that network filters can block reverse geocoding', () async {
     final service = GeocodingService(
       appMetadata: _appMetadata,
       client: MockClient(
@@ -96,7 +69,7 @@ void main() {
     );
 
     await expectLater(
-      service.search('Central station'),
+      service.reverse(Point(latitude: 0, longitude: 0)),
       throwsA(
         isA<GeocodingException>()
             .having((error) => error.message, 'message', contains('firewall'))
@@ -113,7 +86,7 @@ void main() {
     );
 
     await expectLater(
-      service.search('Central station'),
+      service.reverse(Point(latitude: 0, longitude: 0)),
       throwsA(
         isA<GeocodingException>().having(
           (error) => error.message,
@@ -124,4 +97,35 @@ void main() {
     );
     service.dispose();
   });
+
+  for (final invalidResponse in <Object>[
+    <Object>[],
+    {'lat': 51.5, 'lon': '-0.1'},
+    {'lat': '51.5', 'lon': <Object>[]},
+    {'lat': '51.5', 'lon': '-0.1', 'display_name': <String, Object>{}},
+  ]) {
+    test(
+      'rejects reverse response with invalid schema: $invalidResponse',
+      () async {
+        final service = GeocodingService(
+          appMetadata: _appMetadata,
+          client: MockClient(
+            (request) async => http.Response(jsonEncode(invalidResponse), 200),
+          ),
+        );
+
+        await expectLater(
+          service.reverse(Point(latitude: 0, longitude: 0)),
+          throwsA(
+            isA<GeocodingException>().having(
+              (error) => error.message,
+              'message',
+              contains('invalid response'),
+            ),
+          ),
+        );
+        service.dispose();
+      },
+    );
+  }
 }

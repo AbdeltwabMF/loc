@@ -3,11 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/models/place.dart';
-import 'package:loc/data/services/app_diagnostics.dart';
 import 'package:loc/data/services/geo_uri_service.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
 import 'package:loc/pages/reminders_page.dart';
-import 'package:loc/pages/saved_places_page.dart';
 import 'package:loc/pages/settings_page.dart';
 import 'package:provider/provider.dart';
 
@@ -22,21 +20,13 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   int _index = 0;
   late final StreamSubscription<Place> _geoIntentSubscription;
 
-  static const _pages = <Widget>[
-    RemindersPage(),
-    SavedPlacesPage(),
-    SettingsPage(),
-  ];
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _geoIntentSubscription = GeoUriService.places.listen(
       _openGeoPlace,
-      onError: (Object error, StackTrace stackTrace) {
-        AppDiagnostics.record('geo.intent', error);
-      },
+      onError: (Object _, StackTrace _) {},
     );
   }
 
@@ -68,27 +58,40 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppController>();
+    final alerts = context
+        .select<AppController, ({bool arrival, bool attention})>(
+          (state) => (
+            arrival: state.hasArrivalAlert,
+            attention: state.locationError != null && state.activeCount > 0,
+          ),
+        );
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            if (state.hasArrivalAlert) const _ArrivalBanner(),
-            if (state.locationError != null && state.activeCount > 0)
-              const _AttentionBanner(),
+            if (alerts.arrival) const _StatusBanner(_BannerType.arrival),
+            if (alerts.attention) const _StatusBanner(_BannerType.attention),
             Expanded(
-              child: IndexedStack(index: _index, children: _pages),
+              child: IndexedStack(
+                index: _index,
+                children: [
+                  RemindersPage(isActive: _index == 0),
+                  const SettingsPage(),
+                ],
+              ),
             ),
           ],
         ),
       ),
       floatingActionButton: _index == 0
-          ? FloatingActionButton.extended(
+          ? FloatingActionButton(
               onPressed: () => Navigator.of(context).push<void>(
                 MaterialPageRoute(builder: (_) => const ReminderEditorPage()),
               ),
-              icon: const Icon(Icons.add_location_alt_rounded),
-              label: const Text('New reminder'),
+              tooltip: 'New reminder',
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.add_location_alt_rounded),
             )
           : null,
       bottomNavigationBar: NavigationBar(
@@ -101,11 +104,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             label: 'Reminders',
           ),
           NavigationDestination(
-            icon: Icon(Icons.bookmark_border_rounded),
-            selectedIcon: Icon(Icons.bookmark_rounded),
-            label: 'Places',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.tune_rounded),
             label: 'Settings',
           ),
@@ -115,52 +113,60 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 }
 
-class _AttentionBanner extends StatelessWidget {
-  const _AttentionBanner();
+enum _BannerType { arrival, attention }
+
+class _StatusBanner extends StatelessWidget {
+  const _StatusBanner(this.type);
+
+  final _BannerType type;
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppController>();
-    return Material(
-      color: Theme.of(context).colorScheme.errorContainer,
-      child: SafeArea(
-        bottom: false,
-        child: ListTile(
-          leading: const Icon(Icons.warning_amber_rounded),
-          title: const Text('Attention needed'),
-          subtitle: Text(state.locationError!),
-          trailing: TextButton(
-            onPressed: state.attentionAction == null
-                ? null
-                : state.resolveAttention,
-            child: Text(state.attentionActionLabel),
+    final alert = context
+        .select<
+          AppController,
+          ({
+            String arrivals,
+            String? error,
+            bool canResolve,
+            String actionLabel,
+          })
+        >(
+          (state) => (
+            arrivals: state.arrivedReminders
+                .map((item) => item.title)
+                .join(', '),
+            error: state.locationError,
+            canResolve: state.attentionAction != null,
+            actionLabel: state.attentionActionLabel,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ArrivalBanner extends StatelessWidget {
-  const _ArrivalBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<AppController>();
-    final names = state.arrivedReminders.map((item) => item.title).join(', ');
+        );
+    final isArrival = type == _BannerType.arrival;
+    final colors = Theme.of(context).colorScheme;
+    final foreground = isArrival ? colors.onSecondary : colors.onError;
     return Material(
-      color: Theme.of(context).colorScheme.tertiaryContainer,
-      child: SafeArea(
-        bottom: false,
-        child: ListTile(
-          leading: const Icon(Icons.notifications_active_rounded),
-          title: const Text('You have arrived'),
-          subtitle: Text(names),
-          trailing: FilledButton.tonal(
-            onPressed: state.dismissArrival,
-            child: const Text('Dismiss'),
-          ),
+      color: isArrival ? colors.secondary : colors.error,
+      child: ListTile(
+        iconColor: foreground,
+        textColor: foreground,
+        leading: Icon(
+          isArrival
+              ? Icons.notifications_active_rounded
+              : Icons.warning_amber_rounded,
         ),
+        title: Text(isArrival ? 'You have arrived' : 'Attention needed'),
+        subtitle: Text(isArrival ? alert.arrivals : alert.error ?? ''),
+        trailing: isArrival
+            ? FilledButton.tonal(
+                onPressed: context.read<AppController>().dismissArrival,
+                child: const Text('Dismiss'),
+              )
+            : FilledButton.tonal(
+                onPressed: alert.canResolve
+                    ? context.read<AppController>().resolveAttention
+                    : null,
+                child: Text(alert.actionLabel),
+              ),
       ),
     );
   }

@@ -2,10 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_repository.dart';
-import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
-import 'package:loc/data/services/app_diagnostics.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 
@@ -28,7 +26,6 @@ class AppController extends ChangeNotifier {
   final LocationService _locationService;
   final NotificationService _notificationService;
   final List<Reminder> _reminders = [];
-  final List<Place> _savedPlaces = [];
   String? _arrivalNotificationSignature;
   StreamSubscription<Point>? _positionSubscription;
   Future<void> _operationQueue = Future.value();
@@ -40,9 +37,9 @@ class AppController extends ChangeNotifier {
   bool _isDisposed = false;
   String? _locationError;
   AttentionAction? _attentionAction;
+  Point? _retryPosition;
 
   List<Reminder> get reminders => List.unmodifiable(_reminders);
-  List<Place> get savedPlaces => List.unmodifiable(_savedPlaces);
   Point? get currentPosition => _currentPosition;
   ThemeMode get themeMode => _themeMode;
   bool get alarmEnabled => _alarmEnabled;
@@ -69,9 +66,6 @@ class AppController extends ChangeNotifier {
     _reminders
       ..clear()
       ..addAll(_repository.loadReminders());
-    _savedPlaces
-      ..clear()
-      ..addAll(_repository.loadSavedPlaces().toSet());
     _themeMode = switch (_repository.loadThemeMode()) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
@@ -92,21 +86,20 @@ class AppController extends ChangeNotifier {
     Point point;
     try {
       point = await _locationService.current();
-    } on Object catch (error) {
-      AppDiagnostics.record('location.initial', error);
+    } on Object {
       if (_isDisposed) return;
       try {
         await _enqueue(_syncArrivalAlert);
-      } on Object catch (fallbackError) {
-        AppDiagnostics.record('notification.initial', fallbackError);
+      } on Object {
+        // A later location update will retry notification reconciliation.
       }
       return;
     }
     if (_isDisposed) return;
     try {
       await _enqueue(() => _handlePosition(point));
-    } on Object catch (error) {
-      AppDiagnostics.record('location.initial', error);
+    } on Object {
+      // The live location stream remains the source of subsequent updates.
     }
   }
 
@@ -118,6 +111,7 @@ class AppController extends ChangeNotifier {
         await _locationService.ensurePermission(background: true);
       }
       if (requestPermission &&
+          _alarmEnabled &&
           !await _notificationService.requestPermission()) {
         throw const LocationException(
           'Allow notifications so Loc can alert you on arrival.',
@@ -134,6 +128,7 @@ class AppController extends ChangeNotifier {
               Object error,
               StackTrace stackTrace,
             ) {
+              _retryPosition = point;
               _locationError = error.toString();
               _attentionAction = AttentionAction.retry;
               notifyListeners();
@@ -142,6 +137,7 @@ class AppController extends ChangeNotifier {
         },
         cancelOnError: true,
         onError: (Object error, StackTrace stackTrace) {
+          _retryPosition = null;
           _locationError = error.toString();
           _attentionAction = AttentionAction.retry;
           _isTrackingLocation = false;
@@ -149,13 +145,13 @@ class AppController extends ChangeNotifier {
           notifyListeners();
         },
         onDone: () {
+          _retryPosition = null;
           _isTrackingLocation = false;
           _positionSubscription = null;
           notifyListeners();
         },
       );
     } on Object catch (error) {
-      AppDiagnostics.record('location.tracking', error);
       _isTrackingLocation = false;
       await _refreshAttentionState(
         startTrackingWhenReady: false,
@@ -172,14 +168,14 @@ class AppController extends ChangeNotifier {
     try {
       final point = await _locationService.current();
       _currentPosition = point;
-      if (activeCount == 0) {
+      if (activeCount == 0 || _attentionAction == AttentionAction.retry) {
+        _retryPosition = null;
         _locationError = null;
         _attentionAction = null;
       }
       notifyListeners();
       return point;
     } on Object catch (error) {
-      AppDiagnostics.record('location.current', error);
       await _refreshAttentionState(
         startTrackingWhenReady: false,
         fallbackError: error.toString(),
@@ -189,8 +185,10 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> saveReminder(Reminder reminder) =>
-      _enqueue(() => _saveReminder(reminder));
+  Future<void> saveReminder(Reminder reminder) => _enqueue(() async {
+    await _saveReminder(reminder);
+    notifyListeners();
+  });
 
   Future<void> _saveReminder(Reminder reminder) async {
     final position = _currentPosition;
@@ -226,7 +224,6 @@ class AppController extends ChangeNotifier {
       }
     }
     await _syncArrivalAlert();
-    notifyListeners();
   }
 
   Future<void> deleteReminder(Reminder reminder) => _enqueue(() async {
@@ -246,21 +243,18 @@ class AppController extends ChangeNotifier {
         );
         await _saveReminder(updated);
         await _syncTrackingState();
+        notifyListeners();
       });
 
-  Future<bool> addSavedPlace(Place place) => _enqueue(() async {
-    if (_savedPlaces.any((item) => item.isSameLocation(place))) return false;
-    await _repository.saveSavedPlace(place);
-    _savedPlaces.add(place);
-    notifyListeners();
-    return true;
-  });
-
-  Future<void> deleteSavedPlace(Place place) => _enqueue(() async {
-    await _repository.deleteSavedPlace(place);
-    _savedPlaces.remove(place);
-    notifyListeners();
-  });
+  Future<void> setReminderPinned(Reminder reminder, bool value) =>
+      _enqueue(() async {
+        final index = _reminders.indexWhere((item) => item.id == reminder.id);
+        if (index == -1 || _reminders[index].isPinned == value) return;
+        final updated = _reminders[index].copy(isPinned: value);
+        await _repository.saveReminder(updated);
+        _reminders[index] = updated;
+        notifyListeners();
+      });
 
   Future<void> setThemeMode(ThemeMode value) async {
     await _repository.saveThemeMode(value.name);
@@ -272,10 +266,12 @@ class AppController extends ChangeNotifier {
     await _repository.saveAlarmEnabled(value);
     _alarmEnabled = value;
     if (!value) {
-      await dismissArrival();
+      _arrivalNotificationSignature = null;
+      await _notificationService.dismissArrival();
     } else {
       await _syncArrivalAlert();
     }
+    await _refreshAttentionState(startTrackingWhenReady: true);
     notifyListeners();
   }
 
@@ -308,7 +304,12 @@ class AppController extends ChangeNotifier {
         return;
       case AttentionAction.retry:
         try {
-          await startTracking(requestPermission: false);
+          final point = _retryPosition;
+          if (point == null) {
+            await startTracking(requestPermission: false);
+          } else {
+            await _enqueue(() => _handlePosition(point));
+          }
         } on Object {
           // The refreshed banner presents the next required action.
         }
@@ -334,11 +335,9 @@ class AppController extends ChangeNotifier {
   Future<void> _handlePosition(Point point) async {
     if (_isDisposed) return;
     final previousPosition = _currentPosition;
-    _currentPosition = point;
     for (var index = 0; index < _reminders.length; index++) {
       final reminder = _reminders[index];
       if (!reminder.isTracking) continue;
-      final distance = reminder.remainderDistance(point);
       final enteredArrivalZone =
           reminder.hasArrived(point) ||
           (previousPosition != null &&
@@ -346,26 +345,26 @@ class AppController extends ChangeNotifier {
       final arrived = reminder.isArrived
           ? !reminder.hasExited(point)
           : enteredArrivalZone;
-      final needsInitialDistance = reminder.initialDistance <= 0;
       final resetAcknowledgement = !arrived && reminder.isAcknowledged;
-      if (arrived == reminder.isArrived &&
-          !needsInitialDistance &&
-          !resetAcknowledgement) {
+      if (arrived == reminder.isArrived && !resetAcknowledgement) {
         continue;
       }
       final updated = reminder.copy(
         isArrived: arrived,
         isAcknowledged: arrived ? reminder.isAcknowledged : false,
-        initialDistance: needsInitialDistance
-            ? distance
-            : reminder.initialDistance,
       );
       await _repository.saveReminder(updated);
       _reminders[index] = updated;
     }
 
+    _currentPosition = point;
     await _syncArrivalAlert();
-    if (!_isDisposed) notifyListeners();
+    if (_attentionAction == AttentionAction.retry) {
+      _retryPosition = null;
+      _locationError = null;
+      _attentionAction = null;
+    }
+    notifyListeners();
   }
 
   Future<void> _syncArrivalAlert() async {
@@ -410,7 +409,7 @@ class AppController extends ChangeNotifier {
       _attentionAction = null;
       return;
     }
-    if (!await _notificationService.isPermissionGranted()) {
+    if (_alarmEnabled && !await _notificationService.isPermissionGranted()) {
       _locationError = 'Allow notifications so Loc can alert you on arrival.';
       _attentionAction = AttentionAction.requestNotifications;
       return;
@@ -450,6 +449,11 @@ class AppController extends ChangeNotifier {
       onError: (Object _, StackTrace _) {},
     );
     return result;
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) super.notifyListeners();
   }
 
   @override

@@ -1,0 +1,7 @@
+Loc 1.1.0
+
+- Removed the Google Play services requirement for location
+- Added external map selection and shared location imports
+- Simplified destination selection and reminder setup
+- Made location permission warnings directly actionable
+- Added privacy, version, and manual update-check options

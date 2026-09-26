@@ -35,10 +35,12 @@ void main() {
     test(
       'dismisses one visit and alerts again after exit and re-entry',
       () async {
-        final harness = await _Harness.create([_reminder()]);
+        final harness = await _Harness.create([
+          _reminder(),
+        ], initialMeters: -200);
         addTearDown(harness.dispose);
 
-        harness.location.emit(_pointAtMeters(50));
+        harness.location.emit(_pointAtMeters(200));
         await _waitFor(() => harness.notifications.shown.length == 1);
         await harness.controller.dismissArrival();
 
@@ -121,6 +123,72 @@ void main() {
 
   group('AppController attention actions', () {
     test(
+      'retries a failed position update without restarting tracking',
+      () async {
+        final harness = await _Harness.create([_reminder()]);
+        addTearDown(harness.dispose);
+        harness.repository.saveFailuresRemaining = 1;
+
+        harness.location.emit(_pointAtMeters(50));
+        await _waitFor(
+          () => harness.controller.attentionAction == AttentionAction.retry,
+        );
+
+        expect(harness.controller.isTrackingLocation, isTrue);
+        expect(harness.reminder.isArrived, isFalse);
+
+        await harness.controller.resolveAttention();
+
+        expect(harness.reminder.isArrived, isTrue);
+        expect(harness.controller.attentionAction, isNull);
+        expect(harness.controller.locationError, isNull);
+      },
+    );
+
+    test('retries a failed arrival notification', () async {
+      final harness = await _Harness.create([_reminder()]);
+      addTearDown(harness.dispose);
+      harness.notifications.showFailuresRemaining = 1;
+
+      harness.location.emit(_pointAtMeters(50));
+      await _waitFor(
+        () => harness.controller.attentionAction == AttentionAction.retry,
+      );
+
+      await harness.controller.resolveAttention();
+
+      expect(harness.notifications.shown, hasLength(1));
+      expect(harness.controller.attentionAction, isNull);
+    });
+
+    test('turning off system notifications keeps the in-app arrival', () async {
+      final harness = await _Harness.create([_reminder()]);
+      addTearDown(harness.dispose);
+      harness.location.emit(_pointAtMeters(50));
+      await _waitFor(() => harness.controller.hasArrivalAlert);
+
+      await harness.controller.setAlarmEnabled(false);
+
+      expect(harness.controller.hasArrivalAlert, isTrue);
+      expect(harness.reminder.isAcknowledged, isFalse);
+      expect(harness.notifications.current, isNull);
+    });
+
+    test('notifies after tracking stops for the final reminder', () async {
+      final harness = await _Harness.create([_reminder()]);
+      addTearDown(harness.dispose);
+      final observedTrackingStates = <bool>[];
+      harness.controller.addListener(
+        () => observedTrackingStates.add(harness.controller.isTrackingLocation),
+      );
+
+      await harness.controller.setReminderTracking(harness.reminder, false);
+
+      expect(observedTrackingStates, isNotEmpty);
+      expect(observedTrackingStates, everyElement(isFalse));
+    });
+
+    test(
       'opens app settings when notification permission stays denied',
       () async {
         final location = _FakeLocationService(_pointAtMeters(200));
@@ -146,6 +214,35 @@ void main() {
 
         await controller.resolveAttention();
         expect(location.appSettingsOpens, 1);
+      },
+    );
+
+    test(
+      'tracks with in-app alerts when system notifications are off',
+      () async {
+        final location = _FakeLocationService(_pointAtMeters(200));
+        final notifications = _FakeNotificationService(
+          permissionGranted: false,
+        );
+        final repository = _FakeRepository([_reminder()])
+          .._alarmEnabled = false;
+        final controller = AppController(
+          repository: repository,
+          locationService: location,
+          notificationService: notifications,
+        );
+        addTearDown(() {
+          controller.dispose();
+          unawaited(location.close());
+        });
+
+        await controller.initialize();
+        location.emit(_pointAtMeters(50));
+        await _waitFor(() => controller.hasArrivalAlert);
+
+        expect(controller.isTrackingLocation, isTrue);
+        expect(controller.attentionAction, isNull);
+        expect(notifications.shown, isEmpty);
       },
     );
 
@@ -193,6 +290,17 @@ void main() {
       expect(location.appSettingsOpens, 1);
     });
   });
+
+  test('pins and unpins a reminder', () async {
+    final harness = await _Harness.create([_reminder()]);
+    addTearDown(harness.dispose);
+
+    await harness.controller.setReminderPinned(harness.reminder, true);
+    expect(harness.reminder.isPinned, isTrue);
+
+    await harness.controller.setReminderPinned(harness.reminder, false);
+    expect(harness.reminder.isPinned, isFalse);
+  });
 }
 
 Reminder _reminder({
@@ -205,7 +313,6 @@ Reminder _reminder({
   id: id,
   title: title,
   place: Place(position: Point(latitude: latitude, longitude: 0), radius: 100),
-  initialDistance: 0,
   isTracking: true,
   isArrived: isArrived,
   isAlarm: isAlarm,
@@ -227,11 +334,13 @@ Future<void> _waitFor(bool Function() condition) async {
 class _Harness {
   _Harness({
     required this.controller,
+    required this.repository,
     required this.location,
     required this.notifications,
   });
 
   final AppController controller;
+  final _FakeRepository repository;
   final _FakeLocationService location;
   final _FakeNotificationService notifications;
 
@@ -267,6 +376,7 @@ class _Harness {
     await _waitFor(() => controller.currentPosition != null);
     return _Harness(
       controller: controller,
+      repository: repository,
       location: location,
       notifications: notifications,
     );
@@ -283,22 +393,14 @@ class _FakeRepository implements AppRepository {
     : _reminders = {for (final reminder in reminders) reminder.id: reminder};
 
   final Map<String, Reminder> _reminders;
-  final List<Place> _savedPlaces = [];
   String _themeMode = 'system';
   bool _alarmEnabled = true;
-
-  @override
-  Future<void> deleteSavedPlace(Place place) async {
-    _savedPlaces.remove(place);
-  }
+  int saveFailuresRemaining = 0;
 
   @override
   Future<void> deleteReminder(String id) async {
     _reminders.remove(id);
   }
-
-  @override
-  List<Place> loadSavedPlaces() => List.of(_savedPlaces);
 
   @override
   bool loadAlarmEnabled() => _alarmEnabled;
@@ -318,12 +420,11 @@ class _FakeRepository implements AppRepository {
   }
 
   @override
-  Future<void> saveSavedPlace(Place place) async {
-    _savedPlaces.add(place);
-  }
-
-  @override
   Future<void> saveReminder(Reminder reminder) async {
+    if (saveFailuresRemaining > 0) {
+      saveFailuresRemaining--;
+      throw StateError('save failed');
+    }
     _reminders[reminder.id] = reminder;
   }
 
@@ -356,13 +457,7 @@ class _FakeLocationService implements LocationService {
   Future<void> ensurePermission({bool background = false}) async {}
 
   @override
-  Future<bool> hasPermission() async => true;
-
-  @override
   Stream<Point> get updates => _updates.stream;
-
-  @override
-  Future<String> unavailableReason() async => '';
 
   @override
   Future<bool> openAppSettings() async {
@@ -394,6 +489,7 @@ class _FakeNotificationService implements NotificationService {
   _ArrivalNotification? current;
   bool permissionGranted;
   bool requestResult;
+  int showFailuresRemaining = 0;
 
   @override
   Future<void> dismissArrival() async {
@@ -419,6 +515,10 @@ class _FakeNotificationService implements NotificationService {
     required bool isAlarm,
     required bool isVibration,
   }) async {
+    if (showFailuresRemaining > 0) {
+      showFailuresRemaining--;
+      throw StateError('notification failed');
+    }
     final notification = _ArrivalNotification(
       body: body,
       isAlarm: isAlarm,

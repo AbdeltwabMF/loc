@@ -22,9 +22,16 @@ Future<void> main() async {
     ..registerAdapter(PlaceAdapter())
     ..registerAdapter(PointAdapter());
 
+  try {
+    if (await Hive.boxExists('places')) {
+      await Hive.deleteBoxFromDisk('places');
+    }
+  } on Object {
+    // Obsolete saved-place data must not prevent the app from starting.
+  }
+
   final repository = AppRepository(
     await Hive.openBox<dynamic>('reminders'),
-    await Hive.openBox<dynamic>('places'),
     await Hive.openBox<dynamic>('settings'),
   );
   await repository.migrateLegacyData();
@@ -52,8 +59,8 @@ class LocApp extends StatelessWidget {
         builder: (context, state, child) => MaterialApp(
           title: 'Loc',
           debugShowCheckedModeBanner: false,
-          theme: LocTheme.light,
-          darkTheme: LocTheme.dark,
+          theme: AppTheme.themeLight,
+          darkTheme: AppTheme.themeDark,
           themeMode: state.themeMode,
           home: const HomePage(),
           builder: (context, child) => Stack(

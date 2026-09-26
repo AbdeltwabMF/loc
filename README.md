@@ -10,21 +10,22 @@ set how close you want to be, and Loc alerts you when you get there.
 - Notification, vibration, or repeating alarm for each reminder
 - Arrival radius from 100 m to 5 km
 - High-speed crossing detection between GPS updates
-- Place search, manual coordinates, and map selection
-- Reusable saved places
+- Built-in and external map selection, shared locations, and manual coordinates
+- Pinned reminders for quick access
 - Light, dark, and system themes
 
 ## Privacy
 
-Reminders, saved places, and preferences stay on your device. Loc has no
+Reminders and preferences stay on your device. Loc has no
 accounts, ads, or analytics.
 
 While reminders are active, Loc uses your location in the background to check
 whether you have reached a destination.
 
-Place searches use Nominatim, and map tiles come from OpenStreetMap. These
-services receive the request data and standard network information such as your
-IP address.
+Map tiles and destination labels come from OpenStreetMap services. These
+services receive request data and standard network information such as your IP
+address. When you choose Check for updates, Loc contacts the GitHub API to find
+the latest release; GitHub also receives standard network information.
 
 See the full [Privacy Policy](https://loc.abdeltwab.xyz/privacy.html).
 
@@ -65,9 +66,6 @@ Create a local APK with:
 ```powershell
 flutter build apk --debug
 ```
-
-See [`docs/architecture.md`](docs/architecture.md) for implementation details
-and design decisions.
 
 ## License
 

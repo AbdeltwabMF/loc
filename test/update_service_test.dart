@@ -7,36 +7,61 @@ import 'package:loc/app/app_metadata.dart';
 import 'package:loc/data/services/update_service.dart';
 
 const _metadata = AppMetadata(version: '1.2.3', buildNumber: '12');
+const _releasesUrl = 'https://github.com/AbdeltwabMF/loc/releases';
+
+Map<String, String> _asset(
+  String abi,
+  String fileName, {
+  String version = '2.0.0',
+}) => {
+  'name': 'Loc-v$version-$abi.apk',
+  'browser_download_url': '$_releasesUrl/download/v$version/$fileName',
+};
+
+UpdateService _service({
+  String version = '2.0.0',
+  String? releaseUrl,
+  List<Object> assets = const [],
+  List<String>? supportedAbis,
+  SupportedAbisLoader? supportedAbisLoader,
+  void Function(http.Request)? onRequest,
+  int statusCode = 200,
+  String? responseBody,
+}) {
+  final client = MockClient((request) async {
+    onRequest?.call(request);
+    return http.Response(
+      responseBody ??
+          jsonEncode({
+            'tag_name': 'v$version',
+            'html_url': releaseUrl ?? '$_releasesUrl/tag/v$version',
+            'assets': assets,
+          }),
+      statusCode,
+    );
+  });
+  final service = UpdateService(
+    appMetadata: _metadata,
+    supportedAbisLoader:
+        supportedAbisLoader ??
+        (supportedAbis == null ? null : () async => supportedAbis),
+    client: client,
+  );
+  addTearDown(service.dispose);
+  return service;
+}
 
 void main() {
   test('returns a newer release and prefers its matching ABI APK', () async {
     late http.Request captured;
-    final service = UpdateService(
-      appMetadata: _metadata,
-      supportedAbisLoader: () async => ['arm64-v8a', 'armeabi-v7a'],
-      client: MockClient((request) async {
-        captured = request;
-        return http.Response(
-          jsonEncode({
-            'tag_name': 'v1.3.0',
-            'html_url':
-                'https://github.com/AbdeltwabMF/loc/releases/tag/v1.3.0',
-            'assets': [
-              {
-                'name': 'Loc-v1.3.0-arm64-v8a.apk',
-                'browser_download_url':
-                    'https://github.com/AbdeltwabMF/loc/releases/download/v1.3.0/loc-arm64.apk',
-              },
-              {
-                'name': 'Loc-v1.3.0-universal.apk',
-                'browser_download_url':
-                    'https://github.com/AbdeltwabMF/loc/releases/download/v1.3.0/loc-universal.apk',
-              },
-            ],
-          }),
-          200,
-        );
-      }),
+    final service = _service(
+      version: '1.3.0',
+      supportedAbis: ['arm64-v8a', 'armeabi-v7a'],
+      assets: [
+        _asset('arm64-v8a', 'loc-arm64.apk', version: '1.3.0'),
+        _asset('universal', 'loc-universal.apk', version: '1.3.0'),
+      ],
+      onRequest: (request) => captured = request,
     );
 
     final update = await service.check();
@@ -45,205 +70,85 @@ void main() {
     expect(captured.headers['User-Agent'], contains('Loc Android/1.2.3'));
     expect(update?.version, '1.3.0');
     expect(update?.downloadUri.path, endsWith('/loc-arm64.apk'));
-    service.dispose();
   });
 
   test('returns null when the installed version is current', () async {
-    final service = UpdateService(
-      appMetadata: _metadata,
-      client: MockClient(
-        (_) async => http.Response(
-          jsonEncode({
-            'tag_name': 'v1.2.3',
-            'html_url': 'https://github.com/AbdeltwabMF/loc/releases/latest',
-            'assets': <Object>[],
-          }),
-          200,
-        ),
-      ),
+    final service = _service(
+      version: '1.2.3',
+      releaseUrl: '$_releasesUrl/latest',
     );
 
     expect(await service.check(), isNull);
-    service.dispose();
   });
 
   test('falls back to the release page when no APK is attached', () async {
-    final service = UpdateService(
-      appMetadata: _metadata,
-      client: MockClient(
-        (_) async => http.Response(
-          jsonEncode({
-            'tag_name': 'v2.0.0',
-            'html_url':
-                'https://github.com/AbdeltwabMF/loc/releases/tag/v2.0.0',
-            'assets': <Object>[],
-          }),
-          200,
-        ),
-      ),
-    );
+    final service = _service();
 
     final update = await service.check();
 
     expect(update?.downloadUri.path, endsWith('/releases/tag/v2.0.0'));
-    service.dispose();
   });
 
   test('uses a compatible secondary ABI', () async {
-    final service = UpdateService(
-      appMetadata: _metadata,
-      supportedAbisLoader: () async => ['x86', 'armeabi-v7a'],
-      client: MockClient(
-        (_) async => http.Response(
-          jsonEncode({
-            'tag_name': 'v2.0.0',
-            'html_url':
-                'https://github.com/AbdeltwabMF/loc/releases/tag/v2.0.0',
-            'assets': [
-              {
-                'name': 'Loc-v2.0.0-armeabi-v7a.apk',
-                'browser_download_url':
-                    'https://github.com/AbdeltwabMF/loc/releases/download/v2.0.0/loc-arm.apk',
-              },
-            ],
-          }),
-          200,
-        ),
-      ),
+    final service = _service(
+      supportedAbis: ['x86', 'armeabi-v7a'],
+      assets: [_asset('armeabi-v7a', 'loc-arm.apk')],
     );
 
     final update = await service.check();
 
     expect(update?.downloadUri.path, endsWith('/loc-arm.apk'));
-    service.dispose();
   });
 
   test('selects the x86_64 APK on a matching device', () async {
-    final service = UpdateService(
-      appMetadata: _metadata,
-      supportedAbisLoader: () async => ['x86_64'],
-      client: MockClient(
-        (_) async => http.Response(
-          jsonEncode({
-            'tag_name': 'v2.0.0',
-            'html_url':
-                'https://github.com/AbdeltwabMF/loc/releases/tag/v2.0.0',
-            'assets': [
-              {
-                'name': 'Loc-v2.0.0-x86_64.apk',
-                'browser_download_url':
-                    'https://github.com/AbdeltwabMF/loc/releases/download/v2.0.0/loc-x86_64.apk',
-              },
-            ],
-          }),
-          200,
-        ),
-      ),
+    final service = _service(
+      supportedAbis: ['x86_64'],
+      assets: [_asset('x86_64', 'loc-x86_64.apk')],
     );
 
     final update = await service.check();
 
     expect(update?.downloadUri.path, endsWith('/loc-x86_64.apk'));
-    service.dispose();
   });
 
   test('falls back to the universal APK for an unknown ABI', () async {
-    final service = UpdateService(
-      appMetadata: _metadata,
-      supportedAbisLoader: () async => ['riscv64'],
-      client: MockClient(
-        (_) async => http.Response(
-          jsonEncode({
-            'tag_name': 'v2.0.0',
-            'html_url':
-                'https://github.com/AbdeltwabMF/loc/releases/tag/v2.0.0',
-            'assets': [
-              {
-                'name': 'Loc-v2.0.0-arm64-v8a.apk',
-                'browser_download_url':
-                    'https://github.com/AbdeltwabMF/loc/releases/download/v2.0.0/loc-arm64.apk',
-              },
-              {
-                'name': 'Loc-v2.0.0-universal.apk',
-                'browser_download_url':
-                    'https://github.com/AbdeltwabMF/loc/releases/download/v2.0.0/loc-universal.apk',
-              },
-            ],
-          }),
-          200,
-        ),
-      ),
+    final service = _service(
+      supportedAbis: ['riscv64'],
+      assets: [
+        _asset('arm64-v8a', 'loc-arm64.apk'),
+        _asset('universal', 'loc-universal.apk'),
+      ],
     );
 
     final update = await service.check();
 
     expect(update?.downloadUri.path, endsWith('/loc-universal.apk'));
-    service.dispose();
   });
 
   test('falls back to the universal APK when ABI detection fails', () async {
-    final service = UpdateService(
-      appMetadata: _metadata,
+    final service = _service(
       supportedAbisLoader: () => throw Exception('platform unavailable'),
-      client: MockClient(
-        (_) async => http.Response(
-          jsonEncode({
-            'tag_name': 'v2.0.0',
-            'html_url':
-                'https://github.com/AbdeltwabMF/loc/releases/tag/v2.0.0',
-            'assets': [
-              {
-                'name': 'Loc-v2.0.0-universal.apk',
-                'browser_download_url':
-                    'https://github.com/AbdeltwabMF/loc/releases/download/v2.0.0/loc-universal.apk',
-              },
-            ],
-          }),
-          200,
-        ),
-      ),
+      assets: [_asset('universal', 'loc-universal.apk')],
     );
 
     final update = await service.check();
 
     expect(update?.downloadUri.path, endsWith('/loc-universal.apk'));
-    service.dispose();
   });
 
   test('falls back to the release page without a compatible APK', () async {
-    final service = UpdateService(
-      appMetadata: _metadata,
-      supportedAbisLoader: () async => ['arm64-v8a'],
-      client: MockClient(
-        (_) async => http.Response(
-          jsonEncode({
-            'tag_name': 'v2.0.0',
-            'html_url':
-                'https://github.com/AbdeltwabMF/loc/releases/tag/v2.0.0',
-            'assets': [
-              {
-                'name': 'Loc-v2.0.0-x86_64.apk',
-                'browser_download_url':
-                    'https://github.com/AbdeltwabMF/loc/releases/download/v2.0.0/loc-x86_64.apk',
-              },
-            ],
-          }),
-          200,
-        ),
-      ),
+    final service = _service(
+      supportedAbis: ['arm64-v8a'],
+      assets: [_asset('x86_64', 'loc-x86_64.apk')],
     );
 
     final update = await service.check();
 
     expect(update?.downloadUri.path, endsWith('/releases/tag/v2.0.0'));
-    service.dispose();
   });
 
   test('surfaces an actionable GitHub error', () async {
-    final service = UpdateService(
-      appMetadata: _metadata,
-      client: MockClient((_) async => http.Response('rate limited', 403)),
-    );
+    final service = _service(statusCode: 403, responseBody: 'rate limited');
 
     await expectLater(
       service.check(),
@@ -255,6 +160,5 @@ void main() {
         ),
       ),
     );
-    service.dispose();
   });
 }

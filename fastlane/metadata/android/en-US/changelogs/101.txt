@@ -1,0 +1,5 @@
+Loc 1.0.1
+
+- Fixed the arrival notification icon in release builds
+- Improved map-service identification and request handling
+- Made app version details clearer in Settings

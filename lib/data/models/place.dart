@@ -1,22 +1,18 @@
-import 'package:geolocator/geolocator.dart';
 import 'package:hive/hive.dart';
 import 'package:loc/data/models/point.dart';
 
-part 'place.g.dart';
-
-@HiveType(typeId: 2)
 class Place {
-  @HiveField(0)
+  static const defaultRadius = 500;
+  static const droppedPinLabel = 'Dropped pin';
+
   final Point position;
-  @HiveField(1)
   final int? radius;
-  @HiveField(2)
   final String? displayName;
 
   Place({
     required this.position,
-    this.radius = 500,
-    this.displayName = 'Dropped pin',
+    this.radius = defaultRadius,
+    this.displayName = droppedPinLabel,
   });
 
   Place copy({Point? position, int? radius, String? displayName}) {
@@ -29,29 +25,9 @@ class Place {
 
   factory Place.fromJson(Map<String, dynamic> json) => Place(
     position: Point.fromJson(json),
-    radius: json['radius'] as int? ?? 500,
-    displayName: json['display_name'] as String? ?? 'Dropped pin',
+    radius: json['radius'] as int? ?? defaultRadius,
+    displayName: json['display_name'] as String? ?? droppedPinLabel,
   );
-
-  Map<String, dynamic> toJson() {
-    return {
-      'position': Point(
-        latitude: position.latitude,
-        longitude: position.longitude,
-      ),
-      'radius': radius,
-      'display_name': displayName,
-    };
-  }
-
-  bool isSameLocation(Place other, {double toleranceMeters = 25}) =>
-      Geolocator.distanceBetween(
-        position.latitude,
-        position.longitude,
-        other.position.latitude,
-        other.position.longitude,
-      ) <=
-      toleranceMeters;
 
   @override
   bool operator ==(Object other) =>
@@ -68,5 +44,37 @@ class Place {
     reminderStr = '$reminderStr\n  "display_name": "$displayName",';
     reminderStr = '$reminderStr\n}';
     return reminderStr;
+  }
+}
+
+// Type and field IDs are persisted and must never be reused.
+class PlaceAdapter extends TypeAdapter<Place> {
+  @override
+  final int typeId = 2;
+
+  @override
+  Place read(BinaryReader reader) {
+    final fieldCount = reader.readByte();
+    final fields = <int, dynamic>{
+      for (var index = 0; index < fieldCount; index++)
+        reader.readByte(): reader.read(),
+    };
+    return Place(
+      position: fields[0] as Point,
+      radius: fields[1] as int?,
+      displayName: fields[2] as String?,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Place object) {
+    writer
+      ..writeByte(3)
+      ..writeByte(0)
+      ..write(object.position)
+      ..writeByte(1)
+      ..write(object.radius)
+      ..writeByte(2)
+      ..write(object.displayName);
   }
 }
