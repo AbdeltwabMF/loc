@@ -141,7 +141,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
                   if (_mapUnavailable)
                     Card(
                       margin: const EdgeInsets.only(top: 8),
-                      color: colors.errorContainer,
+                      color: colors.error,
                       child: ListTile(
                         iconColor: colors.onErrorContainer,
                         textColor: colors.onErrorContainer,

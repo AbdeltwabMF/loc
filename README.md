@@ -1,39 +1,23 @@
 # Loc
 
-Loc is a free and open-source arrival reminder for Android. Choose a destination,
-set how close you want to be, and Loc alerts you when you get there.
+Loc is a free and open-source location reminder for Android. 
+Set your destination. Loc alerts you as you get nearby.
 
 ## Features
 
 - Multiple independently enabled reminders
 - Background tracking while reminders are active
 - Notification, vibration, or repeating alarm for each reminder
-- Arrival radius from 100 m to 5 km
+- Arrival radius from 20 m to 50 km
 - High-speed crossing detection between GPS updates
 - Built-in and external map selection, shared locations, and manual coordinates
 - Pinned reminders for quick access
 - Light, dark, and system themes
 
-## Privacy
-
-Reminders and preferences stay on your device. Loc has no
-accounts, ads, or analytics.
-
-While reminders are active, Loc uses your location in the background to check
-whether you have reached a destination.
-
-Map tiles and destination labels come from OpenStreetMap services. These
-services receive request data and standard network information such as your IP
-address. When you choose Check for updates, Loc contacts the GitHub API to find
-the latest release; GitHub also receives standard network information.
-
-See the full [Privacy Policy](https://loc.abdeltwab.xyz/privacy.html).
-
 ## Download
 
 Get the latest APK from [GitHub Releases](https://github.com/AbdeltwabMF/loc/releases).
-The `universal` APK works on all supported Android devices and is the recommended
-download. Architecture-specific APKs are also available if you prefer a smaller
+The `universal` APK works on all supported Android devices. Architecture-specific APKs are also available if you prefer a smaller
 download and know which ABI your device uses.
 
 The official signing certificate has this SHA-256 fingerprint:
