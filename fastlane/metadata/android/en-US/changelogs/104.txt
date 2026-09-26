@@ -1,0 +1,6 @@
+Loc 2.0.0
+
+- Redesigned the app with refreshed light and dark themes
+- Replaced Saved Places with pinned reminders and long-press actions
+- Added alert distances from 20 m to 50 km
+- Improved map selection, location permissions, and background reliability

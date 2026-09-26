@@ -1,1 +1,1 @@
-Private arrival reminders with sound, vibration, or repeating alarms
+Free and open-source Android app that alerts you when you approach a chosen destination.
