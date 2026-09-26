@@ -185,6 +185,14 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  Future<LocationAccessStatus> locationAccessStatus() =>
+      _locationService.accessStatus(background: false);
+
+  Future<bool> openLocationSettings() =>
+      _locationService.openLocationSettings();
+
+  Future<bool> openAppSettings() => _locationService.openAppSettings();
+
   Future<void> saveReminder(Reminder reminder) => _enqueue(() async {
     await _saveReminder(reminder);
     notifyListeners();

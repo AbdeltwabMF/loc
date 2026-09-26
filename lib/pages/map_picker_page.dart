@@ -8,6 +8,7 @@ import 'package:loc/app/app_metadata.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/services/geocoding_service.dart';
+import 'package:loc/data/services/location_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -150,7 +151,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
                           'Check internet access and allow Loc through any VPN '
                           'or firewall.',
                         ),
-                        trailing: TextButton(
+                        trailing: FilledButton.tonal(
                           onPressed: _retryTiles,
                           child: const Text('Retry'),
                         ),
@@ -198,8 +199,78 @@ class _MapPickerPageState extends State<MapPickerPage> {
       _center = LatLng(point.latitude, point.longitude);
       _map.move(_center, 16);
     } on Object catch (error) {
-      if (mounted) _showError(error);
+      if (mounted) await _showLocationAction(error);
     }
+  }
+
+  Future<void> _showLocationAction(Object error) async {
+    final state = context.read<AppController>();
+    LocationAccessStatus status;
+    try {
+      status = await state.locationAccessStatus();
+    } on Object {
+      if (mounted) _showError(error);
+      return;
+    }
+    if (!mounted) return;
+
+    if (status == LocationAccessStatus.serviceDisabled) {
+      await state.openLocationSettings();
+      return;
+    }
+
+    final action = switch (status) {
+      LocationAccessStatus.permissionDenied => await _showLocationDialog(
+        title: 'Allow location access',
+        message: 'Loc needs your permission to center the map where you are.',
+        actionLabel: 'Allow',
+      ),
+      LocationAccessStatus.settingsRequired => await _showLocationDialog(
+        title: 'Allow location access',
+        message: 'Enable location permission for Loc in Android settings.',
+        actionLabel: 'Open settings',
+      ),
+      LocationAccessStatus.ready => false,
+      LocationAccessStatus.serviceDisabled => false,
+    };
+    if (!mounted) return;
+
+    switch (status) {
+      case LocationAccessStatus.serviceDisabled:
+        return;
+      case LocationAccessStatus.permissionDenied:
+        if (action) await _moveToCurrent();
+      case LocationAccessStatus.settingsRequired:
+        if (action) await state.openAppSettings();
+      case LocationAccessStatus.ready:
+        _showError(error);
+    }
+  }
+
+  Future<bool> _showLocationDialog({
+    required String title,
+    required String message,
+    required String actionLabel,
+  }) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: const Icon(Icons.location_on_outlined),
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Not now'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(actionLabel),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   void _handleTileError(Object _) {
