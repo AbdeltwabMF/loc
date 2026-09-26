@@ -1,0 +1,5 @@
+Loc 1.2.0
+
+- Added a universal APK recommended for most devices
+- Added smaller APK downloads for each supported architecture
+- Improved in-app updates to choose a compatible download

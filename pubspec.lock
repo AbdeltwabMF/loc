@@ -252,7 +252,7 @@ packages:
     dependency: "direct overridden"
     description:
       path: geolocator_android
-      ref: floss
+      ref: e3991f9e63514933e96b57a8f839ad6511c4afc2
       resolved-ref: e3991f9e63514933e96b57a8f839ad6511c4afc2
       url: "https://github.com/Zverik/flutter-geolocator.git"
     source: git

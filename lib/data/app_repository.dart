@@ -1,37 +1,36 @@
 import 'package:hive/hive.dart';
-import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/reminder.dart';
 
 class AppRepository {
-  AppRepository(this._reminders, this._savedPlaces, this._preferences);
+  AppRepository(this._reminders, this._preferences);
+
+  static const _migrationVersion = 1;
+  static const _migrationVersionKey = 'dataMigrationVersion';
 
   final Box<dynamic> _reminders;
-  final Box<dynamic> _savedPlaces;
   final Box<dynamic> _preferences;
 
   Future<void> migrateLegacyData() async {
-    final reminders = loadReminders();
-    final savedPlaces = <Place>[];
-    for (final place in loadSavedPlaces()) {
-      if (!savedPlaces.any((item) => item.isSameLocation(place))) {
-        savedPlaces.add(place);
-      }
-    }
-    await _reminders.putAll({for (final item in reminders) item.id: item});
-    await _savedPlaces.clear();
-    await _savedPlaces.putAll({
-      for (final item in savedPlaces) _placeKey(item): item,
-    });
-    await _reminders.deleteAll(
-      _reminders.keys.where((key) => key is! String || key == 'len'),
+    final currentVersion = _preferences.get(
+      _migrationVersionKey,
+      defaultValue: 0,
     );
+    if (currentVersion is int && currentVersion >= _migrationVersion) return;
+
+    final reminders = <String, Reminder>{
+      for (final reminder in loadReminders()) reminder.id: reminder,
+    };
+    // Write canonical records before deleting aliases so an interrupted
+    // migration always leaves a recoverable copy.
+    await _reminders.putAll(reminders);
+    await _reminders.deleteAll(
+      _reminders.keys.where((key) => !reminders.containsKey(key)).toList(),
+    );
+    await _preferences.put(_migrationVersionKey, _migrationVersion);
   }
 
   List<Reminder> loadReminders() =>
       _reminders.values.whereType<Reminder>().toList(growable: false);
-
-  List<Place> loadSavedPlaces() =>
-      _savedPlaces.values.whereType<Place>().toList(growable: false);
 
   Future<void> saveReminder(Reminder reminder) async {
     final legacyKeys = _reminders.keys.where(
@@ -51,16 +50,6 @@ class AppRepository {
           (_reminders.get(key) as Reminder).id == id,
     );
     await _reminders.deleteAll(legacyKeys);
-  }
-
-  Future<void> saveSavedPlace(Place place) =>
-      _savedPlaces.put(_placeKey(place), place);
-
-  Future<void> deleteSavedPlace(Place place) async {
-    final keys = _savedPlaces.keys.where(
-      (key) => _savedPlaces.get(key) is Place && _savedPlaces.get(key) == place,
-    );
-    await _savedPlaces.deleteAll(keys);
   }
 
   String loadThemeMode() {
@@ -84,7 +73,4 @@ class AppRepository {
 
   Future<void> saveAlarmEnabled(bool value) =>
       _preferences.put('alarmEnabled', value);
-
-  String _placeKey(Place place) =>
-      '${place.position.latitude},${place.position.longitude}';
 }

@@ -27,7 +27,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<AppController>();
+    final settings = context
+        .select<AppController, ({bool enabled, ThemeMode theme})>(
+          (state) => (enabled: state.alarmEnabled, theme: state.themeMode),
+        );
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 28, 20, 96),
       children: [
@@ -37,12 +40,13 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             SwitchListTile(
               secondary: const Icon(Icons.alarm_rounded),
-              title: const Text('Arrival alerts'),
+              title: const Text('System notifications'),
               subtitle: const Text(
-                'Allow reminders to alert you when you\'re nearby.',
+                'Show an Android notification on arrival. The in-app banner '
+                'always remains available.',
               ),
-              value: state.alarmEnabled,
-              onChanged: state.setAlarmEnabled,
+              value: settings.enabled,
+              onChanged: context.read<AppController>().setAlarmEnabled,
             ),
           ],
         ),
@@ -67,8 +71,9 @@ class _SettingsPageState extends State<SettingsPage> {
               icon: Icon(Icons.dark_mode_outlined),
             ),
           ],
-          selected: {state.themeMode},
-          onSelectionChanged: (value) => state.setThemeMode(value.single),
+          selected: {settings.theme},
+          onSelectionChanged: (value) =>
+              context.read<AppController>().setThemeMode(value.single),
         ),
         const SizedBox(height: 18),
         Text('About', style: Theme.of(context).textTheme.titleMedium),

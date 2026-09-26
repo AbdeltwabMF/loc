@@ -1,31 +1,15 @@
 import 'package:hive/hive.dart';
 
-part 'point.g.dart';
-
-@HiveType(typeId: 3)
 class Point {
-  @HiveField(0)
   final double latitude;
-  @HiveField(1)
   final double longitude;
 
   Point({required this.latitude, required this.longitude});
-
-  Point copy({double? latitude, double? longitude}) {
-    return Point(
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
-    );
-  }
 
   factory Point.fromJson(Map<String, dynamic> json) => Point(
     latitude: double.parse(json['lat'] as String),
     longitude: double.parse(json['lon'] as String),
   );
-
-  Map<String, dynamic> toJson() {
-    return {'latitude': latitude, 'longitude': longitude};
-  }
 
   @override
   bool operator ==(Object other) =>
@@ -43,5 +27,31 @@ class Point {
     reminderStr = '$reminderStr\n  "longitude": $longitude,';
     reminderStr = '$reminderStr\n}';
     return reminderStr;
+  }
+}
+
+// Type and field IDs are persisted and must never be reused.
+class PointAdapter extends TypeAdapter<Point> {
+  @override
+  final int typeId = 3;
+
+  @override
+  Point read(BinaryReader reader) {
+    final fieldCount = reader.readByte();
+    final fields = <int, dynamic>{
+      for (var index = 0; index < fieldCount; index++)
+        reader.readByte(): reader.read(),
+    };
+    return Point(latitude: fields[0] as double, longitude: fields[1] as double);
+  }
+
+  @override
+  void write(BinaryWriter writer, Point object) {
+    writer
+      ..writeByte(2)
+      ..writeByte(0)
+      ..write(object.latitude)
+      ..writeByte(1)
+      ..write(object.longitude);
   }
 }

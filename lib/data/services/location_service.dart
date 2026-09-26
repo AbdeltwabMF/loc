@@ -41,32 +41,7 @@ class LocationService {
 
   Future<bool> openAppSettings() => Geolocator.openAppSettings();
 
-  Future<bool> hasPermission() async {
-    if (!await Geolocator.isLocationServiceEnabled()) return false;
-    final permission = await Geolocator.checkPermission();
-    return permission == LocationPermission.always;
-  }
-
-  Future<String> unavailableReason() async {
-    if (!await Geolocator.isLocationServiceEnabled()) {
-      return 'Device location is turned off.';
-    }
-    final permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.deniedForever) {
-      return 'Location access is blocked in Android settings.';
-    }
-    if (permission == LocationPermission.whileInUse) {
-      return 'Allow location all the time for screen-off reminders.';
-    }
-    return 'Location access is required for active reminders.';
-  }
-
   Future<void> ensurePermission({bool background = false}) async {
-    if (!await Geolocator.isLocationServiceEnabled()) {
-      throw const LocationException(
-        'Turn on device location to track reminders.',
-      );
-    }
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -78,6 +53,11 @@ class LocationService {
     }
     if (permission == LocationPermission.denied) {
       throw const LocationException('Location access was not granted.');
+    }
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      throw const LocationException(
+        'Turn on device location to track reminders.',
+      );
     }
     if (background && permission == LocationPermission.whileInUse) {
       permission = await Geolocator.requestPermission();
