@@ -16,68 +16,43 @@
     <header class="site-header wrap">
       <a class="brand" href="/" aria-label="Loc home">
         <img src="assets/icons/app_icon.png" alt="" width="42" height="42">
-        <span>LOC</span>
+        <span>Loc</span>
       </a>
+      <nav aria-label="Main navigation">
+        <a href="/">Home</a>
+        <a href="https://abdeltwab.xyz">Developer</a>
+      </nav>
     </header>
 
     <main class="legal wrap">
       <h1>Privacy</h1>
       <p class="legal-intro">
-        Loc has no accounts, ads, analytics, or backend server. Your reminders
-        and saved places stay on your device.
+        Loc has no ads, analytics, or backend servers. Your data stays on your device.
       </p>
 
       <section>
-        <h2>Location</h2>
+        <h2>Location and permissions</h2>
         <p>
-          Loc uses precise location while active reminders are running,
-          including in the background. Your location is compared with your
-          destinations directly on your device. Loc does not send your movement
-          history to a Loc server.
+          Loc requests precise and background location access so active
+          reminders can continue working when the screen is off. It also
+          requests notification access to alert you when you reach your
+          destination. Your location is compared with your destinations
+          directly on your device, and Loc does not send your movement history
+          to a Loc server. Android lets you review or revoke these permissions
+          at any time.
         </p>
       </section>
 
       <section>
-        <h2>Map and search services</h2>
+        <h2>Map service</h2>
         <p>
-          Map tiles are loaded from OpenStreetMap. When you search for a place,
-          Loc sends your search text to Nominatim. When Loc looks up a place
-          from map coordinates, those coordinates are sent to Nominatim.
-        </p>
-        <p>
-          Running Diagnostics also contacts both services to check whether they
-          are available. No location, search, or reminder content is included
-          in those checks.
-        </p>
-        <p>
-          These services receive standard network information such as your IP
-          address and are governed by the OpenStreetMap Foundation's privacy
-          policies.
-        </p>
-        <p>
-          <a href="https://osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap privacy policy</a>
-        </p>
-      </section>
-
-      <section>
-        <h2>Data stored on your device</h2>
-        <p>
-          Reminder names, notes, coordinates, saved places, arrival settings,
-          and preferences are stored locally on your device.
-        </p>
-        <p>
-          You can delete individual items in Loc. To remove all locally stored
-          Loc data, clear the app's storage in Android settings.
-        </p>
-      </section>
-
-      <section>
-        <h2>Permissions</h2>
-        <p>
-          Loc requests location, background location, and notification access
-          so reminders can continue working when the screen is off and alert
-          you when you reach your destination. Android lets you review or revoke
-          these permissions at any time.
+          When you use the map, its tiles are loaded from OpenStreetMap.
+          OpenStreetMap receives standard network information, such as your IP
+          address, as described in its
+          <a href="https://osmfoundation.org/wiki/Privacy_Policy">privacy policy</a>.
+          The map service is optional. You can enter destination coordinates
+          manually and use Loc offline if you do not want to share network
+          information with OpenStreetMap.
         </p>
       </section>
 
@@ -89,12 +64,5 @@
         </p>
       </section>
     </main>
-
-    <footer class="site-footer wrap">
-      <div>
-        <a href="/">Home</a>
-        <a href="https://github.com/AbdeltwabMF/loc/blob/main/LICENSE">GPL-3.0</a>
-      </div>
-    </footer>
   </body>
 </html>

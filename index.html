@@ -6,16 +6,16 @@
     <meta name="theme-color" content="#79740e">
     <meta
       name="description"
-      content="Loc is a private, open-source location reminder for Android."
+      content="Loc is a private, open-source location reminder."
     >
-    <meta property="og:title" content="Loc - Location Reminders for Android">
+    <meta property="og:title" content="Loc - Location Reminder">
     <meta
       property="og:description"
       content="Choose a destination and Loc alerts you when you're getting close."
     >
     <meta property="og:image" content="https://loc.abdeltwab.xyz/assets/icons/app_icon.png">
     <meta property="og:url" content="https://loc.abdeltwab.xyz">
-    <title>Loc - Location Reminders for Android</title>
+    <title>Loc - Location Reminder</title>
     <link rel="icon" href="assets/icons/app_icon.png">
     <link rel="stylesheet" href="site.css">
   </head>
@@ -23,21 +23,21 @@
     <header class="site-header wrap">
       <a class="brand" href="/" aria-label="Loc home">
         <img src="assets/icons/app_icon.png" alt="" width="42" height="42">
-        <span>LOC</span>
+        <span>Loc</span>
       </a>
       <nav aria-label="Main navigation">
-        <a href="#features">Features</a>
         <a href="privacy.html">Privacy</a>
+        <a href="https://abdeltwab.xyz">Developer</a>
       </nav>
     </header>
 
     <main>
       <section class="hero wrap">
         <div class="hero-copy">
-          <p class="eyebrow">Location reminders for Android</p>
+          <p class="eyebrow">Location reminder for Android</p>
           <h1>Never miss<br>your stop.</h1>
           <p class="intro">
-            Choose a destination and Loc alerts you when you're getting close.
+            Set your destination. Loc pings you when you're nearby.
           </p>
           <div class="actions">
             <a class="button primary" href="https://github.com/AbdeltwabMF/loc/releases/latest">
@@ -47,28 +47,20 @@
               View on GitHub
             </a>
           </div>
-          <p class="platform-note">Free, open source, and built for Android.</p>
         </div>
-        <div class="route-card" aria-label="A route approaching its destination">
-          <span class="route-start"></span>
-          <span class="route-line"></span>
-          <span class="route-radius"></span>
-          <span class="route-pin"><span>LOC</span></span>
-          <p>Destination nearby</p>
-        </div>
+        <img class="hero-image" src="assets/route.png" alt="" width="500" height="500">
       </section>
 
       <section class="features" id="features">
         <div class="wrap">
           <div class="section-heading">
-            <p class="eyebrow">Focused by design</p>
-            <h2>Everything needed for the next stop.</h2>
+            <h2>Everything you need for your next stop.</h2>
           </div>
           <div class="feature-grid">
             <article>
               <span>01</span>
               <h3>Flexible destinations</h3>
-              <p>Search, drop a pin, enter coordinates, or reuse a saved place.</p>
+              <p>Drop a pin, enter coordinates, select a location in another map app, or reuse a saved place.</p>
             </article>
             <article>
               <span>02</span>
@@ -81,7 +73,7 @@
             <article>
               <span>03</span>
               <h3>Private by default</h3>
-              <p>No account. No analytics. No ads. No Loc tracking server.</p>
+              <p>No analytics or ads. Your data stays on your device.</p>
             </article>
             <article>
               <span>04</span>
@@ -98,7 +90,6 @@
       <section class="screens" aria-labelledby="screens-title">
         <div class="wrap">
           <div class="section-heading">
-            <p class="eyebrow">The app</p>
             <h2 id="screens-title">Simple at every step.</h2>
           </div>
           <div class="screen-grid">
@@ -133,25 +124,15 @@
       <section class="open-source">
         <div class="wrap open-source-grid">
           <div>
-            <p class="eyebrow">GPL-3.0</p>
             <h2>Open all the way down.</h2>
           </div>
           <div>
             <p>
-              Loc is free software. Inspect it, build it, improve it, or report
-              an issue on GitHub.
+              Loc is free and open-source software licensed under the GNU GPL v3.0.
             </p>
           </div>
         </div>
       </section>
     </main>
-
-    <footer class="site-footer wrap">
-      <div>
-        <a href="privacy.html">Privacy</a>
-        <a href="https://github.com/AbdeltwabMF/loc/blob/main/LICENSE">GPL-3.0</a>
-        <a href="https://www.openstreetmap.org/copyright">&copy; OpenStreetMap contributors</a>
-      </div>
-    </footer>
   </body>
 </html>
