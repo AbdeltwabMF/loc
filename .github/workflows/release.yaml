@@ -142,7 +142,7 @@ jobs:
             --verify-tag
             --title "$RELEASE_TAG"
             --generate-notes
-            --notes "Most users should download the universal APK. The ABI-specific APKs are smaller alternatives for users who know their device architecture."
+            --notes ""
           )
 
           if [[ "$RELEASE_TAG" == *-* ]]; then

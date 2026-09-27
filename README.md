@@ -1,7 +1,34 @@
-# Loc
+<div align="center">
+    <img src="assets/icons/app_icon.png" width="200px" height="200px" />
+</div>
 
-Loc is a free and open-source location reminder for Android. 
-Set your destination. Loc alerts you as you get nearby.
+<h1 align="center">
+    Loc
+</h1>
+
+<h4 align="center">
+    Loc is a location reminder for Android. Set a destination, and Loc alerts you when you're nearby.
+</h4>
+
+<div align="center">
+    <a href="https://loc.abdeltwab.xyz">
+        Website
+    </a>
+    &middot;
+    <a href="https://github.com/AbdeltwabMF/loc/releases/latest">
+        Download
+    </a>
+</div>
+
+## Preview
+
+<p align="center">
+      <img src="assets/screenshots/map-picker.png" width="30%">
+      &nbsp;
+      <img src="assets/screenshots/reminder-editor.png" width="30%">
+      &nbsp;
+      <img src="assets/screenshots/reminders.png" width="30%">
+</p>
 
 ## Features
 
@@ -12,23 +39,12 @@ Set your destination. Loc alerts you as you get nearby.
 - High-speed crossing detection between GPS updates
 - Built-in and external map selection, shared locations, and manual coordinates
 - Pinned reminders for quick access
-- Light, dark, and system themes
 
 ## Download
 
 Get the latest APK from [GitHub Releases](https://github.com/AbdeltwabMF/loc/releases).
 The `universal` APK works on all supported Android devices. Architecture-specific APKs are also available if you prefer a smaller
 download and know which ABI your device uses.
-
-The official signing certificate has this SHA-256 fingerprint:
-
-```text
-9e437ae632a5ea07688de12e0a0ea56eb6e5b4184585c86a27f5a4201ae4cc42
-```
-
-Older APKs were signed with a debug key and cannot be upgraded in place.
-Uninstall the old version before installing a current release. This also removes
-your saved reminders and settings.
 
 ## Development
 
