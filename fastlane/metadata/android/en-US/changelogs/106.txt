@@ -1,0 +1,3 @@
+Loc 2.0.2
+
+- Reduced app download size and optimized release packaging

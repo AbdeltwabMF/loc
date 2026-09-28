@@ -49,6 +49,7 @@ jobs:
           cache: true
 
       - name: Validate release version
+        id: version
         run: |
           pubspec_version=$(awk '$1 == "version:" { print $2 }' pubspec.yaml)
           app_version=${pubspec_version%%+*}
@@ -57,6 +58,9 @@ jobs:
             echo "::error::Tag $RELEASE_TAG does not match pubspec version $app_version"
             exit 1
           fi
+
+          echo "APP_BUILD_VERSION=$pubspec_version" >> "$GITHUB_ENV"
+          echo "build_version=$pubspec_version" >> "$GITHUB_OUTPUT"
 
       - name: Install dependencies and test
         run: |
@@ -88,18 +92,25 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          mkdir -p build/release build/symbols
+          symbols_root="build/debug-info/$APP_BUILD_VERSION"
+          split_symbols_dir="$symbols_root/split"
+          universal_symbols_dir="$symbols_root/universal"
+          mkdir -p build/release "$split_symbols_dir" "$universal_symbols_dir"
 
-          flutter build apk --split-per-abi --release \
-            --split-debug-info=build/symbols
+          flutter build apk --split-per-abi --release --obfuscate \
+            --split-debug-info="$split_symbols_dir"
           for abi in armeabi-v7a arm64-v8a x86_64; do
             cp "build/app/outputs/flutter-apk/app-$abi-release.apk" \
               "build/release/Loc-$RELEASE_TAG-$abi.apk"
           done
 
-          flutter build apk --release --split-debug-info=build/symbols
+          flutter build apk --release --obfuscate \
+            --split-debug-info="$universal_symbols_dir"
           cp build/app/outputs/flutter-apk/app-release.apk \
             "build/release/Loc-$RELEASE_TAG-universal.apk"
+
+          tar -cJf "build/release/Loc-$RELEASE_TAG-dart-symbols.tar.xz" \
+            -C build/debug-info "$APP_BUILD_VERSION"
 
       - name: Verify APK signatures
         env:
@@ -124,13 +135,13 @@ jobs:
           done
 
           cd build/release
-          sha256sum *.apk > SHA256SUMS
+          sha256sum *.apk *.tar.xz > SHA256SUMS
 
       - name: Preserve Dart symbols
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: dart-symbols-${{ env.RELEASE_TAG }}
-          path: build/symbols/
+          name: dart-symbols-${{ steps.version.outputs.build_version }}
+          path: build/debug-info/${{ steps.version.outputs.build_version }}/
           if-no-files-found: error
           retention-days: 90
 
@@ -156,5 +167,6 @@ jobs:
             "build/release/Loc-$RELEASE_TAG-arm64-v8a.apk" \
             "build/release/Loc-$RELEASE_TAG-armeabi-v7a.apk" \
             "build/release/Loc-$RELEASE_TAG-x86_64.apk" \
+            "build/release/Loc-$RELEASE_TAG-dart-symbols.tar.xz" \
             build/release/SHA256SUMS \
             "${args[@]}"
