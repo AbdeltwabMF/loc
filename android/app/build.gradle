@@ -37,6 +37,13 @@ android {
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles
+        includeInBundle = false
+    }
+
     compileOptions {
         coreLibraryDesugaringEnabled true
         sourceCompatibility = JavaVersion.VERSION_17
