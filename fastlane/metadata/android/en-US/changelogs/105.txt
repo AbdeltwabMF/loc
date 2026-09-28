@@ -1,0 +1,3 @@
+Loc 2.0.1
+
+- Removed unverifiable dependency metadata from release packages
