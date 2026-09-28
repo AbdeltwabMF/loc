@@ -50,12 +50,19 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    packagingOptions {
+        dex.useLegacyPackaging = true
+        jniLibs.useLegacyPackaging = true
+    }
+
     defaultConfig {
         applicationId = "xyz.abdeltwab.loc"
         minSdkVersion = flutter.minSdkVersion
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        resourceConfigurations += ["en"]
     }
 
     signingConfigs {
@@ -71,6 +78,9 @@ android {
 
     buildTypes {
         release {
+            minifyEnabled true
+            shrinkResources true
+
             if (hasReleaseKeystore) {
                 signingConfig = signingConfigs.release
             }
