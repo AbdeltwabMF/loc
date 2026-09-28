@@ -155,6 +155,6 @@ jobs:
             "build/release/Loc-$RELEASE_TAG-universal.apk" \
             "build/release/Loc-$RELEASE_TAG-arm64-v8a.apk" \
             "build/release/Loc-$RELEASE_TAG-armeabi-v7a.apk" \
-            "build/release/Loc-$RELEASE_TAG-x86_64.apk \
+            "build/release/Loc-$RELEASE_TAG-x86_64.apk" \
             build/release/SHA256SUMS \
             "${args[@]}"
