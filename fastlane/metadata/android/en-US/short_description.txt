@@ -1,1 +1,1 @@
-Free and open-source Android app that alerts you when you approach a chosen destination.
+The location-based reminder
