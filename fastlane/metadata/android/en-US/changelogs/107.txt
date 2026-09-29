@@ -1,0 +1,4 @@
+Loc 2.1.0
+
+- Added optional screen-off tracking and battery optimization guidance
+- Added live destination direction and alignment feedback

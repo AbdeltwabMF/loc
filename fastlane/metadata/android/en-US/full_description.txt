@@ -1,12 +1,13 @@
-Loc is a location-based reminder that alerts you as you get near your destination.
+Loc is a location-based reminder that alerts you as you reach your destination.
 
 Features:
 <ul>
     <li>Multiple reminders, each can be turned on or off separately</li>
     <li>Arrival radius from 20 m to 50 km</li>
     <li>Alerts by sound, vibration, or repeating alarm</li>
-    <li>Reliable background tracking with a visible ongoing notification</li>
+    <li>Optional screen-off tracking</li>
     <li>Detects arrival-zone crossing even at high speed</li>
+    <li>Live direction guidance with an alignment indicator</li>
     <li>Built-in OpenStreetMap picker, or choose a location from an external map app</li>
     <li>Add locations from shared links or manual coordinates</li>
     <li>Pin frequent reminders with quick actions on long press</li>

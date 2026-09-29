@@ -8,7 +8,7 @@ import 'package:loc/data/models/point.dart';
 enum ReminderAlertStyle { brief, vibration, alarm }
 
 class Reminder {
-  static const arrivalExitBufferMeters = 25.0;
+  static const arrivalExitBufferMeters = 10.0;
 
   final String id;
   final String title;
@@ -39,9 +39,7 @@ class Reminder {
       : ReminderAlertStyle.brief;
 
   Reminder copy({
-    String? id,
     String? title,
-    Place? place,
     bool? isTracking,
     bool? isArrived,
     bool? isAcknowledged,
@@ -50,9 +48,9 @@ class Reminder {
     bool? isPinned,
   }) {
     return Reminder(
-      id: id ?? this.id,
+      id: id,
       title: title ?? this.title,
-      place: place ?? this.place,
+      place: place,
       isTracking: isTracking ?? this.isTracking,
       isArrived: isArrived ?? this.isArrived,
       isAcknowledged: isAcknowledged ?? this.isAcknowledged,
@@ -131,9 +129,7 @@ class Reminder {
   }
 }
 
-// Type and field IDs are persisted and must never be reused. Legacy fields 3
-// (initial distance) and 6 (notes) are read and discarded; field 10 stores the
-// pinned state.
+// Type and field IDs are persisted and must never be reused.
 class ReminderAdapter extends TypeAdapter<Reminder> {
   @override
   final int typeId = 1;
@@ -151,10 +147,10 @@ class ReminderAdapter extends TypeAdapter<Reminder> {
       place: fields[2] as Place,
       isTracking: fields[4] as bool,
       isArrived: fields[5] as bool,
-      isAcknowledged: fields[7] as bool? ?? false,
-      isAlarm: fields[8] as bool? ?? false,
-      isVibration: fields[9] as bool? ?? false,
-      isPinned: fields[10] as bool? ?? false,
+      isAcknowledged: fields[7] as bool,
+      isAlarm: fields[8] as bool,
+      isVibration: fields[9] as bool,
+      isPinned: fields[10] as bool,
     );
   }
 

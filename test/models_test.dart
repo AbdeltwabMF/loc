@@ -75,11 +75,11 @@ void main() {
       );
 
       expect(
-        reminder.hasExited(Point(latitude: 120 / 111320, longitude: 0)),
+        reminder.hasExited(Point(latitude: 105 / 111320, longitude: 0)),
         isFalse,
       );
       expect(
-        reminder.hasExited(Point(latitude: 130 / 111320, longitude: 0)),
+        reminder.hasExited(Point(latitude: 115 / 111320, longitude: 0)),
         isTrue,
       );
     });
@@ -145,6 +145,11 @@ void main() {
       expect(CompassService.directionTo(bearing, 90), closeTo(0, 0.01));
       expect(CompassService.directionTo(bearing, 0), closeTo(90, 0.01));
       expect(CompassService.directionTo(bearing, 180), closeTo(270, 0.01));
+      expect(CompassService.isAligned(0), isTrue);
+      expect(CompassService.isAligned(5), isTrue);
+      expect(CompassService.isAligned(355), isTrue);
+      expect(CompassService.isAligned(6), isFalse);
+      expect(CompassService.isAligned(354), isFalse);
     });
   });
 }

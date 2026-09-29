@@ -115,37 +115,12 @@ class _RemindersPageState extends State<RemindersPage>
 
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-            child: TextField(
-              onChanged: (value) => setState(() => _query = value),
-              decoration: const InputDecoration(
-                hintText: 'Search reminders',
-                prefixIcon: Icon(Icons.search_rounded),
-              ),
-            ),
-          ),
-        ),
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 48,
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              scrollDirection: Axis.horizontal,
-              children: ReminderFilter.values
-                  .map(
-                    (filter) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        selected: _filter == filter,
-                        label: Text(_filterLabel(filter)),
-                        onSelected: (_) => setState(() => _filter = filter),
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _ReminderHeaderDelegate(
+            selectedFilter: _filter,
+            onQueryChanged: (value) => setState(() => _query = value),
+            onFilterSelected: (filter) => setState(() => _filter = filter),
           ),
         ),
         if (reminders.isEmpty)
@@ -169,8 +144,75 @@ class _RemindersPageState extends State<RemindersPage>
       ],
     );
   }
+}
 
-  String _filterLabel(ReminderFilter filter) => switch (filter) {
+class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _ReminderHeaderDelegate({
+    required this.selectedFilter,
+    required this.onQueryChanged,
+    required this.onFilterSelected,
+  });
+
+  static const _extent = 124.0;
+
+  final ReminderFilter selectedFilter;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<ReminderFilter> onFilterSelected;
+
+  @override
+  double get minExtent => _extent;
+
+  @override
+  double get maxExtent => _extent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => Material(
+    color: Theme.of(context).scaffoldBackgroundColor,
+    elevation: overlapsContent ? 1 : 0,
+    child: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: TextField(
+            onChanged: onQueryChanged,
+            decoration: const InputDecoration(
+              hintText: 'Search reminders',
+              prefixIcon: Icon(Icons.search_rounded),
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 48,
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            scrollDirection: Axis.horizontal,
+            children: ReminderFilter.values
+                .map(
+                  (filter) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      selected: selectedFilter == filter,
+                      label: Text(_filterLabel(filter)),
+                      onSelected: (_) => onFilterSelected(filter),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  @override
+  bool shouldRebuild(_ReminderHeaderDelegate oldDelegate) =>
+      selectedFilter != oldDelegate.selectedFilter;
+
+  static String _filterLabel(ReminderFilter filter) => switch (filter) {
     ReminderFilter.all => 'All',
     ReminderFilter.pinned => 'Pinned',
     ReminderFilter.active => 'Active',
@@ -218,28 +260,34 @@ class _ReminderCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: reminder.isArrived
+                  if (bearing == null)
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: reminder.isArrived
+                            ? colors.secondary
+                            : colors.tertiaryContainer,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Icon(
+                        reminder.isArrived
+                            ? Icons.flag_rounded
+                            : Icons.location_on_rounded,
+                        color: markerColor,
+                      ),
+                    )
+                  else
+                    _Compass(
+                      bearing: bearing,
+                      deviceHeading: deviceHeading,
+                      color: markerColor,
+                      backgroundColor: reminder.isArrived
                           ? colors.secondary
                           : colors.tertiaryContainer,
-                      borderRadius: BorderRadius.circular(15),
+                      alignedColor: colors.onPrimary,
+                      alignedBackgroundColor: colors.primary,
                     ),
-                    child: bearing == null
-                        ? Icon(
-                            reminder.isArrived
-                                ? Icons.flag_rounded
-                                : Icons.location_on_rounded,
-                            color: markerColor,
-                          )
-                        : _Compass(
-                            bearing: bearing,
-                            deviceHeading: deviceHeading,
-                            color: markerColor,
-                          ),
-                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -396,11 +444,17 @@ class _Compass extends StatelessWidget {
     required this.bearing,
     required this.deviceHeading,
     required this.color,
+    required this.backgroundColor,
+    required this.alignedColor,
+    required this.alignedBackgroundColor,
   });
 
   final double bearing;
   final ValueListenable<double?> deviceHeading;
   final Color color;
+  final Color backgroundColor;
+  final Color alignedColor;
+  final Color alignedBackgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -408,52 +462,66 @@ class _Compass extends StatelessWidget {
       valueListenable: deviceHeading,
       builder: (context, heading, _) {
         final direction = CompassService.directionTo(bearing, heading ?? 0);
+        final aligned = heading != null && CompassService.isAligned(direction);
+        final foreground = aligned ? alignedColor : color;
         return Semantics(
           label: heading == null
               ? 'Destination bearing ${bearing.round() % 360} degrees'
+              : aligned
+              ? 'Destination straight ahead'
               : _relativeDirectionLabel(direction),
-          child: Container(
-            margin: const EdgeInsets.all(5),
+          child: AnimatedContainer(
+            width: 46,
+            height: 46,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: color, width: 1.5),
+              color: aligned ? alignedBackgroundColor : backgroundColor,
+              borderRadius: BorderRadius.circular(15),
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(
-                  top: heading == null ? 0 : 3,
-                  child: heading == null
-                      ? Text(
-                          'N',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: color,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800,
-                              ),
-                        )
-                      : Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
+            child: Container(
+              margin: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: foreground, width: 1.5),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    top: heading == null ? 0 : 3,
+                    child: heading == null
+                        ? Text(
+                            'N',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: foreground,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          )
+                        : Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: foreground,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Transform.rotate(
-                    angle: direction * math.pi / 180,
-                    child: Icon(
-                      Icons.navigation_rounded,
-                      size: 23,
-                      color: color,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Transform.rotate(
+                      angle: direction * math.pi / 180,
+                      child: Icon(
+                        Icons.navigation_rounded,
+                        size: 23,
+                        color: foreground,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

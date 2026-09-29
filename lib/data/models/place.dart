@@ -15,11 +15,11 @@ class Place {
     this.displayName = droppedPinLabel,
   });
 
-  Place copy({Point? position, int? radius, String? displayName}) {
+  Place copy({int? radius}) {
     return Place(
-      position: position ?? this.position,
+      position: position,
       radius: radius ?? this.radius,
-      displayName: displayName ?? this.displayName,
+      displayName: displayName,
     );
   }
 

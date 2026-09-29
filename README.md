@@ -40,11 +40,10 @@
 - Built-in and external map selection, shared locations, and manual coordinates
 - Pinned reminders for quick access
 
-## Download
+## Installation
 
-Get the latest APK from [GitHub Releases](https://github.com/AbdeltwabMF/loc/releases).
-The `universal` APK works on all supported Android devices. Architecture-specific APKs are also available if you prefer a smaller
-download and know which ABI your device uses.
+[<img src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/AbdeltwabMF/loc/releases)
+[<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="80">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/AbdeltwabMF/loc)
 
 ## Development
 

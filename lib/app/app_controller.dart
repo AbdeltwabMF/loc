@@ -4,27 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:loc/data/app_repository.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
+import 'package:loc/data/services/background_tracking_service.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 
-enum AttentionAction {
-  requestNotifications,
-  enableLocation,
-  requestLocation,
-  openAppSettings,
-  retry,
-}
+enum AttentionAction { enableLocation, requestLocation, openAppSettings, retry }
 
 class AppController extends ChangeNotifier {
   AppController({
     required this._repository,
     required this._locationService,
     required this._notificationService,
-  });
+    BackgroundTrackingControl? backgroundTracking,
+  }) : _backgroundTracking =
+           backgroundTracking ?? NoopBackgroundTrackingControl();
 
   final AppRepository _repository;
   final LocationService _locationService;
   final NotificationService _notificationService;
+  final BackgroundTrackingControl _backgroundTracking;
   final List<Reminder> _reminders = [];
   String? _arrivalNotificationSignature;
   StreamSubscription<Point>? _positionSubscription;
@@ -32,6 +30,9 @@ class AppController extends ChangeNotifier {
   Point? _currentPosition;
   ThemeMode _themeMode = ThemeMode.system;
   bool _alarmEnabled = true;
+  bool _notificationsAllowed = true;
+  bool _backgroundTrackingPreferred = false;
+  bool _backgroundLocationAllowed = false;
   bool _isTrackingLocation = false;
   bool _isStartingTracking = false;
   bool _isDisposed = false;
@@ -43,17 +44,21 @@ class AppController extends ChangeNotifier {
   Point? get currentPosition => _currentPosition;
   ThemeMode get themeMode => _themeMode;
   bool get alarmEnabled => _alarmEnabled;
+  bool get notificationsAllowed => _notificationsAllowed;
+  bool get systemNotificationsEnabled => _alarmEnabled && _notificationsAllowed;
+  bool get backgroundTrackingEnabled =>
+      _backgroundTrackingPreferred && _backgroundLocationAllowed;
   bool get isTrackingLocation => _isTrackingLocation;
   String? get locationError => _locationError;
   AttentionAction? get attentionAction => _attentionAction;
   String get attentionActionLabel => switch (_attentionAction) {
-    AttentionAction.requestNotifications => 'Allow',
     AttentionAction.enableLocation => 'Turn on',
     AttentionAction.requestLocation => 'Allow',
-    AttentionAction.openAppSettings => 'Open settings',
+    AttentionAction.openAppSettings => 'Settings',
     AttentionAction.retry => 'Retry',
     null => '',
   };
+
   int get activeCount => _reminders.where((item) => item.isTracking).length;
   List<Reminder> get arrivedReminders => _reminders
       .where(
@@ -72,11 +77,17 @@ class AppController extends ChangeNotifier {
       _ => ThemeMode.system,
     };
     _alarmEnabled = _repository.loadAlarmEnabled();
+    _notificationsAllowed = await _notificationService.isPermissionGranted();
+    _backgroundTrackingPreferred = _repository.loadBackgroundTrackingEnabled();
+    _backgroundLocationAllowed = await _locationService
+        .hasBackgroundPermission();
+    if (!backgroundTrackingEnabled) await _backgroundTracking.stop();
 
     if (activeCount > 0) {
       await _refreshAttentionState(startTrackingWhenReady: true);
       if (_attentionAction == null) unawaited(_reconcileInitialPosition());
     } else {
+      await _backgroundTracking.stop();
       await _syncArrivalAlert();
     }
     notifyListeners();
@@ -108,14 +119,7 @@ class AppController extends ChangeNotifier {
     _isStartingTracking = true;
     try {
       if (requestPermission) {
-        await _locationService.ensurePermission(background: true);
-      }
-      if (requestPermission &&
-          _alarmEnabled &&
-          !await _notificationService.requestPermission()) {
-        throw const LocationException(
-          'Allow notifications so Loc can alert you on arrival.',
-        );
+        await _locationService.ensurePermission();
       }
       _locationError = null;
       _attentionAction = null;
@@ -151,6 +155,14 @@ class AppController extends ChangeNotifier {
           notifyListeners();
         },
       );
+      if (backgroundTrackingEnabled) {
+        unawaited(
+          _backgroundTracking.start(
+            reminders: _reminders,
+            alarmEnabled: systemNotificationsEnabled,
+          ),
+        );
+      }
     } on Object catch (error) {
       _isTrackingLocation = false;
       await _refreshAttentionState(
@@ -224,6 +236,10 @@ class AppController extends ChangeNotifier {
     } else {
       _reminders[index] = savedReminder;
     }
+    await _backgroundTracking.sync(
+      reminders: _reminders,
+      alarmEnabled: systemNotificationsEnabled,
+    );
     if (savedReminder.isTracking) {
       try {
         await startTracking();
@@ -261,6 +277,10 @@ class AppController extends ChangeNotifier {
         final updated = _reminders[index].copy(isPinned: value);
         await _repository.saveReminder(updated);
         _reminders[index] = updated;
+        await _backgroundTracking.sync(
+          reminders: _reminders,
+          alarmEnabled: systemNotificationsEnabled,
+        );
         notifyListeners();
       });
 
@@ -270,9 +290,20 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setAlarmEnabled(bool value) async {
+  Future<bool> setAlarmEnabled(bool value) async {
+    if (value && !_notificationsAllowed) {
+      _notificationsAllowed = await _notificationService.requestPermission();
+      if (!_notificationsAllowed) {
+        notifyListeners();
+        return false;
+      }
+    }
     await _repository.saveAlarmEnabled(value);
     _alarmEnabled = value;
+    await _backgroundTracking.sync(
+      reminders: _reminders,
+      alarmEnabled: systemNotificationsEnabled,
+    );
     if (!value) {
       _arrivalNotificationSignature = null;
       await _notificationService.dismissArrival();
@@ -281,22 +312,49 @@ class AppController extends ChangeNotifier {
     }
     await _refreshAttentionState(startTrackingWhenReady: true);
     notifyListeners();
+    return true;
+  }
+
+  Future<bool> setBackgroundTrackingEnabled(bool value) async {
+    if (!value) {
+      _backgroundTrackingPreferred = false;
+      await _repository.saveBackgroundTrackingEnabled(false);
+      await _backgroundTracking.stop();
+      notifyListeners();
+      return true;
+    }
+    try {
+      await _locationService.ensurePermission(background: true);
+    } on Object {
+      _backgroundLocationAllowed = await _locationService
+          .hasBackgroundPermission();
+      notifyListeners();
+      return false;
+    }
+    _backgroundLocationAllowed = true;
+    _backgroundTrackingPreferred = true;
+    await _repository.saveBackgroundTrackingEnabled(true);
+    if (activeCount > 0) {
+      await _backgroundTracking.start(
+        reminders: _reminders,
+        alarmEnabled: systemNotificationsEnabled,
+      );
+    }
+    notifyListeners();
+    return true;
   }
 
   Future<void> refreshAttention() async {
+    _notificationsAllowed = await _notificationService.isPermissionGranted();
+    _backgroundLocationAllowed = await _locationService
+        .hasBackgroundPermission();
+    if (!backgroundTrackingEnabled) await _backgroundTracking.stop();
     await _refreshAttentionState(startTrackingWhenReady: true);
     notifyListeners();
   }
 
   Future<void> resolveAttention() async {
     switch (_attentionAction) {
-      case AttentionAction.requestNotifications:
-        if (!await _notificationService.requestPermission()) {
-          await _locationService.openAppSettings();
-          return;
-        }
-        await refreshAttention();
-        return;
       case AttentionAction.enableLocation:
         await _locationService.openLocationSettings();
         return;
@@ -337,6 +395,10 @@ class AppController extends ChangeNotifier {
     }
     _arrivalNotificationSignature = null;
     await _notificationService.dismissArrival();
+    await _backgroundTracking.sync(
+      reminders: _reminders,
+      alarmEnabled: systemNotificationsEnabled,
+    );
     notifyListeners();
   });
 
@@ -378,7 +440,7 @@ class AppController extends ChangeNotifier {
   Future<void> _syncArrivalAlert() async {
     if (_isDisposed) return;
     final arrived = arrivedReminders;
-    if (!_alarmEnabled || arrived.isEmpty) {
+    if (!systemNotificationsEnabled || arrived.isEmpty) {
       _arrivalNotificationSignature = null;
       await _notificationService.dismissArrival();
       return;
@@ -400,12 +462,27 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _syncTrackingState() async {
-    if (activeCount > 0) return;
+    if (activeCount > 0) {
+      if (backgroundTrackingEnabled) {
+        await _backgroundTracking.start(
+          reminders: _reminders,
+          alarmEnabled: systemNotificationsEnabled,
+        );
+      } else {
+        await _backgroundTracking.stop();
+      }
+      return;
+    }
     await _positionSubscription?.cancel();
     _positionSubscription = null;
     _isTrackingLocation = false;
     _locationError = null;
     _attentionAction = null;
+    await _backgroundTracking.sync(
+      reminders: _reminders,
+      alarmEnabled: systemNotificationsEnabled,
+    );
+    await _backgroundTracking.stop();
   }
 
   Future<void> _refreshAttentionState({
@@ -417,12 +494,7 @@ class AppController extends ChangeNotifier {
       _attentionAction = null;
       return;
     }
-    if (_alarmEnabled && !await _notificationService.isPermissionGranted()) {
-      _locationError = 'Allow notifications so Loc can alert you on arrival.';
-      _attentionAction = AttentionAction.requestNotifications;
-      return;
-    }
-    switch (await _locationService.accessStatus()) {
+    switch (await _locationService.accessStatus(background: false)) {
       case LocationAccessStatus.serviceDisabled:
         _locationError = 'Device location is turned off.';
         _attentionAction = AttentionAction.enableLocation;
@@ -432,8 +504,7 @@ class AppController extends ChangeNotifier {
         _attentionAction = AttentionAction.requestLocation;
         return;
       case LocationAccessStatus.settingsRequired:
-        _locationError =
-            'Allow location all the time for screen-off reminders.';
+        _locationError = 'Enable location access for active reminders.';
         _attentionAction = AttentionAction.openAppSettings;
         return;
       case LocationAccessStatus.ready:
@@ -468,7 +539,6 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     unawaited(_positionSubscription?.cancel());
-    unawaited(_notificationService.dismissArrival());
     super.dispose();
   }
 }

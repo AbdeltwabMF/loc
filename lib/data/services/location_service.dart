@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:geolocator/geolocator.dart';
 import 'package:loc/data/models/point.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationException implements Exception {
   const LocationException(this.message);
@@ -20,6 +21,8 @@ enum LocationAccessStatus {
 }
 
 class LocationService {
+  static const _permissionRequestedKey = 'location_permission_requested';
+
   Stream<Point> get updates => _positionUpdates();
 
   Future<LocationAccessStatus> accessStatus({bool background = true}) async {
@@ -41,9 +44,20 @@ class LocationService {
 
   Future<bool> openAppSettings() => Geolocator.openAppSettings();
 
+  Future<bool> hasBackgroundPermission() async =>
+      await Geolocator.checkPermission() == LocationPermission.always;
+
   Future<void> ensurePermission({bool background = false}) async {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
+      final preferences = await SharedPreferences.getInstance();
+      if (preferences.getBool(_permissionRequestedKey) ?? false) {
+        await openAppSettings();
+        throw const LocationException(
+          'Enable location access in Android settings.',
+        );
+      }
+      await preferences.setBool(_permissionRequestedKey, true);
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.deniedForever) {
@@ -85,15 +99,8 @@ class LocationService {
         locationSettings: AndroidSettings(
           forceLocationManager: true,
           accuracy: LocationAccuracy.high,
-          distanceFilter: 10,
-          intervalDuration: const Duration(seconds: 3),
-          foregroundNotificationConfig: const ForegroundNotificationConfig(
-            notificationTitle: 'Loc is watching your route',
-            notificationText: 'Active arrival reminders are being checked.',
-            notificationChannelName: 'Arrival tracking',
-            enableWakeLock: true,
-            setOngoing: true,
-          ),
+          distanceFilter: 5,
+          intervalDuration: const Duration(seconds: 2),
         ),
       ).map(
         (position) =>
