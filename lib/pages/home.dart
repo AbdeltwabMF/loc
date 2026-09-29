@@ -128,7 +128,7 @@ class _StatusBanner extends StatelessWidget {
           ({
             String arrivals,
             String? error,
-            bool canResolve,
+            AttentionAction? action,
             String actionLabel,
           })
         >(
@@ -137,16 +137,27 @@ class _StatusBanner extends StatelessWidget {
                 .map((item) => item.title)
                 .join(', '),
             error: state.locationError,
-            canResolve: state.attentionAction != null,
+            action: state.attentionAction,
             actionLabel: state.attentionActionLabel,
           ),
         );
     final isArrival = type == _BannerType.arrival;
     final colors = Theme.of(context).colorScheme;
     final foreground = isArrival ? colors.onSecondary : colors.onError;
+    final message = isArrival
+        ? 'Arrived at ${alert.arrivals}'
+        : switch (alert.action) {
+            AttentionAction.enableLocation => 'Location is turned off',
+            AttentionAction.requestLocation => 'Location access is required',
+            AttentionAction.openAppSettings => 'Location access is blocked',
+            AttentionAction.retry => alert.error ?? 'Tracking was interrupted',
+            null => alert.error ?? 'Tracking needs attention',
+          };
     return Material(
       color: isArrival ? colors.secondary : colors.error,
       child: ListTile(
+        dense: true,
+        visualDensity: VisualDensity.standard,
         iconColor: foreground,
         textColor: foreground,
         leading: Icon(
@@ -154,17 +165,26 @@ class _StatusBanner extends StatelessWidget {
               ? Icons.notifications_active_rounded
               : Icons.warning_amber_rounded,
         ),
-        title: Text(isArrival ? 'You have arrived' : 'Attention needed'),
-        subtitle: Text(isArrival ? alert.arrivals : alert.error ?? ''),
+        title: Text(message, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: isArrival
-            ? FilledButton.tonal(
+            ? TextButton(
                 onPressed: context.read<AppController>().dismissArrival,
+                style: TextButton.styleFrom(
+                  foregroundColor: isArrival
+                      ? colors.onSecondary
+                      : colors.onError,
+                ),
                 child: const Text('Dismiss'),
               )
-            : FilledButton.tonal(
-                onPressed: alert.canResolve
+            : TextButton(
+                onPressed: alert.action != null
                     ? context.read<AppController>().resolveAttention
                     : null,
+                style: TextButton.styleFrom(
+                  foregroundColor: isArrival
+                      ? colors.onSecondary
+                      : colors.onError,
+                ),
                 child: Text(alert.actionLabel),
               ),
       ),

@@ -27,11 +27,8 @@ class _MapPickerPageState extends State<MapPickerPage> {
   final _tileProvider = NetworkTileProvider(
     headers: {'User-Agent': AppMetadata.current.mapUserAgent},
   );
-  final _tileReset = StreamController<void>.broadcast();
   late LatLng _center;
   bool _selecting = false;
-  bool _mapUnavailable = false;
-  bool _tileErrorPending = false;
 
   @override
   void initState() {
@@ -46,7 +43,6 @@ class _MapPickerPageState extends State<MapPickerPage> {
   @override
   void dispose() {
     _map.dispose();
-    _tileReset.close();
     _geocoding.dispose();
     super.dispose();
   }
@@ -87,9 +83,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 tileProvider: _tileProvider,
-                reset: _tileReset.stream,
                 evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
-                errorTileCallback: (_, error, _) => _handleTileError(error),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 100),
@@ -138,25 +132,6 @@ class _MapPickerPageState extends State<MapPickerPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  if (_mapUnavailable)
-                    Card(
-                      margin: const EdgeInsets.only(top: 8),
-                      color: colors.error,
-                      child: ListTile(
-                        iconColor: colors.onErrorContainer,
-                        textColor: colors.onErrorContainer,
-                        leading: const Icon(Icons.wifi_off_rounded),
-                        title: const Text('Map is unavailable'),
-                        subtitle: const Text(
-                          'Check internet access and allow Loc through any VPN '
-                          'or firewall.',
-                        ),
-                        trailing: FilledButton.tonal(
-                          onPressed: _retryTiles,
-                          child: const Text('Retry'),
-                        ),
-                      ),
-                    ),
                   const Spacer(),
                   Align(
                     alignment: Alignment.centerRight,
@@ -271,23 +246,6 @@ class _MapPickerPageState extends State<MapPickerPage> {
           ),
         ) ??
         false;
-  }
-
-  void _handleTileError(Object _) {
-    if (_mapUnavailable || _tileErrorPending) return;
-    _tileErrorPending = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_mapUnavailable) {
-        setState(() => _mapUnavailable = true);
-      }
-      _tileErrorPending = false;
-    });
-  }
-
-  void _retryTiles() {
-    _tileErrorPending = false;
-    setState(() => _mapUnavailable = false);
-    _tileReset.add(null);
   }
 
   Future<void> _select() async {

@@ -6,6 +6,7 @@ import 'package:loc/data/app_repository.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
+import 'package:loc/data/services/background_tracking_service.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 
@@ -20,10 +21,10 @@ void main() {
         harness.location.emit(_pointAtMeters(50));
         await _waitFor(() => harness.reminder.isArrived);
 
-        await harness.emitAndWait(_pointAtMeters(120));
+        await harness.emitAndWait(_pointAtMeters(105));
         expect(harness.reminder.isArrived, isTrue);
 
-        harness.location.emit(_pointAtMeters(130));
+        harness.location.emit(_pointAtMeters(115));
         await _waitFor(() => !harness.reminder.isArrived);
 
         expect(harness.reminder.isAcknowledged, isFalse);
@@ -188,34 +189,30 @@ void main() {
       expect(observedTrackingStates, everyElement(isFalse));
     });
 
-    test(
-      'opens app settings when notification permission stays denied',
-      () async {
-        final location = _FakeLocationService(_pointAtMeters(200));
-        final notifications = _FakeNotificationService(
-          permissionGranted: false,
-          requestResult: false,
-        );
-        final controller = AppController(
-          repository: _FakeRepository([_reminder()]),
-          locationService: location,
-          notificationService: notifications,
-        );
-        addTearDown(() {
-          controller.dispose();
-          unawaited(location.close());
-        });
+    test('tracks while notification permission stays denied', () async {
+      final location = _FakeLocationService(_pointAtMeters(200));
+      final notifications = _FakeNotificationService(
+        permissionGranted: false,
+        requestResult: false,
+      );
+      final controller = AppController(
+        repository: _FakeRepository([_reminder()]),
+        locationService: location,
+        notificationService: notifications,
+      );
+      addTearDown(() {
+        controller.dispose();
+        unawaited(location.close());
+      });
 
-        await controller.initialize();
-        expect(
-          controller.attentionAction,
-          AttentionAction.requestNotifications,
-        );
+      await controller.initialize();
+      expect(controller.attentionAction, isNull);
+      expect(controller.isTrackingLocation, isTrue);
+      expect(controller.notificationsAllowed, isFalse);
 
-        await controller.resolveAttention();
-        expect(location.appSettingsOpens, 1);
-      },
-    );
+      expect(await controller.setAlarmEnabled(true), isFalse);
+      expect(controller.systemNotificationsEnabled, isFalse);
+    });
 
     test(
       'tracks with in-app alerts when system notifications are off',
@@ -268,6 +265,75 @@ void main() {
       expect(location.locationSettingsOpens, 1);
     });
 
+    test('keeps existing reminders active when location is denied', () async {
+      final location = _FakeLocationService(
+        _pointAtMeters(200),
+        status: LocationAccessStatus.permissionDenied,
+      );
+      final controller = AppController(
+        repository: _FakeRepository([_reminder()]),
+        locationService: location,
+        notificationService: _FakeNotificationService(),
+      );
+      addTearDown(() {
+        controller.dispose();
+        unawaited(location.close());
+      });
+
+      await controller.initialize();
+
+      expect(controller.reminders.single.isTracking, isTrue);
+      expect(controller.activeCount, 1);
+      expect(controller.attentionAction, AttentionAction.requestLocation);
+    });
+
+    test('keeps a new reminder active when location is denied', () async {
+      final location = _FakeLocationService(
+        _pointAtMeters(200),
+        status: LocationAccessStatus.permissionDenied,
+      );
+      final controller = AppController(
+        repository: _FakeRepository([]),
+        locationService: location,
+        notificationService: _FakeNotificationService(),
+      );
+      addTearDown(() {
+        controller.dispose();
+        unawaited(location.close());
+      });
+
+      await controller.initialize();
+      await controller.saveReminder(_reminder());
+
+      expect(controller.reminders.single.isTracking, isTrue);
+      expect(controller.activeCount, 1);
+      expect(controller.attentionAction, AttentionAction.requestLocation);
+    });
+
+    test('activates a paused reminder when location is off', () async {
+      final paused = _reminder().copy(isTracking: false);
+      final location = _FakeLocationService(
+        _pointAtMeters(200),
+        status: LocationAccessStatus.serviceDisabled,
+      );
+      final controller = AppController(
+        repository: _FakeRepository([paused]),
+        locationService: location,
+        notificationService: _FakeNotificationService(),
+      );
+      addTearDown(() {
+        controller.dispose();
+        unawaited(location.close());
+      });
+
+      await controller.initialize();
+      await controller.setReminderTracking(paused, true);
+
+      expect(controller.reminders.single.isTracking, isTrue);
+      expect(controller.activeCount, 1);
+      expect(controller.attentionAction, AttentionAction.enableLocation);
+    });
+
     test('opens app settings when background location is required', () async {
       final location = _FakeLocationService(
         _pointAtMeters(200),
@@ -300,6 +366,53 @@ void main() {
 
     await harness.controller.setReminderPinned(harness.reminder, false);
     expect(harness.reminder.isPinned, isFalse);
+  });
+
+  test(
+    'keeps the background tracker synchronized with active reminders',
+    () async {
+      final tracking = _FakeBackgroundTracking();
+      final harness = await _Harness.create(
+        [_reminder()],
+        backgroundTracking: tracking,
+        backgroundTrackingEnabled: true,
+        backgroundPermission: true,
+      );
+      addTearDown(harness.dispose);
+      await _waitFor(() => tracking.starts == 1);
+
+      await harness.controller.saveReminder(
+        harness.reminder.copy(title: 'Updated station'),
+      );
+      await _waitFor(
+        () => tracking.snapshots.any(
+          (snapshot) => snapshot.single.title == 'Updated station',
+        ),
+      );
+
+      await harness.controller.setReminderTracking(harness.reminder, false);
+      await _waitFor(() => tracking.stops == 1);
+    },
+  );
+
+  test('enables optional background tracking independently', () async {
+    final tracking = _FakeBackgroundTracking();
+    final harness = await _Harness.create([
+      _reminder(),
+    ], backgroundTracking: tracking);
+    addTearDown(harness.dispose);
+
+    expect(harness.controller.backgroundTrackingEnabled, isFalse);
+    expect(await harness.controller.setBackgroundTrackingEnabled(true), isTrue);
+    expect(harness.controller.backgroundTrackingEnabled, isTrue);
+    expect(tracking.starts, 1);
+
+    expect(
+      await harness.controller.setBackgroundTrackingEnabled(false),
+      isTrue,
+    );
+    expect(harness.controller.backgroundTrackingEnabled, isFalse);
+    expect(tracking.stops, greaterThanOrEqualTo(1));
   });
 }
 
@@ -363,14 +476,22 @@ class _Harness {
   static Future<_Harness> create(
     List<Reminder> reminders, {
     double initialMeters = 200,
+    BackgroundTrackingControl? backgroundTracking,
+    bool backgroundTrackingEnabled = false,
+    bool backgroundPermission = false,
   }) async {
-    final repository = _FakeRepository(reminders);
-    final location = _FakeLocationService(_pointAtMeters(initialMeters));
+    final repository = _FakeRepository(reminders)
+      .._backgroundTrackingEnabled = backgroundTrackingEnabled;
+    final location = _FakeLocationService(
+      _pointAtMeters(initialMeters),
+      backgroundPermission: backgroundPermission,
+    );
     final notifications = _FakeNotificationService();
     final controller = AppController(
       repository: repository,
       locationService: location,
       notificationService: notifications,
+      backgroundTracking: backgroundTracking,
     );
     await controller.initialize();
     await _waitFor(() => controller.currentPosition != null);
@@ -388,6 +509,34 @@ class _Harness {
   }
 }
 
+class _FakeBackgroundTracking implements BackgroundTrackingControl {
+  int starts = 0;
+  int stops = 0;
+  final List<List<Reminder>> snapshots = [];
+
+  @override
+  Future<void> start({
+    required List<Reminder> reminders,
+    required bool alarmEnabled,
+  }) async {
+    starts++;
+    snapshots.add(List.of(reminders));
+  }
+
+  @override
+  Future<void> stop() async {
+    stops++;
+  }
+
+  @override
+  Future<void> sync({
+    required List<Reminder> reminders,
+    required bool alarmEnabled,
+  }) async {
+    snapshots.add(List.of(reminders));
+  }
+}
+
 class _FakeRepository implements AppRepository {
   _FakeRepository(Iterable<Reminder> reminders)
     : _reminders = {for (final reminder in reminders) reminder.id: reminder};
@@ -395,6 +544,7 @@ class _FakeRepository implements AppRepository {
   final Map<String, Reminder> _reminders;
   String _themeMode = 'system';
   bool _alarmEnabled = true;
+  bool _backgroundTrackingEnabled = false;
   int saveFailuresRemaining = 0;
 
   @override
@@ -406,17 +556,22 @@ class _FakeRepository implements AppRepository {
   bool loadAlarmEnabled() => _alarmEnabled;
 
   @override
+  bool loadBackgroundTrackingEnabled() => _backgroundTrackingEnabled;
+
+  @override
   List<Reminder> loadReminders() => List.of(_reminders.values);
 
   @override
   String loadThemeMode() => _themeMode;
 
   @override
-  Future<void> migrateLegacyData() async {}
-
-  @override
   Future<void> saveAlarmEnabled(bool value) async {
     _alarmEnabled = value;
+  }
+
+  @override
+  Future<void> saveBackgroundTrackingEnabled(bool value) async {
+    _backgroundTrackingEnabled = value;
   }
 
   @override
@@ -438,11 +593,13 @@ class _FakeLocationService implements LocationService {
   _FakeLocationService(
     this.currentPoint, {
     this.status = LocationAccessStatus.ready,
+    this.backgroundPermission = false,
   });
 
   final StreamController<Point> _updates = StreamController<Point>();
   Point currentPoint;
   LocationAccessStatus status;
+  bool backgroundPermission;
   int appSettingsOpens = 0;
   int locationSettingsOpens = 0;
 
@@ -454,7 +611,14 @@ class _FakeLocationService implements LocationService {
   Future<Point> current() async => currentPoint;
 
   @override
-  Future<void> ensurePermission({bool background = false}) async {}
+  Future<void> ensurePermission({bool background = false}) async {
+    if (status != LocationAccessStatus.ready) {
+      throw const LocationException('Location access is unavailable.');
+    }
+  }
+
+  @override
+  Future<bool> hasBackgroundPermission() async => backgroundPermission;
 
   @override
   Stream<Point> get updates => _updates.stream;

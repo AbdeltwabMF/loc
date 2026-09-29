@@ -6,7 +6,6 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/geo_uri_service.dart';
-import 'package:loc/data/services/geocoding_service.dart';
 import 'package:loc/pages/map_picker_page.dart';
 import 'package:loc/place_presentation.dart';
 import 'package:provider/provider.dart';
@@ -58,7 +57,6 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   ];
 
   final _formKey = GlobalKey<FormState>();
-  final _geocoding = GeocodingService();
   late final StreamSubscription<Place> _geoIntentSubscription;
   late final TextEditingController _title;
   late final TextEditingController _latitude;
@@ -97,7 +95,6 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   @override
   void dispose() {
     unawaited(_geoIntentSubscription.cancel());
-    _geocoding.dispose();
     _title.dispose();
     _latitude.dispose();
     _longitude.dispose();
@@ -136,7 +133,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                       Expanded(
                         child: Text(
                           'Notify me when I\'m within',
-                          style: Theme.of(context).textTheme.bodyLarge,
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
                       Container(
@@ -239,21 +236,29 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         ),
         child: SafeArea(
           minimum: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-          child: FilledButton.icon(
-            onPressed: _saving ? null : _save,
-            icon: _saving
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.notifications_none_rounded),
-            label: Text(
-              _saving
-                  ? 'Saving…'
-                  : widget.reminder == null
-                  ? 'Create reminder'
-                  : 'Save changes',
-            ),
+          child: ValueListenableBuilder<bool>(
+            valueListenable: GeoUriService.isResolving,
+            builder: (context, isResolving, _) {
+              final busy = _saving || isResolving;
+              return FilledButton.icon(
+                onPressed: busy ? null : _save,
+                icon: busy
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.notifications_none_rounded),
+                label: Text(
+                  isResolving
+                      ? 'Retrieving location address…'
+                      : _saving
+                      ? 'Saving…'
+                      : widget.reminder == null
+                      ? 'Create reminder'
+                      : 'Save changes',
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -507,23 +512,16 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
       return;
     }
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _saving = true);
     final state = context.read<AppController>();
+    setState(() => _saving = true);
     final point = Point(latitude: latitude, longitude: longitude);
-    var place = Place(
+    final place = Place(
       position: point,
       radius: _radius.round(),
-      displayName: _selectedPlace?.displayName,
+      displayName: _selectedPlace?.position == point
+          ? _selectedPlace?.displayName
+          : null,
     );
-    if (_selectedPlace?.position != point ||
-        _selectedPlace?.displayName == null) {
-      try {
-        final resolved = await _geocoding.reverse(point);
-        place = resolved.copy(radius: _radius.round());
-      } on Object {
-        // Coordinates are sufficient when reverse geocoding is unavailable.
-      }
-    }
     final existing = widget.reminder;
     final reminder = Reminder(
       id: existing?.id ?? const Uuid().v4(),
@@ -537,7 +535,9 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     );
     try {
       await state.saveReminder(reminder);
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     } on Object {
       if (mounted) {
         setState(() => _saving = false);
@@ -589,14 +589,9 @@ class _EditorSection extends StatelessWidget {
                 Icon(icon, color: colors.primary, size: 24),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ],
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
               ],
