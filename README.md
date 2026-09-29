@@ -7,7 +7,7 @@
 </h1>
 
 <h4 align="center">
-    Loc is a location reminder for Android. Set a destination, and Loc alerts you when you're nearby.
+    The location-based reminder for Android. Set a destination. Get notified as you get nearby.
 </h4>
 
 <div align="center">
