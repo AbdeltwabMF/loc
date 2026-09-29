@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/app/app_metadata.dart';
-import 'package:loc/data/services/update_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -13,15 +12,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final UpdateService _updates = UpdateService();
-  AppUpdate? _availableUpdate;
-  bool _checkingForUpdate = false;
-  bool _checkedForUpdate = false;
-  String? _updateError;
-
   @override
   void dispose() {
-    _updates.dispose();
     super.dispose();
   }
 
@@ -100,68 +92,10 @@ class _SettingsPageState extends State<SettingsPage> {
               title: const Text('App version'),
               subtitle: Text(AppMetadata.current.displayVersion),
             ),
-            ListTile(
-              leading: const Icon(Icons.system_update_alt_rounded),
-              title: Text(
-                _availableUpdate == null
-                    ? 'Check for updates'
-                    : 'Update available',
-              ),
-              subtitle: Text(_updateSubtitle),
-              trailing: _checkingForUpdate
-                  ? const SizedBox.square(
-                      dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      _availableUpdate == null
-                          ? Icons.refresh_rounded
-                          : Icons.download_rounded,
-                    ),
-              onTap: _checkingForUpdate ? null : _handleUpdateTap,
-            ),
           ],
         ),
       ],
     );
-  }
-
-  String get _updateSubtitle {
-    if (_checkingForUpdate) return 'Checking GitHub Releases…';
-    if (_availableUpdate != null) {
-      return 'Version ${_availableUpdate!.version} is ready to download.';
-    }
-    if (_updateError != null) return _updateError!;
-    if (_checkedForUpdate) return 'You have the latest version.';
-    return 'Installed version: ${AppMetadata.current.version}';
-  }
-
-  Future<void> _handleUpdateTap() async {
-    final update = _availableUpdate;
-    if (update != null) {
-      await _openUri(context, update.downloadUri);
-      return;
-    }
-    setState(() {
-      _checkingForUpdate = true;
-      _updateError = null;
-    });
-    try {
-      final result = await _updates.check();
-      if (!mounted) return;
-      setState(() {
-        _availableUpdate = result;
-        _checkedForUpdate = true;
-      });
-    } on UpdateException catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _updateError = error.message;
-        _checkedForUpdate = true;
-      });
-    } finally {
-      if (mounted) setState(() => _checkingForUpdate = false);
-    }
   }
 
   Future<void> _open(BuildContext context, String value) async {
