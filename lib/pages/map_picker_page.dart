@@ -230,6 +230,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
+            scrollable: true,
             icon: const Icon(Icons.location_on_outlined),
             title: Text(title),
             content: Text(message),
@@ -238,7 +239,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
                 onPressed: () => Navigator.pop(context, false),
                 child: const Text('Not now'),
               ),
-              FilledButton(
+              TextButton(
                 onPressed: () => Navigator.pop(context, true),
                 child: Text(actionLabel),
               ),
