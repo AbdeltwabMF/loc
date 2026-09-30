@@ -9,6 +9,7 @@ import 'package:loc/data/services/geo_uri_service.dart';
 import 'package:loc/pages/map_picker_page.dart';
 import 'package:loc/place_presentation.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
@@ -23,6 +24,7 @@ class ReminderEditorPage extends StatefulWidget {
 }
 
 class _ReminderEditorPageState extends State<ReminderEditorPage> {
+  static const _hideExternalMapGuidanceKey = 'external_map_guidance_hidden';
   static const _radiusValues = [
     20,
     50,
@@ -462,6 +464,137 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   }
 
   Future<void> _pickWithExternalMap() async {
+    SharedPreferences? preferences;
+    var showGuidance = true;
+    try {
+      preferences = await SharedPreferences.getInstance();
+      showGuidance =
+          !(preferences.getBool(_hideExternalMapGuidanceKey) ?? false);
+    } on Object {
+      // Preference storage should not prevent opening another map app.
+    }
+    if (!mounted) return;
+
+    var hideGuidance = false;
+    if (showGuidance) {
+      final shouldOpen = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => StatefulBuilder(
+          builder: (context, setDialogState) {
+            final colors = Theme.of(context).colorScheme;
+            Widget step(Widget leading, String label) => Row(
+              children: [
+                SizedBox.square(
+                  dimension: 28,
+                  child: Center(child: ExcludeSemantics(child: leading)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(child: Text(label)),
+              ],
+            );
+            Widget connector() => Padding(
+              padding: const EdgeInsets.only(left: 13),
+              child: Container(
+                width: 2,
+                height: 14,
+                color: colors.outlineVariant,
+              ),
+            );
+
+            return AlertDialog(
+              scrollable: true,
+              title: const Text('Choose in another map'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  step(
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 20,
+                      color: colors.primary,
+                    ),
+                    'Choose your destination',
+                  ),
+                  connector(),
+                  step(
+                    Icon(Icons.share_outlined, size: 20, color: colors.primary),
+                    'Tap Share',
+                  ),
+                  connector(),
+                  step(
+                    Image.asset(
+                      'assets/icons/app_icon.png',
+                      width: 28,
+                      height: 28,
+                    ),
+                    'Select Loc',
+                  ),
+                  const SizedBox(height: 16),
+                  Semantics(
+                    checked: hideGuidance,
+                    label: "Don't show this again",
+                    onTap: () =>
+                        setDialogState(() => hideGuidance = !hideGuidance),
+                    child: ExcludeSemantics(
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () =>
+                            setDialogState(() => hideGuidance = !hideGuidance),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: Row(
+                            children: [
+                              Icon(
+                                hideGuidance
+                                    ? Icons.check_box_rounded
+                                    : Icons.check_box_outline_blank_rounded,
+                                size: 18,
+                                color: hideGuidance
+                                    ? colors.primary
+                                    : colors.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                "Don't show this again",
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: colors.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  child: const Text('Open map'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+      if (shouldOpen != true || !mounted) return;
+
+      if (hideGuidance && preferences != null) {
+        try {
+          await preferences.setBool(_hideExternalMapGuidanceKey, true);
+        } on Object {
+          // The map can still open if saving the opt-out fails.
+        }
+        if (!mounted) return;
+      }
+    }
+
     final center =
         context.read<AppController>().currentPosition ??
         _selectedPlace?.position;
@@ -544,6 +677,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
+            scrollable: true,
             icon: const Icon(Icons.error_outline_rounded),
             title: const Text('Reminder was not saved'),
             content: const Text(
@@ -551,7 +685,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
               'again.',
             ),
             actions: [
-              FilledButton(
+              TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Keep editing'),
               ),

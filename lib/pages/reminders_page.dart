@@ -408,6 +408,7 @@ class _ReminderCard extends StatelessWidget {
           final confirmed = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
+              scrollable: true,
               title: const Text('Delete this reminder?'),
               content: const Text('This cannot be undone.'),
               actions: [
@@ -415,7 +416,10 @@ class _ReminderCard extends StatelessWidget {
                   onPressed: () => Navigator.pop(context, false),
                   child: const Text('Cancel'),
                 ),
-                FilledButton(
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
                   onPressed: () => Navigator.pop(context, true),
                   child: const Text('Delete'),
                 ),

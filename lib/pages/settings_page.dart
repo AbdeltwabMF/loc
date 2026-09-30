@@ -119,6 +119,7 @@ class _SettingsPageState extends State<SettingsPage>
     final openSettings = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        scrollable: true,
         title: const Text('Allow screen-off tracking'),
         content: const Text(
           'Open Permissions > Location and choose "Allow all the time".',
@@ -128,7 +129,7 @@ class _SettingsPageState extends State<SettingsPage>
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Not now'),
           ),
-          FilledButton(
+          TextButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Open settings'),
           ),

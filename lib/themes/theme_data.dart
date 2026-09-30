@@ -217,6 +217,7 @@ abstract final class AppTheme {
       borderSide: BorderSide.none,
     );
     return ThemeData(
+      useMaterial3: true,
       colorScheme: colors,
       scaffoldBackgroundColor: colors.surface,
       appBarTheme: const AppBarTheme(
@@ -229,6 +230,23 @@ abstract final class AppTheme {
         elevation: 0,
         color: colors.surfaceContainer,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.surfaceContainerHigh,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        titleTextStyle: TextStyle(
+          color: colors.onSurface,
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          height: 1.3,
+        ),
+        contentTextStyle: TextStyle(
+          color: colors.onSurfaceVariant,
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          height: 1.4,
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
