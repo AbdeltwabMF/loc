@@ -59,6 +59,23 @@ void main() {
       },
     );
 
+    test(
+      'alerts again when an arrived reminder is paused and resumed',
+      () async {
+        final harness = await _Harness.create([
+          _reminder(isAlarm: true),
+        ], initialMeters: 50);
+        addTearDown(harness.dispose);
+        await _waitFor(() => harness.notifications.shown.length == 1);
+
+        await harness.controller.setReminderTracking(harness.reminder, false);
+        await harness.controller.setReminderTracking(harness.reminder, true);
+
+        expect(harness.notifications.shown, hasLength(2));
+        expect(harness.notifications.shown.last.isAlarm, isTrue);
+      },
+    );
+
     test('editing preserves the current acknowledged visit', () async {
       final harness = await _Harness.create([_reminder()]);
       addTearDown(harness.dispose);
@@ -413,6 +430,9 @@ void main() {
 
       await harness.controller.setReminderTracking(harness.reminder, false);
       await _waitFor(() => tracking.stops == 1);
+
+      await harness.controller.setReminderTracking(harness.reminder, true);
+      expect(tracking.starts, 2);
     },
   );
 
@@ -626,7 +646,7 @@ class _FakeLocationService implements LocationService {
     this.backgroundPermission = false,
   });
 
-  final StreamController<Point> _updates = StreamController<Point>();
+  final StreamController<Point> _updates = StreamController<Point>.broadcast();
   Point currentPoint;
   LocationAccessStatus status;
   bool backgroundPermission;
