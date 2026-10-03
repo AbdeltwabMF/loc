@@ -109,6 +109,21 @@ void main() {
 
     expect(find.text('Choose in another map'), findsNothing);
   });
+
+  testWidgets('describes alarm behavior without a channel settings action', (
+    tester,
+  ) async {
+    await _pumpEditor(tester, controller);
+    await tester.ensureVisible(find.text('Alarm'));
+    await tester.tap(find.text('Alarm'));
+    await tester.pump();
+
+    expect(
+      find.text('Repeats using your alarm volume until dismissed.'),
+      findsOneWidget,
+    );
+    expect(find.text('Alarm settings'), findsNothing);
+  });
 }
 
 Future<void> _pumpEditor(WidgetTester tester, AppController controller) async {

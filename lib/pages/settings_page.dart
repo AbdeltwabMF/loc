@@ -121,7 +121,7 @@ class _SettingsPageState extends State<SettingsPage>
         scrollable: true,
         title: const Text('Allow screen-off tracking'),
         content: const Text(
-          'Open Permissions > Location and choose "Allow all the time".',
+          'Open Permissions > Location and choose "Allow all the time"',
         ),
         actions: [
           TextButton(
@@ -155,6 +155,7 @@ class _SettingsPageState extends State<SettingsPage>
             bool notificationsAllowed,
             bool background,
             ThemeMode theme,
+            bool useGoogleSans,
           })
         >(
           (state) => (
@@ -162,6 +163,7 @@ class _SettingsPageState extends State<SettingsPage>
             notificationsAllowed: state.notificationsAllowed,
             background: state.backgroundTrackingEnabled,
             theme: state.themeMode,
+            useGoogleSans: state.useGoogleSans,
           ),
         );
     return Scaffold(
@@ -185,8 +187,8 @@ class _SettingsPageState extends State<SettingsPage>
                 icon: Icons.notifications_outlined,
                 title: 'Arrival notifications',
                 subtitle: settings.notificationsAllowed
-                    ? 'Notify me when I arrive.'
-                    : 'Tap to allow notifications.',
+                    ? 'Notify me when I arrive'
+                    : 'Tap to allow notifications',
                 value: settings.notifications && settings.notificationsAllowed,
                 onChanged: _setNotifications,
               ),
@@ -196,8 +198,8 @@ class _SettingsPageState extends State<SettingsPage>
                 subtitle: _locationEnabled == null
                     ? 'Checking Location status…'
                     : _locationEnabled!
-                    ? 'Continue tracking when the screen is off.'
-                    : 'Requires Location to be on.',
+                    ? 'Continue tracking when the screen is off'
+                    : 'Requires Location to be on',
                 value: settings.background,
                 onChanged: _setBackgroundTracking,
               ),
@@ -245,7 +247,67 @@ class _SettingsPageState extends State<SettingsPage>
             onSelectionChanged: (value) =>
                 context.read<AppController>().setThemeMode(value.single),
           ),
+          const SizedBox(height: AppSpacing.compact),
+          _SettingsGroup(
+            children: [_FontStyleMenu(useGoogleSans: settings.useGoogleSans)],
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _FontStyleMenu extends StatelessWidget {
+  const _FontStyleMenu({required this.useGoogleSans});
+
+  final bool useGoogleSans;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final menuStyle = MenuStyle(
+      backgroundColor: WidgetStatePropertyAll(colors.surfaceContainerHigh),
+      elevation: const WidgetStatePropertyAll(0),
+      padding: const WidgetStatePropertyAll(EdgeInsets.symmetric()),
+      shape: WidgetStatePropertyAll(
+        RoundedRectangleBorder(borderRadius: AppRadius.dialogRadius),
+      ),
+    );
+
+    ButtonStyle optionStyle(bool selected) => ButtonStyle(
+      backgroundColor: selected
+          ? WidgetStatePropertyAll(colors.primaryContainer)
+          : null,
+      foregroundColor: WidgetStatePropertyAll(
+        selected ? colors.onPrimaryContainer : colors.onSurface,
+      ),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: AppSpacing.card),
+      ),
+    );
+
+    return MenuAnchor(
+      style: menuStyle,
+      menuChildren: [
+        MenuItemButton(
+          style: optionStyle(!useGoogleSans),
+          onPressed: () =>
+              context.read<AppController>().setUseGoogleSans(false),
+          child: const Text('System font'),
+        ),
+        MenuItemButton(
+          style: optionStyle(useGoogleSans),
+          onPressed: () => context.read<AppController>().setUseGoogleSans(true),
+          child: const Text('Google Sans'),
+        ),
+      ],
+      builder: (context, controller, child) => ListTile(
+        leading: const Icon(Icons.font_download_outlined),
+        title: const Text('Font style'),
+        subtitle: Text(useGoogleSans ? 'Google Sans font' : 'System font'),
+        trailing: const Icon(Icons.arrow_drop_down_rounded),
+        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.card),
+        onTap: controller.open,
       ),
     );
   }

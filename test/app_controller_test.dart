@@ -368,6 +368,27 @@ void main() {
     expect(harness.reminder.isPinned, isFalse);
   });
 
+  test('loads and updates the Google Sans preference', () async {
+    final repository = _FakeRepository([]).._useGoogleSans = true;
+    final location = _FakeLocationService(_pointAtMeters(200));
+    final controller = AppController(
+      repository: repository,
+      locationService: location,
+      notificationService: _FakeNotificationService(),
+    );
+    addTearDown(() {
+      controller.dispose();
+      unawaited(location.close());
+    });
+
+    await controller.initialize();
+    expect(controller.useGoogleSans, isTrue);
+
+    await controller.setUseGoogleSans(false);
+    expect(controller.useGoogleSans, isFalse);
+    expect(repository._useGoogleSans, isFalse);
+  });
+
   test(
     'keeps the background tracker synchronized with active reminders',
     () async {
@@ -545,6 +566,7 @@ class _FakeRepository implements AppRepository {
   String _themeMode = 'system';
   bool _alarmEnabled = true;
   bool _backgroundTrackingEnabled = false;
+  bool _useGoogleSans = false;
   int saveFailuresRemaining = 0;
 
   @override
@@ -557,6 +579,9 @@ class _FakeRepository implements AppRepository {
 
   @override
   bool loadBackgroundTrackingEnabled() => _backgroundTrackingEnabled;
+
+  @override
+  bool loadUseGoogleSans() => _useGoogleSans;
 
   @override
   List<Reminder> loadReminders() => List.of(_reminders.values);
@@ -586,6 +611,11 @@ class _FakeRepository implements AppRepository {
   @override
   Future<void> saveThemeMode(String value) async {
     _themeMode = value;
+  }
+
+  @override
+  Future<void> saveUseGoogleSans(bool value) async {
+    _useGoogleSans = value;
   }
 }
 

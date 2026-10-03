@@ -63,8 +63,8 @@ class LocApp extends StatelessWidget {
         builder: (context, state, child) => MaterialApp(
           title: 'Loc',
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.themeLight,
-          darkTheme: AppTheme.themeDark,
+          theme: AppTheme.light(useGoogleSans: state.useGoogleSans),
+          darkTheme: AppTheme.dark(useGoogleSans: state.useGoogleSans),
           themeMode: state.themeMode,
           home: const HomePage(),
         ),

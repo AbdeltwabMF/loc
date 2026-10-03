@@ -531,11 +531,6 @@ class _ReminderCard extends StatelessWidget {
                       style: theme.textTheme.bodyMedium,
                     ),
                   ),
-                  IconButton(
-                    tooltip: 'Reminder actions',
-                    onPressed: () => _showActions(context),
-                    icon: const Icon(Icons.more_vert_rounded),
-                  ),
                 ],
               ),
             ],

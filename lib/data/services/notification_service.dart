@@ -49,17 +49,6 @@ class NotificationService {
     }
   }
 
-  static Future<void> openAlarmSettings() async {
-    try {
-      await _settingsChannel.invokeMethod<void>(
-        'openNotificationChannelSettings',
-        'arrival_alarms_v2',
-      );
-    } on Object {
-      // Android may not expose per-channel settings on every device.
-    }
-  }
-
   Future<bool> isPermissionGranted() async {
     final allowed = await _plugin
         .resolvePlatformSpecificImplementation<

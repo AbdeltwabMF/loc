@@ -29,6 +29,7 @@ class AppController extends ChangeNotifier {
   Future<void> _operationQueue = Future.value();
   Point? _currentPosition;
   ThemeMode _themeMode = ThemeMode.system;
+  bool _useGoogleSans = true;
   bool _alarmEnabled = true;
   bool _notificationsAllowed = true;
   bool _backgroundTrackingPreferred = false;
@@ -43,6 +44,7 @@ class AppController extends ChangeNotifier {
   List<Reminder> get reminders => List.unmodifiable(_reminders);
   Point? get currentPosition => _currentPosition;
   ThemeMode get themeMode => _themeMode;
+  bool get useGoogleSans => _useGoogleSans;
   bool get alarmEnabled => _alarmEnabled;
   bool get notificationsAllowed => _notificationsAllowed;
   bool get systemNotificationsEnabled => _alarmEnabled && _notificationsAllowed;
@@ -76,6 +78,7 @@ class AppController extends ChangeNotifier {
       'dark' => ThemeMode.dark,
       _ => ThemeMode.system,
     };
+    _useGoogleSans = _repository.loadUseGoogleSans();
     _alarmEnabled = _repository.loadAlarmEnabled();
     _notificationsAllowed = await _notificationService.isPermissionGranted();
     _backgroundTrackingPreferred = _repository.loadBackgroundTrackingEnabled();
@@ -287,6 +290,12 @@ class AppController extends ChangeNotifier {
   Future<void> setThemeMode(ThemeMode value) async {
     await _repository.saveThemeMode(value.name);
     _themeMode = value;
+    notifyListeners();
+  }
+
+  Future<void> setUseGoogleSans(bool value) async {
+    await _repository.saveUseGoogleSans(value);
+    _useGoogleSans = value;
     notifyListeners();
   }
 

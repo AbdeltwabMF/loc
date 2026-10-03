@@ -6,7 +6,6 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/geo_uri_service.dart';
-import 'package:loc/data/services/notification_service.dart';
 import 'package:loc/pages/map_picker_page.dart';
 import 'package:loc/place_presentation.dart';
 import 'package:loc/themes/tokens.dart';
@@ -227,24 +226,16 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                   Text(
                     switch (_alertStyle) {
                       ReminderAlertStyle.brief =>
-                        'Plays a notification sound once.',
+                        'Plays a notification sound once',
                       ReminderAlertStyle.vibration =>
-                        'Vibrates without playing a sound.',
+                        'Vibrates without playing a sound',
                       ReminderAlertStyle.alarm =>
-                        'Repeats using your Arrival alarms channel and alarm volume.',
+                        'Repeats using your alarm volume until dismissed',
                     },
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
                   ),
-                  if (_alertStyle == ReminderAlertStyle.alarm)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton(
-                        onPressed: NotificationService.openAlarmSettings,
-                        child: const Text('Alarm settings'),
-                      ),
-                    ),
                 ],
               ),
             ),
@@ -337,7 +328,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                   ),
           ),
           validator: (value) => value == null || value.trim().isEmpty
-              ? 'Enter a reminder name.'
+              ? 'Enter a reminder name'
               : null,
         ),
         const SizedBox(height: 10),
@@ -522,10 +513,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                     label: 'Choose the destination',
                   ),
                   const SizedBox(height: 10),
-                  const NumberedStep(
-                    number: 2,
-                    label: 'Tap Share',
-                  ),
+                  const NumberedStep(number: 2, label: 'Tap Share'),
                   const SizedBox(height: 10),
                   NumberedStep(
                     number: 3,
@@ -623,7 +611,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     }
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No compatible map app is installed.')),
+        const SnackBar(content: Text('No compatible map app is installed')),
       );
     }
   }
@@ -653,7 +641,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         longitude < -180 ||
         longitude > 180) {
       setState(() {
-        _destinationError = 'Choose a destination or enter valid coordinates.';
+        _destinationError = 'Choose a destination or enter valid coordinates';
         _showCoordinates = true;
       });
       return;

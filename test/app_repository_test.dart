@@ -59,6 +59,14 @@ void main() {
 
     expect(repository.loadBackgroundTrackingEnabled(), isTrue);
   });
+
+  test('persists the Google Sans preference', () async {
+    expect(repository.loadUseGoogleSans(), isTrue);
+
+    await repository.saveUseGoogleSans(false);
+
+    expect(repository.loadUseGoogleSans(), isFalse);
+  });
 }
 
 Reminder _reminder(String id, {String title = 'Station'}) => Reminder(

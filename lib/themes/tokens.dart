@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+/// App-level typography tokens used by the shared themes.
+abstract final class AppTypography {
+  static const String googleSans = 'GoogleSans';
+}
+
 /// App-level spacing tokens based on a 4dp grid.
 ///
 /// Avoid arbitrary per-screen values: prefer these constants so cards,

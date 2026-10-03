@@ -212,7 +212,23 @@ abstract final class AppTheme {
     ),
   );
 
-  static ThemeData _build(ColorScheme colors) {
+  static final _googleSansThemeLight = _build(
+    themeLight.colorScheme,
+    fontFamily: AppTypography.googleSans,
+  );
+
+  static final _googleSansThemeDark = _build(
+    themeDark.colorScheme,
+    fontFamily: AppTypography.googleSans,
+  );
+
+  static ThemeData light({required bool useGoogleSans}) =>
+      useGoogleSans ? _googleSansThemeLight : themeLight;
+
+  static ThemeData dark({required bool useGoogleSans}) =>
+      useGoogleSans ? _googleSansThemeDark : themeDark;
+
+  static ThemeData _build(ColorScheme colors, {String? fontFamily}) {
     final border = OutlineInputBorder(
       borderRadius: AppRadius.textFieldRadius,
       borderSide: BorderSide.none,
@@ -224,6 +240,7 @@ abstract final class AppTheme {
 
     return ThemeData(
       colorScheme: colors,
+      fontFamily: fontFamily,
       scaffoldBackgroundColor: colors.surface,
       appBarTheme: AppBarTheme(
         centerTitle: false,
@@ -233,6 +250,7 @@ abstract final class AppTheme {
         foregroundColor: colors.onSurface,
         titleTextStyle: TextStyle(
           color: colors.onSurface,
+          fontFamily: fontFamily,
           fontSize: 22,
           fontWeight: FontWeight.w600,
           height: 1.3,
@@ -254,12 +272,14 @@ abstract final class AppTheme {
         ),
         titleTextStyle: TextStyle(
           color: colors.onSurface,
+          fontFamily: fontFamily,
           fontSize: 24,
           fontWeight: FontWeight.w400,
           height: 32 / 24,
         ),
         contentTextStyle: TextStyle(
           color: colors.onSurfaceVariant,
+          fontFamily: fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w400,
           height: 1.5,
@@ -289,14 +309,27 @@ abstract final class AppTheme {
           horizontal: 16,
           vertical: 14,
         ),
-        labelStyle: TextStyle(color: colors.onSurfaceVariant, fontSize: 16),
-        hintStyle: TextStyle(color: colors.onSurfaceVariant, fontSize: 16),
-        helperStyle: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+        labelStyle: TextStyle(
+          color: colors.onSurfaceVariant,
+          fontFamily: fontFamily,
+          fontSize: 16,
+        ),
+        hintStyle: TextStyle(
+          color: colors.onSurfaceVariant,
+          fontFamily: fontFamily,
+          fontSize: 16,
+        ),
+        helperStyle: TextStyle(
+          color: colors.onSurfaceVariant,
+          fontFamily: fontFamily,
+          fontSize: 14,
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(AppControlHeights.control),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
+            fontFamily: fontFamily,
             fontSize: 15,
             fontWeight: FontWeight.w600,
             height: 1.4,
@@ -307,7 +340,8 @@ abstract final class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size.fromHeight(AppControlHeights.control),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
+            fontFamily: fontFamily,
             fontSize: 14,
             fontWeight: FontWeight.w600,
             height: 1.4,
@@ -320,7 +354,8 @@ abstract final class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           minimumSize: const Size(64, AppControlHeights.control),
-          textStyle: const TextStyle(
+          textStyle: TextStyle(
+            fontFamily: fontFamily,
             fontSize: 14,
             fontWeight: FontWeight.w600,
             height: 1.4,
@@ -332,6 +367,7 @@ abstract final class AppTheme {
         backgroundColor: Colors.transparent,
         selectedColor: colors.primaryContainer.withAlpha(79),
         labelStyle: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: colors.onSurface,
@@ -377,49 +413,59 @@ abstract final class AppTheme {
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: colors.inverseSurface,
-        contentTextStyle: TextStyle(color: colors.onInverseSurface),
+        contentTextStyle: TextStyle(
+          color: colors.onInverseSurface,
+          fontFamily: fontFamily,
+        ),
       ),
       sliderTheme: SliderThemeData(
         tickMarkShape: SliderTickMarkShape.noTickMark,
       ),
       textTheme: TextTheme(
         headlineSmall: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 24,
           fontWeight: FontWeight.w400,
           height: 32 / 24,
           color: colors.onSurface,
         ),
         titleLarge: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 22,
           fontWeight: FontWeight.w400,
           height: 28 / 22,
           color: colors.onSurface,
         ),
         titleMedium: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 16,
           fontWeight: FontWeight.w500,
           height: 1.5,
           color: colors.onSurface,
         ),
         bodyLarge: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 16,
           fontWeight: FontWeight.w400,
           height: 1.5,
           color: colors.onSurface,
         ),
         bodyMedium: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w400,
           height: 1.45,
           color: colors.onSurface,
         ),
         bodySmall: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 12,
           fontWeight: FontWeight.w400,
           height: 16 / 12,
           color: colors.onSurface,
         ),
-        labelLarge: const TextStyle(
+        labelLarge: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w600,
           height: 1.4,
@@ -448,8 +494,13 @@ abstract final class AppTheme {
           shape: WidgetStatePropertyAll(
             RoundedRectangleBorder(borderRadius: AppRadius.buttonRadius),
           ),
-          textStyle: const WidgetStatePropertyAll(
-            TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.4),
+          textStyle: WidgetStatePropertyAll(
+            TextStyle(
+              fontFamily: fontFamily,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
           ),
         ),
       ),
