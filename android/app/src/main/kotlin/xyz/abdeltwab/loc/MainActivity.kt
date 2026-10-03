@@ -1,7 +1,9 @@
 package xyz.abdeltwab.loc
 
+import android.app.NotificationManager
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
@@ -57,6 +59,11 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "openNotificationSettings" -> {
                     openNotificationSettings()
+                    result.success(null)
+                }
+
+                "openNotificationChannelSettings" -> {
+                    openNotificationChannelSettings(call.arguments as? String)
                     result.success(null)
                 }
 
@@ -126,6 +133,28 @@ class MainActivity : FlutterActivity() {
             )
         } catch (_: Exception) {
             openAppSettings()
+        }
+    }
+
+    private fun openNotificationChannelSettings(channelId: String?) {
+        if (channelId == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            openNotificationSettings()
+            return
+        }
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        if (notificationManager?.getNotificationChannel(channelId) == null) {
+            openNotificationSettings()
+            return
+        }
+        try {
+            startActivity(
+                Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                    putExtra(Settings.EXTRA_CHANNEL_ID, channelId)
+                },
+            )
+        } catch (_: Exception) {
+            openNotificationSettings()
         }
     }
 }

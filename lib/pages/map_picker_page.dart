@@ -9,6 +9,7 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/services/geocoding_service.dart';
 import 'package:loc/data/services/location_service.dart';
+import 'package:loc/themes/tokens.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,6 +30,9 @@ class _MapPickerPageState extends State<MapPickerPage> {
   );
   late LatLng _center;
   bool _selecting = false;
+  bool _tilesFailed = false;
+  bool _tileLoaded = false;
+  int _tileFailureCount = 0;
 
   @override
   void initState() {
@@ -49,49 +53,120 @@ class _MapPickerPageState extends State<MapPickerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final toolbarHeight =
+        (textScaler.scale(22) * 1.3 + textScaler.scale(12) * 16 / 12 + 18)
+            .clamp(72.0, 144.0);
+
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 72,
-        title: const Column(
+        toolbarHeight: toolbarHeight,
+        title: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Choose destination'),
-            SizedBox(height: 2),
+            const Text('Choose destination'),
+            const SizedBox(height: 2),
             Text(
               'Pan and zoom the map under the pin',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.normal),
+              style: theme.textTheme.bodySmall,
             ),
           ],
         ),
       ),
-      body: Stack(
+      body: Column(
         children: [
-          FlutterMap(
-            mapController: _map,
-            options: MapOptions(
-              initialCenter: _center,
-              initialZoom: 14,
-              minZoom: 2,
-              maxZoom: 19,
-              onPositionChanged: (camera, hasGesture) {
-                _center = camera.center;
-              },
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                tileProvider: _tileProvider,
-                evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+          if (_tilesFailed)
+            Material(
+              color: colors.surfaceContainerHigh,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.cloud_off_outlined,
+                      size: 18,
+                      color: colors.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Map tiles are unavailable. You can still choose a location.',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 100),
-                child: SafeArea(
-                  child: Align(
-                    alignment: Alignment.bottomLeft,
-                    child: ColoredBox(
-                      color: colors.surface.withValues(alpha: 0.8),
+            ),
+          Expanded(
+            child: Stack(
+              children: [
+                Container(
+                  color: colors.surfaceContainerHighest,
+                  child: FlutterMap(
+                    mapController: _map,
+                    options: MapOptions(
+                      initialCenter: _center,
+                      initialZoom: 14,
+                      minZoom: 2,
+                      maxZoom: 19,
+                      backgroundColor: colors.surfaceContainerHighest,
+                      onPositionChanged: (camera, hasGesture) {
+                        _center = camera.center;
+                      },
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        tileProvider: _tileProvider,
+                        evictErrorTileStrategy: EvictErrorTileStrategy.dispose,
+                        errorTileCallback: (tile, error, stackTrace) {
+                          _tileFailureCount++;
+                          if (mounted &&
+                              !_tileLoaded &&
+                              !_tilesFailed &&
+                              _tileFailureCount >= 3) {
+                            setState(() => _tilesFailed = true);
+                          }
+                        },
+                        tileBuilder: (context, tileWidget, tile) {
+                          if (tile.loadError) {
+                            return Container(
+                              color: colors.surfaceContainerHigh,
+                              child: Center(
+                                child: Icon(
+                                  Icons.map_outlined,
+                                  color: colors.outline,
+                                  size: 28,
+                                ),
+                              ),
+                            );
+                          }
+                          if (!_tileLoaded && tile.imageInfo != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (!mounted || _tileLoaded) return;
+                              setState(() {
+                                _tileLoaded = true;
+                                _tilesFailed = false;
+                              });
+                            });
+                          }
+                          return tileWidget;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  left: 8,
+                  bottom: -16,
+                  child: SafeArea(
+                    child: Material(
+                      color: colors.surface.withValues(alpha: 0.79),
                       child: InkWell(
                         onTap: () => unawaited(
                           launchUrl(
@@ -102,63 +177,84 @@ class _MapPickerPageState extends State<MapPickerPage> {
                           ),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: Text(
-                            '© OpenStreetMap contributors',
-                            style: Theme.of(context).textTheme.labelSmall,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Center(
+                            child: Text(
+                              '© OpenStreetMap contributors',
+                              style: theme.textTheme.labelSmall,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          IgnorePointer(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 44),
-                child: Icon(
-                  Icons.location_pin,
-                  size: 58,
-                  color: colors.tertiary,
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Spacer(),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FloatingActionButton.small(
-                      heroTag: 'my-location',
-                      tooltip: 'My location',
-                      onPressed: _moveToCurrent,
-                      child: const Icon(Icons.my_location_rounded),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _selecting ? null : _select,
-                      icon: _selecting
-                          ? const SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check_rounded),
-                      label: Text(
-                        _selecting ? 'Finding address…' : 'Use this location',
+                IgnorePointer(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 44),
+                      child: Icon(
+                        Icons.location_pin,
+                        size: 58,
+                        color: colors.tertiary,
+                        shadows: [
+                          Shadow(
+                            color: colors.scrim.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
+                ),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.page),
+                    child: Column(
+                      children: [
+                        const Spacer(),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FloatingActionButton.small(
+                            heroTag: 'my-location',
+                            tooltip: 'My location',
+                            onPressed: _moveToCurrent,
+                            child: const Icon(Icons.my_location_rounded),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Material(
+            color: colors.surface,
+            elevation: 2,
+            child: SafeArea(
+              top: false,
+              minimum: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.compact,
+                AppSpacing.page,
+                AppSpacing.page,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _selecting ? null : _select,
+                  icon: _selecting
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check_rounded),
+                  label: Text(
+                    _selecting ? 'Finding address…' : 'Use this location',
+                  ),
+                ),
               ),
             ),
           ),
