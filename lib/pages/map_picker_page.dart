@@ -162,8 +162,8 @@ class _MapPickerPageState extends State<MapPickerPage> {
                   ),
                 ),
                 Positioned(
-                  left: 8,
-                  bottom: -16,
+                  left: 16,
+                  bottom: 0,
                   child: SafeArea(
                     child: Material(
                       color: colors.surface.withValues(alpha: 0.79),
