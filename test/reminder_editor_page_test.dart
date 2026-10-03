@@ -119,7 +119,7 @@ void main() {
     await tester.pump();
 
     expect(
-      find.text('Repeats using your alarm volume until dismissed.'),
+      find.text('Repeats using your alarm volume until dismissed'),
       findsOneWidget,
     );
     expect(find.text('Alarm settings'), findsNothing);
