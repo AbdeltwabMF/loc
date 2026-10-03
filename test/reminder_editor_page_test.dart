@@ -46,11 +46,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Choose in another map'), findsOneWidget);
-    expect(find.text('Choose your destination'), findsOneWidget);
+    expect(find.text('Choose the destination'), findsOneWidget);
     expect(find.text('Tap Share'), findsOneWidget);
     expect(find.text('Select Loc'), findsOneWidget);
     expect(find.text("Don't show this again"), findsOneWidget);
     expect(find.text('Open map'), findsOneWidget);
+    // Numbered steps replace the old decorative connector lines/icons.
+    expect(find.text('1'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('3'), findsOneWidget);
 
     final dialog = find.byType(AlertDialog);
     expect(
@@ -58,11 +62,11 @@ void main() {
         of: dialog,
         matching: find.byIcon(Icons.location_on_outlined),
       ),
-      findsOneWidget,
+      findsNothing,
     );
     expect(
       find.descendant(of: dialog, matching: find.byIcon(Icons.share_outlined)),
-      findsOneWidget,
+      findsNothing,
     );
     final locIcon = tester.widget<Image>(
       find.descendant(of: dialog, matching: find.byType(Image)),
@@ -73,9 +77,9 @@ void main() {
     );
     final theme = Theme.of(tester.element(dialog)).dialogTheme;
     final optOutLabel = tester.widget<Text>(find.text("Don't show this again"));
-    expect(theme.titleTextStyle?.fontSize, 16);
+    expect(theme.titleTextStyle?.fontSize, 24);
     expect(theme.titleTextStyle?.fontWeight, FontWeight.w400);
-    expect(optOutLabel.style?.fontSize, 12);
+    expect(optOutLabel.style?.fontSize, 14);
     expect(find.byType(CheckboxListTile), findsNothing);
     expect(find.byIcon(Icons.check_box_outline_blank_rounded), findsOneWidget);
     expect(

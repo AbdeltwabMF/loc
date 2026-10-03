@@ -1,0 +1,5 @@
+Loc 2.2.0
+
+- Moved settings and app information into the overflow menu
+- Clarified the external map sharing workflow
+- Exposed Android arrival alarm channel settings

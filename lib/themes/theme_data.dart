@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loc/themes/tokens.dart';
 
 abstract final class Gruvbox {
   static const light = GruvboxPalette(
@@ -138,114 +139,140 @@ abstract final class AppTheme {
   static final themeLight = _build(
     ColorScheme(
       brightness: Brightness.light,
-      primary: Gruvbox.light.purpleHard,
+      primary: Gruvbox.light.blueHard,
       onPrimary: Gruvbox.light.bg,
-      primaryContainer: Gruvbox.light.bg,
-      onPrimaryContainer: Gruvbox.light.fg0,
-      secondary: Gruvbox.light.aquaHard,
+      primaryContainer: Gruvbox.light.blueSoft,
+      onPrimaryContainer: Gruvbox.light.bg,
+      secondary: Gruvbox.light.greenHard,
       onSecondary: Gruvbox.light.bg,
-      secondaryContainer: Gruvbox.light.bg1,
-      onSecondaryContainer: Gruvbox.light.fg0,
-      tertiary: Gruvbox.light.blueHard,
+      secondaryContainer: Gruvbox.light.greenSoft,
+      onSecondaryContainer: Gruvbox.light.bg,
+      tertiary: Gruvbox.light.orangeHard,
       onTertiary: Gruvbox.light.bg,
-      tertiaryContainer: Gruvbox.light.bg2,
-      onTertiaryContainer: Gruvbox.light.fg0,
+      tertiaryContainer: Gruvbox.light.orangeSoft,
+      onTertiaryContainer: Gruvbox.light.bg,
       error: Gruvbox.light.redHard,
       onError: Gruvbox.light.bg,
-      errorContainer: Gruvbox.light.redHard,
+      errorContainer: Gruvbox.light.redSoft,
       onErrorContainer: Gruvbox.light.bg,
       surface: Gruvbox.light.bg,
-      onSurface: Gruvbox.light.fg0,
+      onSurface: Gruvbox.light.fg,
       surfaceContainerLowest: Gruvbox.light.bg0H,
       surfaceContainerLow: Gruvbox.light.bg0,
       surfaceContainer: Gruvbox.light.bg0S,
       surfaceContainerHigh: Gruvbox.light.bg1,
       surfaceContainerHighest: Gruvbox.light.bg2,
-      onSurfaceVariant: Gruvbox.light.fg2,
+      onSurfaceVariant: Gruvbox.light.fg1,
       outline: Gruvbox.light.grayHard,
-      outlineVariant: Gruvbox.light.bg3,
-      shadow: Gruvbox.light.fg0,
-      scrim: Gruvbox.light.fg0,
-      inverseSurface: Gruvbox.light.fg0,
+      outlineVariant: Gruvbox.light.graySoft,
+      shadow: Gruvbox.light.fg,
+      scrim: Gruvbox.light.fg,
+      inverseSurface: Gruvbox.light.fg,
       onInverseSurface: Gruvbox.light.bg,
-      inversePrimary: Gruvbox.dark.purpleHard,
-      surfaceTint: Gruvbox.light.purpleHard,
+      inversePrimary: Gruvbox.dark.blueSoft,
+      surfaceTint: Gruvbox.light.blueSoft,
     ),
   );
 
   static final themeDark = _build(
     ColorScheme(
       brightness: Brightness.dark,
-      primary: Gruvbox.dark.purpleSoft,
+      primary: Gruvbox.dark.blueSoft,
       onPrimary: Gruvbox.dark.bg,
-      primaryContainer: Gruvbox.dark.bg,
-      onPrimaryContainer: Gruvbox.dark.fg0,
-      secondary: Gruvbox.dark.aquaSoft,
-      onSecondary: Gruvbox.dark.fg,
-      secondaryContainer: Gruvbox.dark.bg1,
-      onSecondaryContainer: Gruvbox.dark.fg0,
-      tertiary: Gruvbox.dark.blueSoft,
+      primaryContainer: Gruvbox.dark.blueHard,
+      onPrimaryContainer: Gruvbox.dark.bg,
+      secondary: Gruvbox.dark.greenSoft,
+      onSecondary: Gruvbox.dark.bg,
+      secondaryContainer: Gruvbox.dark.greenHard,
+      onSecondaryContainer: Gruvbox.dark.bg,
+      tertiary: Gruvbox.dark.orangeSoft,
       onTertiary: Gruvbox.dark.bg,
-      tertiaryContainer: Gruvbox.dark.bg2,
-      onTertiaryContainer: Gruvbox.dark.fg0,
+      tertiaryContainer: Gruvbox.dark.orangeHard,
+      onTertiaryContainer: Gruvbox.dark.bg,
       error: Gruvbox.dark.redSoft,
-      onError: Gruvbox.dark.fg,
-      errorContainer: Gruvbox.dark.redSoft,
-      onErrorContainer: Gruvbox.dark.fg0,
+      onError: Gruvbox.dark.bg,
+      errorContainer: Gruvbox.dark.redHard,
+      onErrorContainer: Gruvbox.dark.bg,
       surface: Gruvbox.dark.bg,
-      onSurface: Gruvbox.dark.fg0,
+      onSurface: Gruvbox.dark.fg,
       surfaceContainerLowest: Gruvbox.dark.bg0H,
       surfaceContainerLow: Gruvbox.dark.bg0,
       surfaceContainer: Gruvbox.dark.bg0S,
       surfaceContainerHigh: Gruvbox.dark.bg1,
       surfaceContainerHighest: Gruvbox.dark.bg2,
-      onSurfaceVariant: Gruvbox.dark.fg2,
-      outline: Gruvbox.dark.graySoft,
-      outlineVariant: Gruvbox.dark.bg3,
-      shadow: Gruvbox.dark.fg0,
-      scrim: Gruvbox.dark.fg0,
-      inverseSurface: Gruvbox.dark.fg0,
+      onSurfaceVariant: Gruvbox.dark.fg1,
+      outline: Gruvbox.dark.grayHard,
+      outlineVariant: Gruvbox.dark.graySoft,
+      shadow: Gruvbox.dark.fg,
+      scrim: Gruvbox.dark.fg,
+      inverseSurface: Gruvbox.dark.fg,
       onInverseSurface: Gruvbox.dark.bg,
-      inversePrimary: Gruvbox.light.purpleSoft,
-      surfaceTint: Gruvbox.dark.purpleSoft,
+      inversePrimary: Gruvbox.light.blueHard,
+      surfaceTint: Gruvbox.dark.blueHard,
     ),
   );
 
   static ThemeData _build(ColorScheme colors) {
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: AppRadius.textFieldRadius,
       borderSide: BorderSide.none,
     );
+
+    final controlShape = RoundedRectangleBorder(
+      borderRadius: AppRadius.buttonRadius,
+    );
+
     return ThemeData(
-      useMaterial3: true,
       colorScheme: colors,
       scaffoldBackgroundColor: colors.surface,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
         scrolledUnderElevation: 0,
+        backgroundColor: colors.surface,
+        foregroundColor: colors.onSurface,
+        titleTextStyle: TextStyle(
+          color: colors.onSurface,
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          height: 1.3,
+        ),
       ),
       cardTheme: CardThemeData(
         margin: EdgeInsets.zero,
         elevation: 0,
         color: colors.surfaceContainer,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.cardRadius),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: colors.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.dialogRadius),
+        insetPadding: const EdgeInsets.symmetric(
+          horizontal: 32,
+          vertical: AppSpacing.group,
+        ),
         titleTextStyle: TextStyle(
           color: colors.onSurface,
-          fontSize: 16,
+          fontSize: 24,
           fontWeight: FontWeight.w400,
-          height: 1.3,
+          height: 32 / 24,
         ),
         contentTextStyle: TextStyle(
           color: colors.onSurfaceVariant,
           fontSize: 14,
           fontWeight: FontWeight.w400,
-          height: 1.4,
+          height: 1.5,
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: colors.surfaceContainerHigh,
+        surfaceTintColor: Colors.transparent,
+        elevation: 2,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.menuRadius,
+          side: BorderSide(color: colors.outlineVariant),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -259,21 +286,71 @@ abstract final class AppTheme {
           borderSide: BorderSide(color: colors.primary, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 16,
+          horizontal: 16,
+          vertical: 14,
+        ),
+        labelStyle: TextStyle(color: colors.onSurfaceVariant, fontSize: 16),
+        hintStyle: TextStyle(color: colors.onSurfaceVariant, fontSize: 16),
+        helperStyle: TextStyle(color: colors.onSurfaceVariant, fontSize: 14),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(AppControlHeights.control),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+          ),
+          shape: controlShape,
         ),
       ),
-      navigationBarTheme: NavigationBarThemeData(
-        elevation: 0,
-        backgroundColor: colors.surfaceContainerHigh,
-        indicatorColor: colors.primaryContainer,
-        height: 72,
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(AppControlHeights.control),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+          ),
+          side: BorderSide(color: colors.outlineVariant),
+          foregroundColor: colors.onSurface,
+          shape: controlShape,
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          minimumSize: const Size(64, AppControlHeights.control),
+          textStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.buttonRadius),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: Colors.transparent,
+        selectedColor: colors.primaryContainer.withAlpha(79),
+        labelStyle: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: colors.onSurface,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.chipRadius),
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => BorderSide(
+            color: states.contains(WidgetState.selected)
+                ? colors.primary
+                : colors.outlineVariant,
+          ),
+        ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: colors.primary,
         foregroundColor: colors.onPrimary,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.fabRadius),
       ),
       switchTheme: SwitchThemeData(
         thumbIcon: WidgetStateProperty.resolveWith(
@@ -281,11 +358,14 @@ abstract final class AppTheme {
             states.contains(WidgetState.selected)
                 ? Icons.check_rounded
                 : Icons.close_rounded,
+            color: states.contains(WidgetState.selected)
+                ? colors.primary
+                : colors.onInverseSurface,
           ),
         ),
         thumbColor: WidgetStateProperty.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? colors.primaryContainer
+              ? colors.onPrimary
               : colors.outline,
         ),
         trackOutlineColor: WidgetStateProperty.resolveWith(
@@ -299,27 +379,77 @@ abstract final class AppTheme {
         backgroundColor: colors.inverseSurface,
         contentTextStyle: TextStyle(color: colors.onInverseSurface),
       ),
-      textTheme: const TextTheme(
-        headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-        titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-        titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        bodyLarge: TextStyle(fontSize: 16, height: 1.4),
-        bodyMedium: TextStyle(fontSize: 14, height: 1.4),
+      sliderTheme: SliderThemeData(
+        tickMarkShape: SliderTickMarkShape.noTickMark,
+      ),
+      textTheme: TextTheme(
+        headlineSmall: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w400,
+          height: 32 / 24,
+          color: colors.onSurface,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w400,
+          height: 28 / 22,
+          color: colors.onSurface,
+        ),
+        titleMedium: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          height: 1.5,
+          color: colors.onSurface,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          height: 1.5,
+          color: colors.onSurface,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          height: 1.45,
+          color: colors.onSurface,
+        ),
+        bodySmall: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          height: 16 / 12,
+          color: colors.onSurface,
+        ),
+        labelLarge: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          height: 1.4,
+        ),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
+          minimumSize: const WidgetStatePropertyAll(
+            Size(0, AppControlHeights.control),
+          ),
           backgroundColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return colors.tertiaryContainer;
+              return colors.primaryContainer;
             }
             return Colors.transparent;
           }),
-          textStyle: WidgetStateProperty.resolveWith(
-            (states) => TextStyle(
-              fontWeight: states.contains(WidgetState.selected)
-                  ? FontWeight.w700
-                  : FontWeight.w500,
-            ),
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return colors.onPrimaryContainer;
+            }
+            return colors.onSurfaceVariant;
+          }),
+          side: WidgetStatePropertyAll(
+            BorderSide(color: colors.outlineVariant),
+          ),
+          shape: WidgetStatePropertyAll(
+            RoundedRectangleBorder(borderRadius: AppRadius.buttonRadius),
+          ),
+          textStyle: const WidgetStatePropertyAll(
+            TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.4),
           ),
         ),
       ),

@@ -4,7 +4,7 @@ repository: https://github.com/AbdeltwabMF/loc
 homepage: https://loc.abdeltwab.xyz
 publish_to: 'none'
 
-version: 2.1.0+107
+version: 2.2.0+108
 
 environment:
   sdk: '>=3.12.0 <4.0.0'

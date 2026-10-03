@@ -6,8 +6,11 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/geo_uri_service.dart';
+import 'package:loc/data/services/notification_service.dart';
 import 'package:loc/pages/map_picker_page.dart';
 import 'package:loc/place_presentation.dart';
+import 'package:loc/themes/tokens.dart';
+import 'package:loc/widgets/app_components.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -116,14 +119,19 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            AppSpacing.compact,
+            AppSpacing.page,
+            AppSpacing.group,
+          ),
           children: [
             _EditorSection(
               icon: Icons.location_on_outlined,
               title: 'Destination',
               child: _buildDestination(context),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             _EditorSection(
               icon: Icons.notifications_none_rounded,
               title: 'Alert',
@@ -132,25 +140,29 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                 children: [
                   Row(
                     children: [
-                      Expanded(
+                      Flexible(
                         child: Text(
-                          'Notify me when I\'m within',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          'Notify me when I’m within',
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
                       ),
+                      const SizedBox(width: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
+                          horizontal: 8,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: colors.secondaryContainer,
-                          borderRadius: BorderRadius.circular(20),
+                          color: colors.tertiaryContainer,
+                          borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
                           _formatDistance(_radius.round()),
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: colors.onSecondaryContainer),
+                              ?.copyWith(color: colors.onTertiaryContainer),
                         ),
                       ),
                     ],
@@ -179,7 +191,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                       ),
                     ],
                   ),
-                  const Divider(height: 28),
+                  const Divider(height: AppSpacing.group),
                   SegmentedButton<ReminderAlertStyle>(
                     expandedInsets: EdgeInsets.zero,
                     segments: [
@@ -219,25 +231,35 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                       ReminderAlertStyle.vibration =>
                         'Vibrates without playing a sound.',
                       ReminderAlertStyle.alarm =>
-                        'Rings repeatedly until dismissed.',
+                        'Repeats using your Arrival alarms channel and alarm volume.',
                     },
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,
                     ),
                   ),
+                  if (_alertStyle == ReminderAlertStyle.alarm)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: NotificationService.openAlarmSettings,
+                        child: const Text('Alarm settings'),
+                      ),
+                    ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.surface,
-          border: Border(top: BorderSide(color: colors.outlineVariant)),
-        ),
+      bottomNavigationBar: ColoredBox(
+        color: colors.surface,
         child: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+          minimum: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            10,
+            AppSpacing.page,
+            AppSpacing.compact,
+          ),
           child: ValueListenableBuilder<bool>(
             valueListenable: GeoUriService.isResolving,
             builder: (context, isResolving, _) {
@@ -271,19 +293,25 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     final colors = Theme.of(context).colorScheme;
     final place = _selectedPlace;
     final stackActions = MediaQuery.textScalerOf(context).scale(16) >= 24;
+    final secondaryStyle = OutlinedButton.styleFrom(
+      minimumSize: const Size.fromHeight(AppControlHeights.control),
+      side: BorderSide(color: colors.outlineVariant),
+      foregroundColor: colors.onSurfaceVariant,
+    );
     final otherMapButton = OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+      style: secondaryStyle,
       onPressed: _pickWithExternalMap,
-      icon: const Icon(Icons.open_in_new_rounded),
+      icon: const Icon(Icons.open_in_new_rounded, size: 20),
       label: const Text('Other map'),
     );
     final coordinatesButton = OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+      style: secondaryStyle,
       onPressed: () => setState(() => _showCoordinates = !_showCoordinates),
       icon: Icon(
         _showCoordinates
             ? Icons.keyboard_arrow_up_rounded
             : Icons.location_on_outlined,
+        size: 20,
       ),
       label: Text(_showCoordinates ? 'Hide coords' : 'Coords'),
     );
@@ -315,10 +343,10 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         const SizedBox(height: 10),
         if (place != null)
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpacing.compact),
             decoration: BoxDecoration(
               border: Border.all(color: colors.outlineVariant),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppRadius.chipRadius,
             ),
             child: Row(
               children: [
@@ -343,13 +371,13 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         else
           FilledButton.tonalIcon(
             style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-              backgroundColor: colors.tertiary,
-              foregroundColor: colors.onTertiary,
+              minimumSize: const Size.fromHeight(AppControlHeights.control),
+              backgroundColor: colors.secondary,
+              foregroundColor: colors.onSecondary,
             ),
             onPressed: _pickOnMap,
             icon: const Icon(Icons.map_outlined),
-            label: const Text('Pick on Loc map'),
+            label: const Text('Choose on map'),
           ),
         const SizedBox(height: 8),
         if (stackActions)
@@ -482,25 +510,6 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         builder: (dialogContext) => StatefulBuilder(
           builder: (context, setDialogState) {
             final colors = Theme.of(context).colorScheme;
-            Widget step(Widget leading, String label) => Row(
-              children: [
-                SizedBox.square(
-                  dimension: 28,
-                  child: Center(child: ExcludeSemantics(child: leading)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(child: Text(label)),
-              ],
-            );
-            Widget connector() => Padding(
-              padding: const EdgeInsets.only(left: 13),
-              child: Container(
-                width: 2,
-                height: 14,
-                color: colors.outlineVariant,
-              ),
-            );
-
             return AlertDialog(
               scrollable: true,
               title: const Text('Choose in another map'),
@@ -508,29 +517,27 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  step(
-                    Icon(
-                      Icons.location_on_outlined,
-                      size: 20,
-                      color: colors.primary,
-                    ),
-                    'Choose your destination',
+                  const NumberedStep(
+                    number: 1,
+                    label: 'Choose the destination',
                   ),
-                  connector(),
-                  step(
-                    Icon(Icons.share_outlined, size: 20, color: colors.primary),
-                    'Tap Share',
+                  const SizedBox(height: 10),
+                  const NumberedStep(
+                    number: 2,
+                    label: 'Tap Share',
                   ),
-                  connector(),
-                  step(
-                    Image.asset(
+                  const SizedBox(height: 10),
+                  NumberedStep(
+                    number: 3,
+                    label: 'Select Loc',
+                    trailing: Image.asset(
                       'assets/icons/app_icon.png',
-                      width: 28,
-                      height: 28,
+                      width: 24,
+                      height: 24,
+                      semanticLabel: 'Loc icon',
                     ),
-                    'Select Loc',
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Semantics(
                     checked: hideGuidance,
                     label: "Don't show this again",
@@ -538,30 +545,37 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                         setDialogState(() => hideGuidance = !hideGuidance),
                     child: ExcludeSemantics(
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppRadius.chipRadius,
                         onTap: () =>
                             setDialogState(() => hideGuidance = !hideGuidance),
                         child: SizedBox(
                           width: double.infinity,
-                          height: 48,
-                          child: Row(
-                            children: [
-                              Icon(
-                                hideGuidance
-                                    ? Icons.check_box_rounded
-                                    : Icons.check_box_outline_blank_rounded,
-                                size: 18,
-                                color: hideGuidance
-                                    ? colors.primary
-                                    : colors.onSurfaceVariant,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                "Don't show this again",
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: colors.onSurfaceVariant),
-                              ),
-                            ],
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minHeight: AppControlHeights.control,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  hideGuidance
+                                      ? Icons.check_box_rounded
+                                      : Icons.check_box_outline_blank_rounded,
+                                  size: 20,
+                                  color: hideGuidance
+                                      ? colors.primary
+                                      : colors.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    "Don't show this again",
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -709,32 +723,6 @@ class _EditorSection extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, color: colors.primary, size: 24),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) =>
+      AppSectionCard(icon: icon, title: title, child: child);
 }

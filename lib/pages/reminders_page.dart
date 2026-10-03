@@ -10,16 +10,29 @@ import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/compass_service.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
 import 'package:loc/place_presentation.dart';
+import 'package:loc/themes/tokens.dart';
+import 'package:loc/widgets/app_components.dart';
 import 'package:provider/provider.dart';
 
 enum ReminderFilter { all, pinned, active, arrived, paused }
 
 enum _ReminderAction { pin, delete }
 
-class RemindersPage extends StatefulWidget {
-  const RemindersPage({this.isActive = true, super.key});
+enum _ReminderMenuAction { settings, sourceCode, privacyPolicy, about }
 
-  final bool isActive;
+class RemindersPage extends StatefulWidget {
+  const RemindersPage({
+    required this.onSettingsPressed,
+    required this.onSourceCodePressed,
+    required this.onPrivacyPolicyPressed,
+    required this.onAboutPressed,
+    super.key,
+  });
+
+  final VoidCallback onSettingsPressed;
+  final VoidCallback onSourceCodePressed;
+  final VoidCallback onPrivacyPolicyPressed;
+  final VoidCallback onAboutPressed;
 
   @override
   State<RemindersPage> createState() => _RemindersPageState();
@@ -39,27 +52,15 @@ class _RemindersPageState extends State<RemindersPage>
     WidgetsBinding.instance.addObserver(this);
     _lifecycleState =
         WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed;
-    if (widget.isActive && _lifecycleState == AppLifecycleState.resumed) {
+    if (_lifecycleState == AppLifecycleState.resumed) {
       _startCompass();
-    }
-  }
-
-  @override
-  void didUpdateWidget(RemindersPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isActive &&
-        !oldWidget.isActive &&
-        _lifecycleState == AppLifecycleState.resumed) {
-      _startCompass();
-    } else if (!widget.isActive && oldWidget.isActive) {
-      _stopCompass();
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _lifecycleState = state;
-    if (state == AppLifecycleState.resumed && widget.isActive) {
+    if (state == AppLifecycleState.resumed) {
       _startCompass();
     } else {
       _stopCompass();
@@ -112,6 +113,14 @@ class _RemindersPageState extends State<RemindersPage>
       ...matchingReminders.where((item) => item.isPinned),
       ...matchingReminders.where((item) => !item.isPinned),
     ];
+    final textScaler = MediaQuery.textScalerOf(context);
+    final headerExtent = math.max(
+      180.0,
+      math.max(48.0, textScaler.scale(24) * 32 / 24 + 8) +
+          math.max(48.0, textScaler.scale(16) * 1.5 + 28) +
+          16 +
+          math.max(48.0, textScaler.scale(14) * 1.4 + 24),
+    );
 
     return CustomScrollView(
       slivers: [
@@ -119,6 +128,11 @@ class _RemindersPageState extends State<RemindersPage>
           pinned: true,
           delegate: _ReminderHeaderDelegate(
             selectedFilter: _filter,
+            extent: headerExtent,
+            onSettingsPressed: widget.onSettingsPressed,
+            onSourceCodePressed: widget.onSourceCodePressed,
+            onPrivacyPolicyPressed: widget.onPrivacyPolicyPressed,
+            onAboutPressed: widget.onAboutPressed,
             onQueryChanged: (value) => setState(() => _query = value),
             onFilterSelected: (filter) => setState(() => _filter = filter),
           ),
@@ -130,10 +144,16 @@ class _RemindersPageState extends State<RemindersPage>
           )
         else
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 112),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.compact,
+              AppSpacing.page,
+              112,
+            ),
             sliver: SliverList.separated(
               itemCount: reminders.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: AppSpacing.compact),
               itemBuilder: (context, index) => _ReminderCard(
                 reminder: reminders[index],
                 currentPosition: state.currentPosition,
@@ -149,21 +169,29 @@ class _RemindersPageState extends State<RemindersPage>
 class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
   const _ReminderHeaderDelegate({
     required this.selectedFilter,
+    required this.extent,
+    required this.onSettingsPressed,
+    required this.onSourceCodePressed,
+    required this.onPrivacyPolicyPressed,
+    required this.onAboutPressed,
     required this.onQueryChanged,
     required this.onFilterSelected,
   });
 
-  static const _extent = 124.0;
-
   final ReminderFilter selectedFilter;
+  final double extent;
+  final VoidCallback onSettingsPressed;
+  final VoidCallback onSourceCodePressed;
+  final VoidCallback onPrivacyPolicyPressed;
+  final VoidCallback onAboutPressed;
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<ReminderFilter> onFilterSelected;
 
   @override
-  double get minExtent => _extent;
+  double get minExtent => extent;
 
   @override
-  double get maxExtent => _extent;
+  double get maxExtent => extent;
 
   @override
   Widget build(
@@ -176,7 +204,81 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
     child: Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.page, 4, 8, 4),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Semantics(
+                    header: true,
+                    child: Text(
+                      'Reminders',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                ),
+                PopupMenuButton<_ReminderMenuAction>(
+                  tooltip: 'More options',
+                  icon: const Icon(Icons.more_vert_rounded),
+                  constraints: const BoxConstraints(
+                    minWidth: 180,
+                    maxWidth: 240,
+                  ),
+                  menuPadding: const EdgeInsets.symmetric(vertical: 6),
+                  onSelected: (action) => switch (action) {
+                    _ReminderMenuAction.settings => onSettingsPressed(),
+                    _ReminderMenuAction.sourceCode => onSourceCodePressed(),
+                    _ReminderMenuAction.privacyPolicy =>
+                      onPrivacyPolicyPressed(),
+                    _ReminderMenuAction.about => onAboutPressed(),
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _ReminderMenuAction.settings,
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: _MenuItem(
+                        icon: Icons.settings_outlined,
+                        label: 'Settings',
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _ReminderMenuAction.sourceCode,
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: _MenuItem(
+                        icon: Icons.code_rounded,
+                        label: 'Source code',
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _ReminderMenuAction.privacyPolicy,
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: _MenuItem(
+                        icon: Icons.privacy_tip_outlined,
+                        label: 'Privacy policy',
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: _ReminderMenuAction.about,
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: _MenuItem(
+                        icon: Icons.info_outline_rounded,
+                        label: 'About',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            4,
+            AppSpacing.page,
+            12,
+          ),
           child: TextField(
             onChanged: onQueryChanged,
             decoration: const InputDecoration(
@@ -186,22 +288,24 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
           ),
         ),
         SizedBox(
-          height: 48,
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+          height: math.max(
+            48,
+            MediaQuery.textScalerOf(context).scale(14) * 1.4 + 24,
+          ),
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
             scrollDirection: Axis.horizontal,
-            children: ReminderFilter.values
-                .map(
-                  (filter) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      selected: selectedFilter == filter,
-                      label: Text(_filterLabel(filter)),
-                      onSelected: (_) => onFilterSelected(filter),
-                    ),
-                  ),
-                )
-                .toList(),
+            itemCount: ReminderFilter.values.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final filter = ReminderFilter.values[index];
+              return FilterChip(
+                selected: selectedFilter == filter,
+                label: Text(_filterLabel(filter)),
+                showCheckmark: false,
+                onSelected: (_) => onFilterSelected(filter),
+              );
+            },
           ),
         ),
       ],
@@ -210,7 +314,12 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(_ReminderHeaderDelegate oldDelegate) =>
-      selectedFilter != oldDelegate.selectedFilter;
+      selectedFilter != oldDelegate.selectedFilter ||
+      extent != oldDelegate.extent ||
+      onSettingsPressed != oldDelegate.onSettingsPressed ||
+      onSourceCodePressed != oldDelegate.onSourceCodePressed ||
+      onPrivacyPolicyPressed != oldDelegate.onPrivacyPolicyPressed ||
+      onAboutPressed != oldDelegate.onAboutPressed;
 
   static String _filterLabel(ReminderFilter filter) => switch (filter) {
     ReminderFilter.all => 'All',
@@ -219,6 +328,29 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
     ReminderFilter.arrived => 'Triggered',
     ReminderFilter.paused => 'Paused',
   };
+}
+
+class _MenuItem extends StatelessWidget {
+  const _MenuItem({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface),
+      const SizedBox(width: 12),
+      Flexible(
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyLarge,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    ],
+  );
 }
 
 class _ReminderCard extends StatelessWidget {
@@ -244,9 +376,42 @@ class _ReminderCard extends StatelessWidget {
     final markerColor = reminder.isArrived
         ? colors.onSecondary
         : colors.onTertiaryContainer;
+    final theme = Theme.of(context);
+    final marker = bearing == null
+        ? Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: reminder.isArrived
+                  ? colors.secondary
+                  : colors.tertiaryContainer,
+              borderRadius: AppRadius.cardRadius,
+            ),
+            child: Icon(
+              reminder.isArrived
+                  ? Icons.flag_rounded
+                  : Icons.location_on_rounded,
+              color: markerColor,
+            ),
+          )
+        : _Compass(
+            bearing: bearing,
+            deviceHeading: deviceHeading,
+            color: markerColor,
+            backgroundColor: reminder.isArrived
+                ? colors.secondary
+                : colors.tertiaryContainer,
+            alignedColor: colors.onPrimary,
+            alignedBackgroundColor: colors.primary,
+          );
+    final rawPlaceLabel = reminder.place.displayLabel;
+    final placeLabel = rawPlaceLabel == Place.droppedPinLabel
+        ? '$rawPlaceLabel · ${reminder.place.coordinateLabel}'
+        : rawPlaceLabel;
+
     return Card(
       child: InkWell(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: AppRadius.cardRadius,
         onTap: () => Navigator.of(context).push<void>(
           MaterialPageRoute(
             builder: (_) => ReminderEditorPage(reminder: reminder),
@@ -254,40 +419,43 @@ class _ReminderCard extends StatelessWidget {
         ),
         onLongPress: () => _showActions(context),
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(AppSpacing.card),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (bearing == null)
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: reminder.isArrived
-                            ? colors.secondary
-                            : colors.tertiaryContainer,
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Icon(
-                        reminder.isArrived
-                            ? Icons.flag_rounded
-                            : Icons.location_on_rounded,
-                        color: markerColor,
-                      ),
-                    )
-                  else
-                    _Compass(
-                      bearing: bearing,
-                      deviceHeading: deviceHeading,
-                      color: markerColor,
-                      backgroundColor: reminder.isArrived
-                          ? colors.secondary
-                          : colors.tertiaryContainer,
-                      alignedColor: colors.onPrimary,
-                      alignedBackgroundColor: colors.primary,
-                    ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      marker,
+                      if (reminder.isPinned)
+                        Positioned(
+                          top: -8,
+                          right: -8,
+                          child: Semantics(
+                            label: 'Pinned reminder',
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: colors.primary,
+                                border: Border.all(
+                                  color: colors.surfaceContainer,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.push_pin_rounded,
+                                size: 14,
+                                color: colors.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -295,71 +463,79 @@ class _ReminderCard extends StatelessWidget {
                       children: [
                         Text(
                           reminder.title,
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: theme.textTheme.titleMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          reminder.isArrived
-                              ? 'Alert triggered'
-                              : distance == null
+                          distance == null
                               ? '${reminder.place.radius ?? Place.defaultRadius} m alert distance'
                               : '${_distanceLabel(distance)} · '
                                     '${_bearingLabel(bearing!)} '
                                     '${bearing.round() % 360}°',
-                          style: TextStyle(color: colors.onSurfaceVariant),
+                          style: theme.textTheme.bodySmall,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                        if (reminder.isArrived) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colors.secondaryContainer,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              'Triggered',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colors.onSecondaryContainer,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
-                  Column(
-                    children: [
-                      Switch(
-                        value: reminder.isTracking,
-                        onChanged: (value) async {
-                          try {
-                            await state.setReminderTracking(reminder, value);
-                          } on Object catch (error) {
-                            if (context.mounted) _showError(context, error);
-                          }
-                        },
-                      ),
-                      Text(
-                        reminder.isArrived
-                            ? 'Triggered'
-                            : reminder.isTracking
-                            ? 'Active'
-                            : 'Paused',
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                    ],
+                  Semantics(
+                    label: reminder.isTracking
+                        ? 'Tracking enabled'
+                        : 'Tracking paused',
+                    child: CompactSwitch(
+                      value: reminder.isTracking,
+                      onChanged: (value) async {
+                        try {
+                          await state.setReminderTracking(reminder, value);
+                        } on Object catch (error) {
+                          if (context.mounted) _showError(context, error);
+                        }
+                      },
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: AppSpacing.compact),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: Text(
-                      reminder.place.displayLabel,
+                      placeLabel,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       textDirection: reminder.place.displayLabelDirection,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: theme.textTheme.bodyMedium,
                     ),
                   ),
-                  if (reminder.isPinned) ...[
-                    const SizedBox(width: 8),
-                    Semantics(
-                      label: 'Pinned reminder',
-                      child: Icon(
-                        Icons.push_pin_rounded,
-                        size: 12,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ],
+                  IconButton(
+                    tooltip: 'Reminder actions',
+                    onPressed: () => _showActions(context),
+                    icon: const Icon(Icons.more_vert_rounded),
+                  ),
                 ],
               ),
             ],
@@ -481,7 +657,7 @@ class _Compass extends StatelessWidget {
             curve: Curves.easeOut,
             decoration: BoxDecoration(
               color: aligned ? alignedBackgroundColor : backgroundColor,
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: AppRadius.cardRadius,
             ),
             child: Container(
               margin: const EdgeInsets.all(5),

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
-import 'package:loc/app/app_metadata.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/power_service.dart';
-import 'package:loc/themes/theme_data.dart';
+import 'package:loc/themes/tokens.dart';
+import 'package:loc/widgets/app_components.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -147,6 +146,7 @@ class _SettingsPageState extends State<SettingsPage>
 
   @override
   Widget build(BuildContext context) {
+    final compactAppearance = MediaQuery.textScalerOf(context).scale(16) >= 24;
     final settings = context
         .select<
           AppController,
@@ -164,118 +164,90 @@ class _SettingsPageState extends State<SettingsPage>
             theme: state.themeMode,
           ),
         );
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 96),
-      children: [
-        Text('Settings', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 20),
-        Text('Tracking access', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 10),
-        _SettingsGroup(
-          children: [
-            SwitchListTile(
-              secondary: const Icon(Icons.notifications_outlined),
-              title: const Text('Arrival notifications'),
-              subtitle: Text(
-                settings.notificationsAllowed
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          AppSpacing.compact,
+          AppSpacing.page,
+          AppSpacing.group,
+        ),
+        children: [
+          Text(
+            'Tracking access',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _SettingsGroup(
+            children: [
+              _SettingsSwitchTile(
+                icon: Icons.notifications_outlined,
+                title: 'Arrival notifications',
+                subtitle: settings.notificationsAllowed
                     ? 'Notify me when I arrive.'
                     : 'Tap to allow notifications.',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                value: settings.notifications && settings.notificationsAllowed,
+                onChanged: _setNotifications,
               ),
-              value: settings.notifications && settings.notificationsAllowed,
-              onChanged: _setNotifications,
-            ),
-            SwitchListTile(
-              secondary: const Icon(Icons.screen_lock_portrait_rounded),
-              title: const Text('Screen-off tracking'),
-              subtitle: Text(
-                _locationEnabled == null
+              _SettingsSwitchTile(
+                icon: Icons.screen_lock_portrait_rounded,
+                title: 'Screen-off tracking',
+                subtitle: _locationEnabled == null
                     ? 'Checking Location status…'
                     : _locationEnabled!
                     ? 'Continue tracking when the screen is off.'
                     : 'Requires Location to be on.',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+                value: settings.background,
+                onChanged: _setBackgroundTracking,
               ),
-              value: settings.background,
-              onChanged: _setBackgroundTracking,
+            ],
+          ),
+          if (settings.background && _batteryExempt == false) ...[
+            const SizedBox(height: AppSpacing.compact),
+            AppWarningCard(
+              icon: Icons.battery_alert_rounded,
+              title: 'Battery optimization is on',
+              description:
+                  'Turn off battery restrictions for reliable screen-off tracking.',
+              busy: _requestingExemption,
+              onTap: _requestExemption,
             ),
           ],
-        ),
-        if (settings.background && _batteryExempt == false) ...[
-          const SizedBox(height: 12),
-          _BatteryOptimizationCard(
-            busy: _requestingExemption,
-            onTap: _requestExemption,
+          const SizedBox(height: 16),
+          Text('Appearance', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: AppSpacing.sm),
+          SegmentedButton<ThemeMode>(
+            segments: [
+              ButtonSegment(
+                value: ThemeMode.system,
+                label: const Text('System'),
+                icon: compactAppearance
+                    ? null
+                    : const Icon(Icons.brightness_auto_rounded),
+              ),
+              ButtonSegment(
+                value: ThemeMode.light,
+                label: const Text('Light'),
+                icon: compactAppearance
+                    ? null
+                    : const Icon(Icons.light_mode_outlined),
+              ),
+              ButtonSegment(
+                value: ThemeMode.dark,
+                label: const Text('Dark'),
+                icon: compactAppearance
+                    ? null
+                    : const Icon(Icons.dark_mode_outlined),
+              ),
+            ],
+            selected: {settings.theme},
+            onSelectionChanged: (value) =>
+                context.read<AppController>().setThemeMode(value.single),
           ),
         ],
-        const SizedBox(height: 18),
-        Text('Appearance', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 10),
-        SegmentedButton<ThemeMode>(
-          segments: const [
-            ButtonSegment(
-              value: ThemeMode.system,
-              label: Text('System'),
-              icon: Icon(Icons.brightness_auto_rounded),
-            ),
-            ButtonSegment(
-              value: ThemeMode.light,
-              label: Text('Light'),
-              icon: Icon(Icons.light_mode_outlined),
-            ),
-            ButtonSegment(
-              value: ThemeMode.dark,
-              label: Text('Dark'),
-              icon: Icon(Icons.dark_mode_outlined),
-            ),
-          ],
-          selected: {settings.theme},
-          onSelectionChanged: (value) =>
-              context.read<AppController>().setThemeMode(value.single),
-        ),
-        const SizedBox(height: 18),
-        Text('About', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 10),
-        _SettingsGroup(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.code_rounded),
-              title: const Text('Source code'),
-              subtitle: const Text('GPL-3.0 licensed'),
-              trailing: const Icon(Icons.open_in_new_rounded),
-              onTap: () => _open(context, 'https://github.com/AbdeltwabMF/loc'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: const Text('Privacy'),
-              subtitle: const Text('Read the privacy policy'),
-              trailing: const Icon(Icons.open_in_new_rounded),
-              onTap: () =>
-                  _open(context, 'https://loc.abdeltwab.xyz/privacy.html'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline_rounded),
-              title: const Text('App version'),
-              subtitle: Text(AppMetadata.current.displayVersion),
-            ),
-          ],
-        ),
-      ],
+      ),
     );
-  }
-
-  Future<void> _open(BuildContext context, String value) async {
-    final opened = await launchUrl(
-      Uri.parse(value),
-      mode: LaunchMode.externalApplication,
-    );
-    if (!opened && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open that link.')),
-      );
-    }
   }
 }
 
@@ -298,207 +270,28 @@ class _SettingsGroup extends StatelessWidget {
   );
 }
 
-class _BatteryOptimizationCard extends StatelessWidget {
-  const _BatteryOptimizationCard({required this.busy, required this.onTap});
+class _SettingsSwitchTile extends StatelessWidget {
+  const _SettingsSwitchTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
 
-  final bool busy;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final palette = theme.brightness == Brightness.light
-        ? Gruvbox.light
-        : Gruvbox.dark;
-
-    final background = palette.orangeHard;
-    final foreground = palette.bg;
-
-    return ClipPath(
-      clipper: const _SmoothWavyCardClipper(),
-      child: Material(
-        color: background,
-        child: InkWell(
-          onTap: busy ? null : onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-            child: Row(
-              children: [
-                Icon(Icons.battery_alert_rounded, color: foreground),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Battery optimization is on',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: foreground,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Turn off battery restrictions for reliable screen-off tracking.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: foreground,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                if (busy)
-                  SizedBox.square(
-                    dimension: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: foreground,
-                    ),
-                  )
-                else
-                  Icon(Icons.chevron_right_rounded, color: foreground),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SmoothWavyCardClipper extends CustomClipper<Path> {
-  const _SmoothWavyCardClipper();
-
-  static const double _radius = 16;
-  static const double _waveDepth = 4;
-  static const double _waveLength = 24;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
 
   @override
-  Path getClip(Size size) {
-    final path = Path()..moveTo(_radius, 0);
-
-    _waveHorizontal(
-      path,
-      from: _radius,
-      to: size.width - _radius,
-      y: 0,
-      depth: _waveDepth,
-    );
-
-    path.quadraticBezierTo(size.width, 0, size.width, _radius);
-
-    _waveVertical(
-      path,
-      from: _radius,
-      to: size.height - _radius,
-      x: size.width,
-      depth: -_waveDepth,
-    );
-
-    path.quadraticBezierTo(
-      size.width,
-      size.height,
-      size.width - _radius,
-      size.height,
-    );
-
-    _waveHorizontal(
-      path,
-      from: size.width - _radius,
-      to: _radius,
-      y: size.height,
-      depth: -_waveDepth,
-    );
-
-    path.quadraticBezierTo(0, size.height, 0, size.height - _radius);
-
-    _waveVertical(
-      path,
-      from: size.height - _radius,
-      to: _radius,
-      x: 0,
-      depth: _waveDepth,
-    );
-
-    path.quadraticBezierTo(0, 0, _radius, 0);
-
-    return path..close();
-  }
-
-  void _waveHorizontal(
-    Path path, {
-    required double from,
-    required double to,
-    required double y,
-    required double depth,
-  }) {
-    final distance = (to - from).abs();
-    final direction = to >= from ? 1.0 : -1.0;
-
-    final waveCount = (distance / _waveLength).round().clamp(1, 1000);
-    final waveWidth = distance / waveCount;
-
-    for (var i = 0; i < waveCount; i++) {
-      final start = from + direction * waveWidth * i;
-      final end = start + direction * waveWidth;
-
-      path
-        ..cubicTo(
-          start + direction * waveWidth * 0.25,
-          y,
-          start + direction * waveWidth * 0.25,
-          y + depth,
-          start + direction * waveWidth * 0.5,
-          y + depth,
-        )
-        ..cubicTo(
-          start + direction * waveWidth * 0.75,
-          y + depth,
-          start + direction * waveWidth * 0.75,
-          y,
-          end,
-          y,
-        );
-    }
-  }
-
-  void _waveVertical(
-    Path path, {
-    required double from,
-    required double to,
-    required double x,
-    required double depth,
-  }) {
-    final distance = (to - from).abs();
-    final direction = to >= from ? 1.0 : -1.0;
-
-    final waveCount = (distance / _waveLength).round().clamp(1, 1000);
-    final waveHeight = distance / waveCount;
-
-    for (var i = 0; i < waveCount; i++) {
-      final start = from + direction * waveHeight * i;
-      final end = start + direction * waveHeight;
-
-      path
-        ..cubicTo(
-          x,
-          start + direction * waveHeight * 0.25,
-          x + depth,
-          start + direction * waveHeight * 0.25,
-          x + depth,
-          start + direction * waveHeight * 0.5,
-        )
-        ..cubicTo(
-          x + depth,
-          start + direction * waveHeight * 0.75,
-          x,
-          start + direction * waveHeight * 0.75,
-          x,
-          end,
-        );
-    }
-  }
-
-  @override
-  bool shouldReclip(covariant _SmoothWavyCardClipper oldClipper) => false;
+  Widget build(BuildContext context) => ListTile(
+    leading: Icon(icon),
+    title: Text(title),
+    subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+    trailing: CompactSwitch(value: value, onChanged: onChanged),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+    onTap: () => onChanged(!value),
+  );
 }
