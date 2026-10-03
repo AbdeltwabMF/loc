@@ -33,6 +33,11 @@ class AppRepository {
     return value is bool ? value : false;
   }
 
+  bool loadUseGoogleSans() {
+    final value = _preferences.get('useGoogleSans', defaultValue: true);
+    return value is bool ? value : true;
+  }
+
   Future<void> saveThemeMode(String value) =>
       _preferences.put('themeMode', value);
 
@@ -41,4 +46,7 @@ class AppRepository {
 
   Future<void> saveBackgroundTrackingEnabled(bool value) =>
       _preferences.put('backgroundTrackingEnabled', value);
+
+  Future<void> saveUseGoogleSans(bool value) =>
+      _preferences.put('useGoogleSans', value);
 }
