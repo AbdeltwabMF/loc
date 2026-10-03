@@ -269,7 +269,7 @@ class AppController extends ChangeNotifier {
           isAcknowledged: value ? reminder.isAcknowledged : false,
         );
         await _saveReminder(updated);
-        await _syncTrackingState();
+        if (!value) await _syncTrackingState();
         notifyListeners();
       });
 
