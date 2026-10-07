@@ -10,6 +10,7 @@ import 'package:loc/data/services/background_tracking_service.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 import 'package:loc/pages/home.dart';
+import 'package:loc/pages/permission_setup_page.dart';
 import 'package:loc/themes/theme_data.dart';
 import 'package:provider/provider.dart';
 
@@ -60,14 +61,18 @@ class LocApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => controller,
       child: Consumer<AppController>(
-        builder: (context, state, child) => MaterialApp(
-          title: 'Loc',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.light(useGoogleSans: state.useGoogleSans),
-          darkTheme: AppTheme.dark(useGoogleSans: state.useGoogleSans),
-          themeMode: state.themeMode,
-          home: const HomePage(),
-        ),
+        builder: (context, state, child) {
+          return MaterialApp(
+            title: 'Loc',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(useGoogleSans: state.useGoogleSans),
+            darkTheme: AppTheme.dark(useGoogleSans: state.useGoogleSans),
+            themeMode: state.themeMode,
+            home: !state.trackingSetupSeen || state.permissionRecoveryRequired
+                ? PermissionSetupPage(initialSetup: !state.trackingSetupSeen)
+                : const HomePage(),
+          );
+        },
       ),
     );
   }

@@ -67,6 +67,20 @@ void main() {
 
     expect(repository.loadUseGoogleSans(), isFalse);
   });
+
+  test('persists that the tracking setup prompt was handled', () async {
+    expect(repository.loadTrackingSetupSeen(), isFalse);
+
+    await repository.saveTrackingSetupSeen(true);
+
+    expect(repository.loadTrackingSetupSeen(), isTrue);
+  });
+
+  test('shows the new setup to existing users after the update', () async {
+    await repository.saveReminder(_reminder('station'));
+
+    expect(repository.loadTrackingSetupSeen(), isFalse);
+  });
 }
 
 Reminder _reminder(String id, {String title = 'Station'}) => Reminder(

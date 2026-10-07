@@ -34,6 +34,8 @@ class AppController extends ChangeNotifier {
   bool _notificationsAllowed = true;
   bool _backgroundTrackingPreferred = false;
   bool _backgroundLocationAllowed = false;
+  bool _trackingSetupSeen = false;
+  bool _permissionRecoveryRequired = false;
   bool _isTrackingLocation = false;
   bool _isStartingTracking = false;
   bool _isDisposed = false;
@@ -50,6 +52,11 @@ class AppController extends ChangeNotifier {
   bool get systemNotificationsEnabled => _alarmEnabled && _notificationsAllowed;
   bool get backgroundTrackingEnabled =>
       _backgroundTrackingPreferred && _backgroundLocationAllowed;
+  bool get backgroundLocationAllowed => _backgroundLocationAllowed;
+  bool get trackingSetupSeen => _trackingSetupSeen;
+  bool get permissionRecoveryRequired => _permissionRecoveryRequired;
+  bool get permissionPageOpen =>
+      !_trackingSetupSeen || _permissionRecoveryRequired;
   bool get isTrackingLocation => _isTrackingLocation;
   String? get locationError => _locationError;
   AttentionAction? get attentionAction => _attentionAction;
@@ -79,12 +86,15 @@ class AppController extends ChangeNotifier {
       _ => ThemeMode.system,
     };
     _useGoogleSans = _repository.loadUseGoogleSans();
+    _trackingSetupSeen = _repository.loadTrackingSetupSeen();
     _alarmEnabled = _repository.loadAlarmEnabled();
     _notificationsAllowed = await _notificationService.isPermissionGranted();
     _backgroundTrackingPreferred = _repository.loadBackgroundTrackingEnabled();
     _backgroundLocationAllowed = await _locationService
         .hasBackgroundPermission();
-    if (!backgroundTrackingEnabled) await _backgroundTracking.stop();
+    if (!backgroundTrackingEnabled || permissionPageOpen) {
+      await _backgroundTracking.stop();
+    }
 
     if (activeCount > 0) {
       await _refreshAttentionState(startTrackingWhenReady: true);
@@ -200,8 +210,29 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<LocationAccessStatus> locationAccessStatus() =>
-      _locationService.accessStatus(background: false);
+  Future<LocationAccessStatus> locationAccessStatus({
+    bool background = false,
+  }) => _locationService.accessStatus(background: background);
+
+  Future<bool> requestForegroundLocation() async {
+    final status = await locationAccessStatus();
+    if (status == LocationAccessStatus.serviceDisabled) {
+      await openLocationSettings();
+      return false;
+    }
+    if (status == LocationAccessStatus.settingsRequired) {
+      await openAppSettings();
+      return false;
+    }
+    try {
+      await _locationService.ensurePermission();
+    } on Object {
+      await refreshAttention();
+      return false;
+    }
+    await refreshAttention();
+    return await locationAccessStatus() == LocationAccessStatus.ready;
+  }
 
   Future<bool> openLocationSettings() =>
       _locationService.openLocationSettings();
@@ -223,9 +254,12 @@ class AppController extends ChangeNotifier {
         existing.isArrived &&
         existing.place == reminder.place) {
       final isArrived = position == null || !reminder.hasExited(position);
+      final alertStyleChanged = existing.alertStyle != reminder.alertStyle;
       savedReminder = reminder.copy(
         isArrived: isArrived,
-        isAcknowledged: isArrived ? existing.isAcknowledged : false,
+        isAcknowledged: isArrived && !alertStyleChanged
+            ? existing.isAcknowledged
+            : false,
       );
     } else if (position != null && reminder.isTracking) {
       savedReminder = reminder.copy(
@@ -244,11 +278,7 @@ class AppController extends ChangeNotifier {
       alarmEnabled: systemNotificationsEnabled,
     );
     if (savedReminder.isTracking) {
-      try {
-        await startTracking();
-      } on Object {
-        // The saved reminder remains visible with an actionable permission error.
-      }
+      await _refreshAttentionState(startTrackingWhenReady: true);
     }
     await _syncArrivalAlert();
   }
@@ -299,6 +329,30 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> markTrackingSetupSeen() async {
+    if (_trackingSetupSeen) return;
+    try {
+      await _repository.saveTrackingSetupSeen(true);
+      _trackingSetupSeen = true;
+      _permissionRecoveryRequired = false;
+      await _refreshAttentionState(startTrackingWhenReady: true);
+      await _syncArrivalAlert();
+      notifyListeners();
+    } on Object {
+      _trackingSetupSeen = false;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> completePermissionRecovery() async {
+    if (!_permissionRecoveryRequired) return;
+    _permissionRecoveryRequired = false;
+    await _refreshAttentionState(startTrackingWhenReady: true);
+    await _syncArrivalAlert();
+    notifyListeners();
+  }
+
   Future<bool> setAlarmEnabled(bool value) async {
     if (value && !_notificationsAllowed) {
       _notificationsAllowed = await _notificationService.requestPermission();
@@ -343,7 +397,7 @@ class AppController extends ChangeNotifier {
     _backgroundLocationAllowed = true;
     _backgroundTrackingPreferred = true;
     await _repository.saveBackgroundTrackingEnabled(true);
-    if (activeCount > 0) {
+    if (activeCount > 0 && !permissionPageOpen) {
       await _backgroundTracking.start(
         reminders: _reminders,
         alarmEnabled: systemNotificationsEnabled,
@@ -449,7 +503,7 @@ class AppController extends ChangeNotifier {
   Future<void> _syncArrivalAlert() async {
     if (_isDisposed) return;
     final arrived = arrivedReminders;
-    if (!systemNotificationsEnabled || arrived.isEmpty) {
+    if (permissionPageOpen || !systemNotificationsEnabled || arrived.isEmpty) {
       _arrivalNotificationSignature = null;
       await _notificationService.dismissArrival();
       return;
@@ -461,6 +515,9 @@ class AppController extends ChangeNotifier {
     if (_arrivalNotificationSignature == signature) return;
     if (!await _notificationService.isPermissionGranted()) return;
     if (_isDisposed) return;
+    if (_arrivalNotificationSignature != null) {
+      await _notificationService.dismissArrival();
+    }
     await _notificationService.showArrival(
       title: 'You have arrived',
       body: arrived.map((item) => item.title).join(', '),
@@ -472,7 +529,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> _syncTrackingState() async {
     if (activeCount > 0) {
-      if (backgroundTrackingEnabled) {
+      if (backgroundTrackingEnabled && !permissionPageOpen) {
         await _backgroundTracking.start(
           reminders: _reminders,
           alarmEnabled: systemNotificationsEnabled,
@@ -501,24 +558,35 @@ class AppController extends ChangeNotifier {
     if (activeCount == 0) {
       _locationError = null;
       _attentionAction = null;
+      _permissionRecoveryRequired = false;
       return;
     }
     switch (await _locationService.accessStatus(background: false)) {
       case LocationAccessStatus.serviceDisabled:
         _locationError = 'Device location is turned off.';
         _attentionAction = AttentionAction.enableLocation;
+        _permissionRecoveryRequired = true;
+        await _pauseTrackingForPermissionPage();
         return;
       case LocationAccessStatus.permissionDenied:
         _locationError = 'Location access is required for active reminders.';
         _attentionAction = AttentionAction.requestLocation;
+        _permissionRecoveryRequired = true;
+        await _pauseTrackingForPermissionPage();
         return;
       case LocationAccessStatus.settingsRequired:
         _locationError = 'Enable location access for active reminders.';
         _attentionAction = AttentionAction.openAppSettings;
+        _permissionRecoveryRequired = true;
+        await _pauseTrackingForPermissionPage();
         return;
       case LocationAccessStatus.ready:
         _locationError = fallbackError;
         _attentionAction = fallbackError == null ? null : AttentionAction.retry;
+        if (permissionPageOpen) {
+          await _pauseTrackingForPermissionPage();
+          return;
+        }
         if (startTrackingWhenReady && _positionSubscription == null) {
           try {
             await startTracking(requestPermission: false);
@@ -528,6 +596,15 @@ class AppController extends ChangeNotifier {
         }
         return;
     }
+  }
+
+  Future<void> _pauseTrackingForPermissionPage() async {
+    await _positionSubscription?.cancel();
+    _positionSubscription = null;
+    _isTrackingLocation = false;
+    _arrivalNotificationSignature = null;
+    await _notificationService.dismissArrival();
+    await _backgroundTracking.stop();
   }
 
   Future<T> _enqueue<T>(Future<T> Function() operation) {

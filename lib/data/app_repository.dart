@@ -38,6 +38,11 @@ class AppRepository {
     return value is bool ? value : true;
   }
 
+  bool loadTrackingSetupSeen() {
+    final value = _preferences.get('trackingSetupSeen');
+    return value is bool ? value : false;
+  }
+
   Future<void> saveThemeMode(String value) =>
       _preferences.put('themeMode', value);
 
@@ -49,4 +54,7 @@ class AppRepository {
 
   Future<void> saveUseGoogleSans(bool value) =>
       _preferences.put('useGoogleSans', value);
+
+  Future<void> saveTrackingSetupSeen(bool value) =>
+      _preferences.put('trackingSetupSeen', value);
 }

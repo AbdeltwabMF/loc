@@ -332,6 +332,9 @@ Future<void> _syncAlert(
   if (await android?.areNotificationsEnabled() == false) return;
   final isAlarm = arrived.any((item) => item.isAlarm);
   final isVibration = arrived.any((item) => item.isVibration);
+  if (signature != null) {
+    await notifications.cancel(id: NotificationService.arrivalNotificationId);
+  }
   await notifications.show(
     id: NotificationService.arrivalNotificationId,
     title: 'You have arrived',
