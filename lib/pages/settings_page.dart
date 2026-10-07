@@ -110,38 +110,22 @@ class _SettingsPageState extends State<SettingsPage>
       await controller.openLocationSettings();
       return;
     }
-    if (await controller.setBackgroundTrackingEnabled(true) || !mounted) return;
+    if (await controller.setBackgroundTrackingEnabled(true)) {
+      return;
+    }
+    if (!mounted) return;
     if (await controller.locationAccessStatus() != LocationAccessStatus.ready ||
         !mounted) {
       return;
     }
-    final openSettings = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        scrollable: true,
-        title: const Text('Allow screen-off tracking'),
-        content: const Text(
-          'Open Permissions > Location and choose "Allow all the time"',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Not now'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Open settings'),
-          ),
-        ],
-      ),
-    );
-    if (openSettings == true && mounted) {
-      setState(() {
-        _enablingBackgroundTracking = true;
-        _waitingForLocationService = false;
-      });
-      await controller.openAppSettings();
-    }
+    setState(() {
+      _enablingBackgroundTracking = true;
+      _waitingForLocationService = false;
+    });
+  }
+
+  Future<void> _openBackgroundLocationSettings() async {
+    await context.read<AppController>().openAppSettings();
   }
 
   @override
@@ -205,13 +189,23 @@ class _SettingsPageState extends State<SettingsPage>
               ),
             ],
           ),
+          if (_enablingBackgroundTracking && !settings.background) ...[
+            const SizedBox(height: AppSpacing.compact),
+            AppWarningCard(
+              icon: Icons.location_on_outlined,
+              title: 'Allow location all the time',
+              description:
+                  'Tap here, then open Permissions > Location, select "Allow all the time"',
+              onTap: _openBackgroundLocationSettings,
+            ),
+          ],
           if (settings.background && _batteryExempt == false) ...[
             const SizedBox(height: AppSpacing.compact),
             AppWarningCard(
               icon: Icons.battery_alert_rounded,
               title: 'Battery optimization is on',
               description:
-                  'Turn off battery restrictions for reliable screen-off tracking.',
+                  'Turn off battery restrictions for reliable screen-off tracking',
               busy: _requestingExemption,
               onTap: _requestExemption,
             ),

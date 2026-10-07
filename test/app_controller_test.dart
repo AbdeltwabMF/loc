@@ -98,6 +98,31 @@ void main() {
     });
 
     test(
+      'changing alert style starts a fresh alert for the current visit',
+      () async {
+        final harness = await _Harness.create([
+          _reminder(isAlarm: true),
+        ], initialMeters: 50);
+        addTearDown(harness.dispose);
+        await _waitFor(() => harness.notifications.shown.length == 1);
+        await harness.controller.dismissArrival();
+
+        await harness.controller.saveReminder(
+          harness.reminder.copy(isAlarm: false),
+        );
+        expect(harness.reminder.isAcknowledged, isFalse);
+        expect(harness.notifications.shown, hasLength(2));
+        expect(harness.notifications.shown.last.isAlarm, isFalse);
+
+        await harness.controller.saveReminder(
+          harness.reminder.copy(isAlarm: true),
+        );
+        expect(harness.notifications.shown, hasLength(3));
+        expect(harness.notifications.shown.last.isAlarm, isTrue);
+      },
+    );
+
+    test(
       'replaces the shared notification when the arrived reminder changes',
       () async {
         final first = _reminder(title: 'First', isAlarm: true);
@@ -351,6 +376,79 @@ void main() {
       expect(controller.attentionAction, AttentionAction.enableLocation);
     });
 
+    test(
+      'activating a reminder waits for the permission page action',
+      () async {
+        final paused = _reminder().copy(isTracking: false);
+        final location = _FakeLocationService(
+          _pointAtMeters(200),
+          status: LocationAccessStatus.settingsRequired,
+        );
+        final controller = AppController(
+          repository: _FakeRepository([paused]),
+          locationService: location,
+          notificationService: _FakeNotificationService(),
+        );
+        addTearDown(() {
+          controller.dispose();
+          unawaited(location.close());
+        });
+
+        await controller.initialize();
+        await controller.setReminderTracking(paused, true);
+
+        expect(controller.activeCount, 1);
+        expect(controller.attentionAction, AttentionAction.openAppSettings);
+        expect(controller.permissionRecoveryRequired, isTrue);
+        expect(location.appSettingsOpens, 0);
+        expect(location.locationSettingsOpens, 0);
+
+        location.status = LocationAccessStatus.ready;
+        await controller.refreshAttention();
+
+        expect(controller.attentionAction, isNull);
+        expect(controller.permissionRecoveryRequired, isTrue);
+        expect(controller.isTrackingLocation, isFalse);
+
+        await controller.completePermissionRecovery();
+        expect(controller.permissionRecoveryRequired, isFalse);
+        expect(controller.isTrackingLocation, isTrue);
+      },
+    );
+
+    test('suppresses arrival alerts until reminders are resumed', () async {
+      final reminder = _reminder(isArrived: true);
+      final repository = _FakeRepository([reminder]).._alarmEnabled = false;
+      final location = _FakeLocationService(
+        _pointAtMeters(50),
+        status: LocationAccessStatus.permissionDenied,
+      );
+      final notifications = _FakeNotificationService();
+      final controller = AppController(
+        repository: repository,
+        locationService: location,
+        notificationService: notifications,
+      );
+      addTearDown(() {
+        controller.dispose();
+        unawaited(location.close());
+      });
+
+      await controller.initialize();
+      location.status = LocationAccessStatus.ready;
+      await controller.refreshAttention();
+      await controller.setAlarmEnabled(true);
+
+      expect(controller.permissionRecoveryRequired, isTrue);
+      expect(controller.isTrackingLocation, isFalse);
+      expect(notifications.shown, isEmpty);
+
+      await controller.completePermissionRecovery();
+
+      expect(controller.isTrackingLocation, isTrue);
+      expect(notifications.shown, hasLength(1));
+    });
+
     test('opens app settings when background location is required', () async {
       final location = _FakeLocationService(
         _pointAtMeters(200),
@@ -404,6 +502,31 @@ void main() {
     await controller.setUseGoogleSans(false);
     expect(controller.useGoogleSans, isFalse);
     expect(repository._useGoogleSans, isFalse);
+  });
+
+  test('persists completion of the tracking setup prompt', () async {
+    final repository = _FakeRepository([_reminder()])
+      .._trackingSetupSeen = false;
+    final location = _FakeLocationService(_pointAtMeters(200));
+    final controller = AppController(
+      repository: repository,
+      locationService: location,
+      notificationService: _FakeNotificationService(),
+    );
+    addTearDown(() {
+      controller.dispose();
+      unawaited(location.close());
+    });
+
+    await controller.initialize();
+    expect(controller.trackingSetupSeen, isFalse);
+    expect(controller.isTrackingLocation, isFalse);
+
+    await controller.markTrackingSetupSeen();
+
+    expect(controller.trackingSetupSeen, isTrue);
+    expect(controller.isTrackingLocation, isTrue);
+    expect(repository._trackingSetupSeen, isTrue);
   });
 
   test(
@@ -586,6 +709,7 @@ class _FakeRepository implements AppRepository {
   String _themeMode = 'system';
   bool _alarmEnabled = true;
   bool _backgroundTrackingEnabled = false;
+  bool _trackingSetupSeen = true;
   bool _useGoogleSans = false;
   int saveFailuresRemaining = 0;
 
@@ -602,6 +726,9 @@ class _FakeRepository implements AppRepository {
 
   @override
   bool loadUseGoogleSans() => _useGoogleSans;
+
+  @override
+  bool loadTrackingSetupSeen() => _trackingSetupSeen;
 
   @override
   List<Reminder> loadReminders() => List.of(_reminders.values);
@@ -636,6 +763,11 @@ class _FakeRepository implements AppRepository {
   @override
   Future<void> saveUseGoogleSans(bool value) async {
     _useGoogleSans = value;
+  }
+
+  @override
+  Future<void> saveTrackingSetupSeen(bool value) async {
+    _trackingSetupSeen = value;
   }
 }
 

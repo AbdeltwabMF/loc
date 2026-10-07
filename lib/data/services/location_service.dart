@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:geolocator/geolocator.dart';
 import 'package:loc/data/models/point.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LocationException implements Exception {
   const LocationException(this.message);
@@ -21,8 +20,6 @@ enum LocationAccessStatus {
 }
 
 class LocationService {
-  static const _permissionRequestedKey = 'location_permission_requested';
-
   Stream<Point> get updates => _positionUpdates();
 
   Future<LocationAccessStatus> accessStatus({bool background = true}) async {
@@ -50,14 +47,6 @@ class LocationService {
   Future<void> ensurePermission({bool background = false}) async {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      final preferences = await SharedPreferences.getInstance();
-      if (preferences.getBool(_permissionRequestedKey) ?? false) {
-        await openAppSettings();
-        throw const LocationException(
-          'Enable location access in Android settings.',
-        );
-      }
-      await preferences.setBool(_permissionRequestedKey, true);
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.deniedForever) {
