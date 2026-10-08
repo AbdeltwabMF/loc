@@ -177,6 +177,7 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
       android: AndroidInitializationSettings('app_icon'),
     ),
   );
+  await NotificationService.createAlarmChannel(notifications);
 
   // A stale service may briefly be restored by an older installation.
   if (initialSnapshot == null ||
@@ -332,7 +333,7 @@ Future<void> _syncAlert(
   if (await android?.areNotificationsEnabled() == false) return;
   final isAlarm = arrived.any((item) => item.isAlarm);
   final isVibration = arrived.any((item) => item.isVibration);
-  if (signature != null) {
+  if (signature != null || isAlarm) {
     await notifications.cancel(id: NotificationService.arrivalNotificationId);
   }
   await notifications.show(

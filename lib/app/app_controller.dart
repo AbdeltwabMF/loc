@@ -463,13 +463,14 @@ class AppController extends ChangeNotifier {
     if (_arrivalNotificationSignature == signature) return;
     if (!await _notificationService.isPermissionGranted()) return;
     if (_isDisposed) return;
-    if (_arrivalNotificationSignature != null) {
+    final isAlarm = arrived.any((item) => item.isAlarm);
+    if (_arrivalNotificationSignature != null || isAlarm) {
       await _notificationService.dismissArrival();
     }
     await _notificationService.showArrival(
       title: 'You have arrived',
       body: arrived.map((item) => item.title).join(', '),
-      isAlarm: arrived.any((item) => item.isAlarm),
+      isAlarm: isAlarm,
       isVibration: arrived.any((item) => item.isVibration),
     );
     _arrivalNotificationSignature = signature;

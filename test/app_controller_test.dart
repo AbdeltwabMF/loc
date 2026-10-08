@@ -55,6 +55,16 @@ void main() {
       },
     );
 
+    test('clears an existing notification before posting an alarm', () async {
+      final harness = await _Harness.create([
+        _reminder(isArrived: true, isAlarm: true),
+      ], initialMeters: 50);
+      addTearDown(harness.dispose);
+
+      expect(harness.notifications.shown, hasLength(1));
+      expect(harness.notifications.dismissals, 1);
+    });
+
     test('editing preserves the current acknowledged visit', () async {
       final harness = await _Harness.create([_reminder()]);
       addTearDown(harness.dispose);
@@ -811,9 +821,11 @@ class _FakeNotificationService implements NotificationService {
   bool permissionGranted;
   bool requestResult;
   int showFailuresRemaining = 0;
+  int dismissals = 0;
 
   @override
   Future<void> dismissArrival() async {
+    dismissals++;
     current = null;
   }
 
