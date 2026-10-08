@@ -8,7 +8,6 @@ import 'package:loc/data/services/geo_uri_service.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
 import 'package:loc/pages/reminders_page.dart';
 import 'package:loc/pages/settings_page.dart';
-import 'package:loc/themes/tokens.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -60,29 +59,19 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final hasArrivalAlert = context.select<AppController, bool>(
-      (state) => state.hasArrivalAlert,
-    );
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            if (hasArrivalAlert) const _ArrivalBanner(),
-            Expanded(
-              child: RemindersPage(
-                onSettingsPressed: () => Navigator.of(context).push<void>(
-                  MaterialPageRoute(builder: (_) => const SettingsPage()),
-                ),
-                onSourceCodePressed: () => unawaited(
-                  _openExternal('https://github.com/AbdeltwabMF/loc'),
-                ),
-                onPrivacyPolicyPressed: () => unawaited(
-                  _openExternal('https://loc.abdeltwab.xyz/privacy.html'),
-                ),
-                onAboutPressed: _showAbout,
-              ),
-            ),
-          ],
+        child: RemindersPage(
+          onSettingsPressed: () => Navigator.of(context).push<void>(
+            MaterialPageRoute(builder: (_) => const SettingsPage()),
+          ),
+          onSourceCodePressed: () => unawaited(
+            _openExternal('https://github.com/AbdeltwabMF/loc'),
+          ),
+          onPrivacyPolicyPressed: () => unawaited(
+            _openExternal('https://loc.abdeltwab.xyz/privacy.html'),
+          ),
+          onAboutPressed: _showAbout,
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -125,44 +114,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         semanticLabel: 'Loc icon',
       ),
       applicationLegalese: 'Licensed under GPL-3.0',
-    );
-  }
-}
-
-class _ArrivalBanner extends StatelessWidget {
-  const _ArrivalBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final alert = context.select<AppController, ({String arrivals})>(
-      (state) => (
-        arrivals: state.arrivedReminders.map((item) => item.title).join(', '),
-      ),
-    );
-    final colors = Theme.of(context).colorScheme;
-    final foreground = colors.onSecondaryContainer;
-    final message = 'Arrived at ${alert.arrivals}';
-    return Material(
-      color: colors.secondaryContainer,
-      child: ListTile(
-        dense: true,
-        visualDensity: VisualDensity.compact,
-        minTileHeight: 48,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        iconColor: foreground,
-        textColor: foreground,
-        leading: Icon(Icons.notifications_active_rounded),
-        title: Text(message, maxLines: 2, overflow: TextOverflow.ellipsis),
-        trailing: TextButton(
-          onPressed: context.read<AppController>().dismissArrival,
-          style: TextButton.styleFrom(
-            foregroundColor: foreground,
-            minimumSize: const Size(64, AppControlHeights.control),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-          ),
-          child: const Text('Dismiss'),
-        ),
-      ),
     );
   }
 }
