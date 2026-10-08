@@ -164,7 +164,7 @@ void main() {
     });
   });
 
-  group('AppController attention actions', () {
+  group('AppController tracking access and recovery', () {
     test(
       'retries a failed position update without restarting tracking',
       () async {
@@ -173,17 +173,15 @@ void main() {
         harness.repository.saveFailuresRemaining = 1;
 
         harness.location.emit(_pointAtMeters(50));
-        await _waitFor(
-          () => harness.controller.attentionAction == AttentionAction.retry,
-        );
+        await _waitFor(() => harness.controller.locationError != null);
 
         expect(harness.controller.isTrackingLocation, isTrue);
         expect(harness.reminder.isArrived, isFalse);
 
-        await harness.controller.resolveAttention();
+        harness.location.emit(_pointAtMeters(50));
+        await _waitFor(() => harness.reminder.isArrived);
 
         expect(harness.reminder.isArrived, isTrue);
-        expect(harness.controller.attentionAction, isNull);
         expect(harness.controller.locationError, isNull);
       },
     );
@@ -194,14 +192,13 @@ void main() {
       harness.notifications.showFailuresRemaining = 1;
 
       harness.location.emit(_pointAtMeters(50));
-      await _waitFor(
-        () => harness.controller.attentionAction == AttentionAction.retry,
-      );
+      await _waitFor(() => harness.controller.locationError != null);
 
-      await harness.controller.resolveAttention();
+      harness.location.emit(_pointAtMeters(50));
+      await _waitFor(() => harness.notifications.shown.length == 1);
 
       expect(harness.notifications.shown, hasLength(1));
-      expect(harness.controller.attentionAction, isNull);
+      expect(harness.controller.locationError, isNull);
     });
 
     test('turning off system notifications keeps the in-app arrival', () async {
@@ -248,7 +245,6 @@ void main() {
       });
 
       await controller.initialize();
-      expect(controller.attentionAction, isNull);
       expect(controller.isTrackingLocation, isTrue);
       expect(controller.notificationsAllowed, isFalse);
 
@@ -280,7 +276,6 @@ void main() {
         await _waitFor(() => controller.hasArrivalAlert);
 
         expect(controller.isTrackingLocation, isTrue);
-        expect(controller.attentionAction, isNull);
         expect(notifications.shown, isEmpty);
       },
     );
@@ -301,9 +296,11 @@ void main() {
       });
 
       await controller.initialize();
-      expect(controller.attentionAction, AttentionAction.enableLocation);
+      expect(controller.permissionRecoveryRequired, isTrue);
+      expect(location.locationSettingsOpens, 0);
 
-      await controller.resolveAttention();
+      await controller.requestForegroundLocation();
+
       expect(location.locationSettingsOpens, 1);
     });
 
@@ -326,7 +323,7 @@ void main() {
 
       expect(controller.reminders.single.isTracking, isTrue);
       expect(controller.activeCount, 1);
-      expect(controller.attentionAction, AttentionAction.requestLocation);
+      expect(controller.permissionRecoveryRequired, isTrue);
     });
 
     test('keeps a new reminder active when location is denied', () async {
@@ -349,7 +346,7 @@ void main() {
 
       expect(controller.reminders.single.isTracking, isTrue);
       expect(controller.activeCount, 1);
-      expect(controller.attentionAction, AttentionAction.requestLocation);
+      expect(controller.permissionRecoveryRequired, isTrue);
     });
 
     test('activates a paused reminder when location is off', () async {
@@ -373,7 +370,7 @@ void main() {
 
       expect(controller.reminders.single.isTracking, isTrue);
       expect(controller.activeCount, 1);
-      expect(controller.attentionAction, AttentionAction.enableLocation);
+      expect(controller.permissionRecoveryRequired, isTrue);
     });
 
     test(
@@ -398,15 +395,13 @@ void main() {
         await controller.setReminderTracking(paused, true);
 
         expect(controller.activeCount, 1);
-        expect(controller.attentionAction, AttentionAction.openAppSettings);
         expect(controller.permissionRecoveryRequired, isTrue);
         expect(location.appSettingsOpens, 0);
         expect(location.locationSettingsOpens, 0);
 
         location.status = LocationAccessStatus.ready;
-        await controller.refreshAttention();
+        await controller.refreshTrackingState();
 
-        expect(controller.attentionAction, isNull);
         expect(controller.permissionRecoveryRequired, isTrue);
         expect(controller.isTrackingLocation, isFalse);
 
@@ -436,7 +431,7 @@ void main() {
 
       await controller.initialize();
       location.status = LocationAccessStatus.ready;
-      await controller.refreshAttention();
+      await controller.refreshTrackingState();
       await controller.setAlarmEnabled(true);
 
       expect(controller.permissionRecoveryRequired, isTrue);
@@ -465,9 +460,10 @@ void main() {
       });
 
       await controller.initialize();
-      expect(controller.attentionAction, AttentionAction.openAppSettings);
+      expect(controller.permissionRecoveryRequired, isTrue);
+      expect(location.appSettingsOpens, 0);
 
-      await controller.resolveAttention();
+      await controller.requestForegroundLocation();
       expect(location.appSettingsOpens, 1);
     });
   });

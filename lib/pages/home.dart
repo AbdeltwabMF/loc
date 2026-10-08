@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      unawaited(context.read<AppController>().refreshAttention());
+      unawaited(context.read<AppController>().refreshTrackingState());
     }
   }
 
@@ -60,19 +60,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final alerts = context
-        .select<AppController, ({bool arrival, bool attention})>(
-          (state) => (
-            arrival: state.hasArrivalAlert,
-            attention: state.locationError != null && state.activeCount > 0,
-          ),
-        );
+    final hasArrivalAlert = context.select<AppController, bool>(
+      (state) => state.hasArrivalAlert,
+    );
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            if (alerts.arrival) const _StatusBanner(_BannerType.arrival),
-            if (alerts.attention) const _StatusBanner(_BannerType.attention),
+            if (hasArrivalAlert) const _ArrivalBanner(),
             Expanded(
               child: RemindersPage(
                 onSettingsPressed: () => Navigator.of(context).push<void>(
@@ -134,50 +129,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 }
 
-enum _BannerType { arrival, attention }
-
-class _StatusBanner extends StatelessWidget {
-  const _StatusBanner(this.type);
-
-  final _BannerType type;
+class _ArrivalBanner extends StatelessWidget {
+  const _ArrivalBanner();
 
   @override
   Widget build(BuildContext context) {
-    final alert = context
-        .select<
-          AppController,
-          ({
-            String arrivals,
-            String? error,
-            AttentionAction? action,
-            String actionLabel,
-          })
-        >(
-          (state) => (
-            arrivals: state.arrivedReminders
-                .map((item) => item.title)
-                .join(', '),
-            error: state.locationError,
-            action: state.attentionAction,
-            actionLabel: state.attentionActionLabel,
-          ),
-        );
-    final isArrival = type == _BannerType.arrival;
+    final alert = context.select<AppController, ({String arrivals})>(
+      (state) => (
+        arrivals: state.arrivedReminders.map((item) => item.title).join(', '),
+      ),
+    );
     final colors = Theme.of(context).colorScheme;
-    final foreground = isArrival
-        ? colors.onSecondaryContainer
-        : colors.onErrorContainer;
-    final message = isArrival
-        ? 'Arrived at ${alert.arrivals}'
-        : switch (alert.action) {
-            AttentionAction.enableLocation => 'Location is turned off',
-            AttentionAction.requestLocation => 'Location access is required',
-            AttentionAction.openAppSettings => 'Location access is blocked',
-            AttentionAction.retry => alert.error ?? 'Tracking was interrupted',
-            null => alert.error ?? 'Tracking needs attention',
-          };
+    final foreground = colors.onSecondaryContainer;
+    final message = 'Arrived at ${alert.arrivals}';
     return Material(
-      color: isArrival ? colors.secondaryContainer : colors.errorContainer,
+      color: colors.secondaryContainer,
       child: ListTile(
         dense: true,
         visualDensity: VisualDensity.compact,
@@ -185,29 +151,17 @@ class _StatusBanner extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         iconColor: foreground,
         textColor: foreground,
-        leading: Icon(
-          isArrival
-              ? Icons.notifications_active_rounded
-              : Icons.warning_amber_rounded,
-        ),
+        leading: Icon(Icons.notifications_active_rounded),
         title: Text(message, maxLines: 2, overflow: TextOverflow.ellipsis),
-        trailing: isArrival
-            ? TextButton(
-                onPressed: context.read<AppController>().dismissArrival,
-                style: TextButton.styleFrom(
-                  foregroundColor: foreground,
-                  minimumSize: const Size(64, AppControlHeights.control),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                ),
-                child: const Text('Dismiss'),
-              )
-            : TextButton(
-                onPressed: alert.action != null
-                    ? context.read<AppController>().resolveAttention
-                    : null,
-                style: TextButton.styleFrom(foregroundColor: foreground),
-                child: Text(alert.actionLabel),
-              ),
+        trailing: TextButton(
+          onPressed: context.read<AppController>().dismissArrival,
+          style: TextButton.styleFrom(
+            foregroundColor: foreground,
+            minimumSize: const Size(64, AppControlHeights.control),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+          ),
+          child: const Text('Dismiss'),
+        ),
       ),
     );
   }

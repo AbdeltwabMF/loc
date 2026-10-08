@@ -46,7 +46,7 @@ class _SettingsPageState extends State<SettingsPage>
 
   Future<void> _refreshTrackingAccess() async {
     final controller = context.read<AppController>();
-    await controller.refreshAttention();
+    await controller.refreshTrackingState();
     await _refreshLocationStatus();
     if (_waitingForLocationService && mounted) {
       setState(() => _waitingForLocationService = false);
@@ -287,7 +287,7 @@ class _FontStyleMenu extends StatelessWidget {
           style: optionStyle(!useGoogleSans),
           onPressed: () =>
               context.read<AppController>().setUseGoogleSans(false),
-          child: const Text('System font'),
+          child: const Text('System'),
         ),
         MenuItemButton(
           style: optionStyle(useGoogleSans),
@@ -298,7 +298,7 @@ class _FontStyleMenu extends StatelessWidget {
       builder: (context, controller, child) => ListTile(
         leading: const Icon(Icons.font_download_outlined),
         title: const Text('Font style'),
-        subtitle: Text(useGoogleSans ? 'Google Sans font' : 'System font'),
+        subtitle: Text(useGoogleSans ? 'Google Sans' : 'System'),
         trailing: const Icon(Icons.arrow_drop_down_rounded),
         contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.card),
         onTap: controller.open,

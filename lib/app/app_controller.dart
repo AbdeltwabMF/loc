@@ -8,8 +8,6 @@ import 'package:loc/data/services/background_tracking_service.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 
-enum AttentionAction { enableLocation, requestLocation, openAppSettings, retry }
-
 class AppController extends ChangeNotifier {
   AppController({
     required this._repository,
@@ -40,8 +38,6 @@ class AppController extends ChangeNotifier {
   bool _isStartingTracking = false;
   bool _isDisposed = false;
   String? _locationError;
-  AttentionAction? _attentionAction;
-  Point? _retryPosition;
 
   List<Reminder> get reminders => List.unmodifiable(_reminders);
   Point? get currentPosition => _currentPosition;
@@ -59,14 +55,6 @@ class AppController extends ChangeNotifier {
       !_trackingSetupSeen || _permissionRecoveryRequired;
   bool get isTrackingLocation => _isTrackingLocation;
   String? get locationError => _locationError;
-  AttentionAction? get attentionAction => _attentionAction;
-  String get attentionActionLabel => switch (_attentionAction) {
-    AttentionAction.enableLocation => 'Turn on',
-    AttentionAction.requestLocation => 'Allow',
-    AttentionAction.openAppSettings => 'Settings',
-    AttentionAction.retry => 'Retry',
-    null => '',
-  };
 
   int get activeCount => _reminders.where((item) => item.isTracking).length;
   List<Reminder> get arrivedReminders => _reminders
@@ -97,8 +85,8 @@ class AppController extends ChangeNotifier {
     }
 
     if (activeCount > 0) {
-      await _refreshAttentionState(startTrackingWhenReady: true);
-      if (_attentionAction == null) unawaited(_reconcileInitialPosition());
+      await _refreshTrackingAccess(startTrackingWhenReady: true);
+      if (!permissionPageOpen) unawaited(_reconcileInitialPosition());
     } else {
       await _backgroundTracking.stop();
       await _syncArrivalAlert();
@@ -135,7 +123,6 @@ class AppController extends ChangeNotifier {
         await _locationService.ensurePermission();
       }
       _locationError = null;
-      _attentionAction = null;
       _isTrackingLocation = true;
       notifyListeners();
       _positionSubscription = _locationService.updates.listen(
@@ -145,24 +132,25 @@ class AppController extends ChangeNotifier {
               Object error,
               StackTrace stackTrace,
             ) {
-              _retryPosition = point;
               _locationError = error.toString();
-              _attentionAction = AttentionAction.retry;
               notifyListeners();
             }),
           );
         },
         cancelOnError: true,
         onError: (Object error, StackTrace stackTrace) {
-          _retryPosition = null;
           _locationError = error.toString();
-          _attentionAction = AttentionAction.retry;
           _isTrackingLocation = false;
           _positionSubscription = null;
           notifyListeners();
+          unawaited(
+            _refreshTrackingAccess(
+              startTrackingWhenReady: true,
+              fallbackError: error.toString(),
+            ),
+          );
         },
         onDone: () {
-          _retryPosition = null;
           _isTrackingLocation = false;
           _positionSubscription = null;
           notifyListeners();
@@ -178,7 +166,7 @@ class AppController extends ChangeNotifier {
       }
     } on Object catch (error) {
       _isTrackingLocation = false;
-      await _refreshAttentionState(
+      await _refreshTrackingAccess(
         startTrackingWhenReady: false,
         fallbackError: error.toString(),
       );
@@ -193,15 +181,11 @@ class AppController extends ChangeNotifier {
     try {
       final point = await _locationService.current();
       _currentPosition = point;
-      if (activeCount == 0 || _attentionAction == AttentionAction.retry) {
-        _retryPosition = null;
-        _locationError = null;
-        _attentionAction = null;
-      }
+      if (activeCount == 0) _locationError = null;
       notifyListeners();
       return point;
     } on Object catch (error) {
-      await _refreshAttentionState(
+      await _refreshTrackingAccess(
         startTrackingWhenReady: false,
         fallbackError: error.toString(),
       );
@@ -227,10 +211,10 @@ class AppController extends ChangeNotifier {
     try {
       await _locationService.ensurePermission();
     } on Object {
-      await refreshAttention();
+      await refreshTrackingState();
       return false;
     }
-    await refreshAttention();
+    await refreshTrackingState();
     return await locationAccessStatus() == LocationAccessStatus.ready;
   }
 
@@ -278,7 +262,7 @@ class AppController extends ChangeNotifier {
       alarmEnabled: systemNotificationsEnabled,
     );
     if (savedReminder.isTracking) {
-      await _refreshAttentionState(startTrackingWhenReady: true);
+      await _refreshTrackingAccess(startTrackingWhenReady: true);
     }
     await _syncArrivalAlert();
   }
@@ -335,7 +319,7 @@ class AppController extends ChangeNotifier {
       await _repository.saveTrackingSetupSeen(true);
       _trackingSetupSeen = true;
       _permissionRecoveryRequired = false;
-      await _refreshAttentionState(startTrackingWhenReady: true);
+      await _refreshTrackingAccess(startTrackingWhenReady: true);
       await _syncArrivalAlert();
       notifyListeners();
     } on Object {
@@ -348,7 +332,7 @@ class AppController extends ChangeNotifier {
   Future<void> completePermissionRecovery() async {
     if (!_permissionRecoveryRequired) return;
     _permissionRecoveryRequired = false;
-    await _refreshAttentionState(startTrackingWhenReady: true);
+    await _refreshTrackingAccess(startTrackingWhenReady: true);
     await _syncArrivalAlert();
     notifyListeners();
   }
@@ -373,7 +357,7 @@ class AppController extends ChangeNotifier {
     } else {
       await _syncArrivalAlert();
     }
-    await _refreshAttentionState(startTrackingWhenReady: true);
+    await _refreshTrackingAccess(startTrackingWhenReady: true);
     notifyListeners();
     return true;
   }
@@ -407,45 +391,13 @@ class AppController extends ChangeNotifier {
     return true;
   }
 
-  Future<void> refreshAttention() async {
+  Future<void> refreshTrackingState() async {
     _notificationsAllowed = await _notificationService.isPermissionGranted();
     _backgroundLocationAllowed = await _locationService
         .hasBackgroundPermission();
     if (!backgroundTrackingEnabled) await _backgroundTracking.stop();
-    await _refreshAttentionState(startTrackingWhenReady: true);
+    await _refreshTrackingAccess(startTrackingWhenReady: true);
     notifyListeners();
-  }
-
-  Future<void> resolveAttention() async {
-    switch (_attentionAction) {
-      case AttentionAction.enableLocation:
-        await _locationService.openLocationSettings();
-        return;
-      case AttentionAction.requestLocation:
-        try {
-          await startTracking();
-        } on Object {
-          // The refreshed banner presents the next required action.
-        }
-        return;
-      case AttentionAction.openAppSettings:
-        await _locationService.openAppSettings();
-        return;
-      case AttentionAction.retry:
-        try {
-          final point = _retryPosition;
-          if (point == null) {
-            await startTracking(requestPermission: false);
-          } else {
-            await _enqueue(() => _handlePosition(point));
-          }
-        } on Object {
-          // The refreshed banner presents the next required action.
-        }
-        return;
-      case null:
-        return;
-    }
   }
 
   Future<void> dismissArrival() => _enqueue(() async {
@@ -492,11 +444,7 @@ class AppController extends ChangeNotifier {
 
     _currentPosition = point;
     await _syncArrivalAlert();
-    if (_attentionAction == AttentionAction.retry) {
-      _retryPosition = null;
-      _locationError = null;
-      _attentionAction = null;
-    }
+    _locationError = null;
     notifyListeners();
   }
 
@@ -543,7 +491,6 @@ class AppController extends ChangeNotifier {
     _positionSubscription = null;
     _isTrackingLocation = false;
     _locationError = null;
-    _attentionAction = null;
     await _backgroundTracking.sync(
       reminders: _reminders,
       alarmEnabled: systemNotificationsEnabled,
@@ -551,38 +498,33 @@ class AppController extends ChangeNotifier {
     await _backgroundTracking.stop();
   }
 
-  Future<void> _refreshAttentionState({
+  Future<void> _refreshTrackingAccess({
     required bool startTrackingWhenReady,
     String? fallbackError,
   }) async {
     if (activeCount == 0) {
       _locationError = null;
-      _attentionAction = null;
       _permissionRecoveryRequired = false;
       return;
     }
     switch (await _locationService.accessStatus(background: false)) {
       case LocationAccessStatus.serviceDisabled:
         _locationError = 'Device location is turned off.';
-        _attentionAction = AttentionAction.enableLocation;
         _permissionRecoveryRequired = true;
         await _pauseTrackingForPermissionPage();
         return;
       case LocationAccessStatus.permissionDenied:
         _locationError = 'Location access is required for active reminders.';
-        _attentionAction = AttentionAction.requestLocation;
         _permissionRecoveryRequired = true;
         await _pauseTrackingForPermissionPage();
         return;
       case LocationAccessStatus.settingsRequired:
         _locationError = 'Enable location access for active reminders.';
-        _attentionAction = AttentionAction.openAppSettings;
         _permissionRecoveryRequired = true;
         await _pauseTrackingForPermissionPage();
         return;
       case LocationAccessStatus.ready:
         _locationError = fallbackError;
-        _attentionAction = fallbackError == null ? null : AttentionAction.retry;
         if (permissionPageOpen) {
           await _pauseTrackingForPermissionPage();
           return;
@@ -591,7 +533,7 @@ class AppController extends ChangeNotifier {
           try {
             await startTracking(requestPermission: false);
           } on Object {
-            // startTracking updates the attention state with the failure.
+            // A later lifecycle refresh or location update retries tracking.
           }
         }
         return;
