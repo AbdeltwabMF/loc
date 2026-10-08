@@ -56,6 +56,8 @@ Platform 36, then run:
 ```shell
 flutter doctor -v
 flutter pub get
+flutter gen-l10n
+dart format lib test
 flutter analyze
 flutter test
 flutter run

@@ -6,6 +6,7 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/geo_uri_service.dart';
+import 'package:loc/l10n/l10n.dart';
 import 'package:loc/pages/map_picker_page.dart';
 import 'package:loc/place_presentation.dart';
 import 'package:loc/themes/tokens.dart';
@@ -113,7 +114,11 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         MediaQuery.textScalerOf(context).scale(16) >= 24;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.reminder == null ? 'New reminder' : 'Edit reminder'),
+        title: Text(
+          widget.reminder == null
+              ? context.l10n.newReminderTitle
+              : context.l10n.editReminderTitle,
+        ),
       ),
       body: Form(
         key: _formKey,
@@ -127,13 +132,13 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
           children: [
             _EditorSection(
               icon: Icons.location_on_outlined,
-              title: 'Destination',
+              title: context.l10n.destinationLabel,
               child: _buildDestination(context),
             ),
             const SizedBox(height: 16),
             _EditorSection(
               icon: Icons.notifications_none_rounded,
-              title: 'Alert',
+              title: context.l10n.alertLabel,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -141,7 +146,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                     children: [
                       Flexible(
                         child: Text(
-                          'Notify me when I’m within',
+                          context.l10n.notifyWithinLabel,
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurface,
@@ -159,7 +164,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          _formatDistance(_radius.round()),
+                          _formatDistance(context, _radius.round()),
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(color: colors.onTertiaryContainer),
                         ),
@@ -170,9 +175,12 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                     value: radiusIndex.toDouble(),
                     max: (_radiusValues.length - 1).toDouble(),
                     divisions: _radiusValues.length - 1,
-                    label: _formatDistance(_radiusValues[radiusIndex]),
+                    label: _formatDistance(context, _radiusValues[radiusIndex]),
                     semanticFormatterCallback: (value) =>
-                        _formatDistanceSemantic(_radiusValues[value.round()]),
+                        _formatDistanceSemantic(
+                          context,
+                          _radiusValues[value.round()],
+                        ),
                     onChanged: (value) => setState(
                       () => _radius = _radiusValues[value.round()].toDouble(),
                     ),
@@ -181,11 +189,11 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _formatDistance(_radiusValues.first),
+                        _formatDistance(context, _radiusValues.first),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       Text(
-                        _formatDistance(_radiusValues.last),
+                        _formatDistance(context, _radiusValues.last),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -199,21 +207,21 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                         icon: compactAlertSegments
                             ? null
                             : const Icon(Icons.volume_up_outlined),
-                        label: const Text('Sound'),
+                        label: Text(context.l10n.alertStyleSound),
                       ),
                       ButtonSegment(
                         value: ReminderAlertStyle.vibration,
                         icon: compactAlertSegments
                             ? null
                             : const Icon(Icons.vibration_rounded),
-                        label: const Text('Vibrate'),
+                        label: Text(context.l10n.alertStyleVibrate),
                       ),
                       ButtonSegment(
                         value: ReminderAlertStyle.alarm,
                         icon: compactAlertSegments
                             ? null
                             : const Icon(Icons.alarm_rounded),
-                        label: const Text('Alarm'),
+                        label: Text(context.l10n.alertStyleAlarm),
                       ),
                     ],
                     selected: {_alertStyle},
@@ -226,11 +234,11 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                   Text(
                     switch (_alertStyle) {
                       ReminderAlertStyle.brief =>
-                        'Plays a notification sound once',
+                        context.l10n.alertStyleSoundDescription,
                       ReminderAlertStyle.vibration =>
-                        'Vibrates without playing a sound',
+                        context.l10n.alertStyleVibrateDescription,
                       ReminderAlertStyle.alarm =>
-                        'Repeats using your alarm volume until dismissed',
+                        context.l10n.alertStyleAlarmDescription,
                     },
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,
@@ -265,12 +273,12 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                     : const Icon(Icons.notifications_none_rounded),
                 label: Text(
                   isResolving
-                      ? 'Retrieving location address…'
+                      ? context.l10n.retrievingLocationAddress
                       : _saving
-                      ? 'Saving…'
+                      ? context.l10n.savingLabel
                       : widget.reminder == null
-                      ? 'Create reminder'
-                      : 'Save changes',
+                      ? context.l10n.createReminderAction
+                      : context.l10n.saveChangesAction,
                 ),
               );
             },
@@ -293,7 +301,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
       style: secondaryStyle,
       onPressed: _pickWithExternalMap,
       icon: const Icon(Icons.open_in_new_rounded, size: 20),
-      label: const Text('Other map'),
+      label: Text(context.l10n.otherMapAction),
     );
     final coordinatesButton = OutlinedButton.icon(
       style: secondaryStyle,
@@ -304,7 +312,11 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             : Icons.location_on_outlined,
         size: 20,
       ),
-      label: Text(_showCoordinates ? 'Hide coords' : 'Coords'),
+      label: Text(
+        _showCoordinates
+            ? context.l10n.hideCoordinatesAction
+            : context.l10n.coordinatesShortLabel,
+      ),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -314,12 +326,12 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
           textCapitalization: TextCapitalization.sentences,
           onChanged: (_) => setState(() => _titleWasAutoFilled = false),
           decoration: InputDecoration(
-            labelText: 'Reminder name',
-            hintText: 'Central station',
+            labelText: context.l10n.reminderNameLabel,
+            hintText: context.l10n.reminderNameHint,
             suffixIcon: _title.text.isEmpty
                 ? null
                 : IconButton(
-                    tooltip: 'Clear reminder name',
+                    tooltip: context.l10n.clearReminderNameTooltip,
                     onPressed: () => setState(() {
                       _title.clear();
                       _titleWasAutoFilled = false;
@@ -328,7 +340,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                   ),
           ),
           validator: (value) => value == null || value.trim().isEmpty
-              ? 'Enter a reminder name'
+              ? context.l10n.reminderNameRequiredError
               : null,
         ),
         const SizedBox(height: 10),
@@ -355,7 +367,10 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                TextButton(onPressed: _pickOnMap, child: const Text('Change')),
+                TextButton(
+                  onPressed: _pickOnMap,
+                  child: Text(context.l10n.changeAction),
+                ),
               ],
             ),
           )
@@ -368,7 +383,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             ),
             onPressed: _pickOnMap,
             icon: const Icon(Icons.map_outlined),
-            label: const Text('Choose on map'),
+            label: Text(context.l10n.chooseOnMapAction),
           ),
         const SizedBox(height: 8),
         if (stackActions)
@@ -392,17 +407,29 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: _coordinateField(_latitude, 'Latitude', -90, 90)),
+              Expanded(
+                child: _coordinateField(
+                  _latitude,
+                  context.l10n.latitudeLabel,
+                  -90,
+                  90,
+                ),
+              ),
               const SizedBox(width: 10),
               Expanded(
-                child: _coordinateField(_longitude, 'Longitude', -180, 180),
+                child: _coordinateField(
+                  _longitude,
+                  context.l10n.longitudeLabel,
+                  -180,
+                  180,
+                ),
               ),
             ],
           ),
         ],
         if (_destinationError != null)
           Padding(
-            padding: const EdgeInsets.only(top: 8, left: 12),
+            padding: const EdgeInsetsDirectional.only(top: 8, start: 12),
             child: Text(
               _destinationError!,
               style: TextStyle(color: colors.error, fontSize: 12),
@@ -432,7 +459,10 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
       validator: (value) {
         final number = double.tryParse(value?.trim() ?? '');
         if (number == null || number < minimum || number > maximum) {
-          return '$minimum to $maximum';
+          return context.l10n.coordinateRangeError(
+            minimum.toString(),
+            maximum.toString(),
+          );
         }
         return null;
       },
@@ -452,23 +482,22 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     return closestIndex;
   }
 
-  String _formatDistance(int meters) {
-    if (meters < 1000) return '$meters m';
+  String _formatDistance(BuildContext context, int meters) {
+    if (meters < 1000) return context.l10n.distanceMetersShort(meters);
     final kilometers = meters / 1000;
     final value = kilometers == kilometers.roundToDouble()
         ? kilometers.round().toString()
         : kilometers.toString();
-    return '$value km';
+    return context.l10n.distanceKilometersShort(value);
   }
 
-  String _formatDistanceSemantic(int meters) {
-    if (meters < 1000) return '$meters meters';
-    if (meters == 1000) return '1 kilometer';
+  String _formatDistanceSemantic(BuildContext context, int meters) {
+    if (meters < 1000) return context.l10n.distanceMetersSemantic(meters);
     final kilometers = meters / 1000;
     final value = kilometers == kilometers.roundToDouble()
         ? kilometers.round().toString()
         : kilometers.toString();
-    return '$value kilometers';
+    return context.l10n.distanceKilometersSemantic(num.parse(value));
   }
 
   Future<void> _pickOnMap() async {
@@ -503,32 +532,35 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
             final colors = Theme.of(context).colorScheme;
             return AlertDialog(
               scrollable: true,
-              title: const Text('Choose in another map'),
+              title: Text(context.l10n.chooseInAnotherMapTitle),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const NumberedStep(
+                  NumberedStep(
                     number: 1,
-                    label: 'Choose the destination',
+                    label: context.l10n.externalMapStepChooseDestination,
                   ),
                   const SizedBox(height: 10),
-                  const NumberedStep(number: 2, label: 'Tap Share'),
+                  NumberedStep(
+                    number: 2,
+                    label: context.l10n.externalMapStepTapShare,
+                  ),
                   const SizedBox(height: 10),
                   NumberedStep(
                     number: 3,
-                    label: 'Select Loc',
+                    label: context.l10n.externalMapStepSelectLoc,
                     trailing: Image.asset(
                       'assets/icons/app_icon.png',
                       width: 24,
                       height: 24,
-                      semanticLabel: 'Loc icon',
+                      semanticLabel: context.l10n.appIconSemanticLabel,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Semantics(
                     checked: hideGuidance,
-                    label: "Don't show again",
+                    label: context.l10n.dontShowAgain,
                     onTap: () =>
                         setDialogState(() => hideGuidance = !hideGuidance),
                     child: ExcludeSemantics(
@@ -556,7 +588,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    "Don't show again",
+                                    context.l10n.dontShowAgain,
                                     style: Theme.of(
                                       context,
                                     ).textTheme.bodyMedium,
@@ -574,11 +606,11 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, false),
-                  child: const Text('Cancel'),
+                  child: Text(context.l10n.cancel),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, true),
-                  child: const Text('Open map'),
+                  child: Text(context.l10n.openMapAction),
                 ),
               ],
             );
@@ -611,7 +643,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     }
     if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No compatible map app is installed')),
+        SnackBar(content: Text(context.l10n.noCompatibleMapAppError)),
       );
     }
   }
@@ -641,7 +673,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
         longitude < -180 ||
         longitude > 180) {
       setState(() {
-        _destinationError = 'Choose a destination or enter valid coordinates';
+        _destinationError = context.l10n.destinationRequiredError;
         _showCoordinates = true;
       });
       return;
@@ -681,15 +713,12 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
           builder: (context) => AlertDialog(
             scrollable: true,
             icon: const Icon(Icons.error_outline_rounded),
-            title: const Text('Reminder was not saved'),
-            content: const Text(
-              'Your entries are still here. Check your connection and try '
-              'again.',
-            ),
+            title: Text(context.l10n.reminderNotSavedTitle),
+            content: Text(context.l10n.reminderNotSavedMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Keep editing'),
+                child: Text(context.l10n.keepEditingAction),
               ),
             ],
           ),

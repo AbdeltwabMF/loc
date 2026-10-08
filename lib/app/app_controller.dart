@@ -1,12 +1,16 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:loc/data/app_repository.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
+import 'package:loc/data/services/app_locale_service.dart';
 import 'package:loc/data/services/background_tracking_service.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
+import 'package:loc/l10n/app_localizations.dart';
+import 'package:loc/l10n/l10n.dart';
 
 class AppController extends ChangeNotifier {
   AppController({
@@ -27,7 +31,9 @@ class AppController extends ChangeNotifier {
   Future<void> _operationQueue = Future.value();
   Point? _currentPosition;
   ThemeMode _themeMode = ThemeMode.system;
-  bool _useGoogleSans = true;
+  Locale? _locale;
+  late AppLocalizations _l10n;
+  bool _useSystemFont = false;
   bool _alarmEnabled = true;
   bool _notificationsAllowed = true;
   bool _backgroundTrackingPreferred = false;
@@ -42,7 +48,15 @@ class AppController extends ChangeNotifier {
   List<Reminder> get reminders => List.unmodifiable(_reminders);
   Point? get currentPosition => _currentPosition;
   ThemeMode get themeMode => _themeMode;
-  bool get useGoogleSans => _useGoogleSans;
+  Locale? get locale => _locale;
+  String get effectiveLanguageCode {
+    final code =
+        _locale?.languageCode ??
+        PlatformDispatcher.instance.locale.languageCode;
+    return code == 'ar' ? 'ar' : 'en';
+  }
+
+  bool get useSystemFont => _useSystemFont;
   bool get alarmEnabled => _alarmEnabled;
   bool get notificationsAllowed => _notificationsAllowed;
   bool get systemNotificationsEnabled => _alarmEnabled && _notificationsAllowed;
@@ -73,7 +87,13 @@ class AppController extends ChangeNotifier {
       'dark' => ThemeMode.dark,
       _ => ThemeMode.system,
     };
-    _useGoogleSans = _repository.loadUseGoogleSans();
+    final localeCode = _repository.loadLocaleCode();
+    _locale = localeCode == null ? null : Locale(localeCode);
+    _l10n = await loadAppLocalizations(effectiveLanguageCode);
+    await _notificationService.updateLocalization(
+      NotificationContent.fromLocalizations(_l10n),
+    );
+    _useSystemFont = _repository.loadUseSystemFont();
     _trackingSetupSeen = _repository.loadTrackingSetupSeen();
     _alarmEnabled = _repository.loadAlarmEnabled();
     _notificationsAllowed = await _notificationService.isPermissionGranted();
@@ -161,6 +181,7 @@ class AppController extends ChangeNotifier {
           _backgroundTracking.start(
             reminders: _reminders,
             alarmEnabled: systemNotificationsEnabled,
+            localeCode: effectiveLanguageCode,
           ),
         );
       }
@@ -260,6 +281,7 @@ class AppController extends ChangeNotifier {
     await _backgroundTracking.sync(
       reminders: _reminders,
       alarmEnabled: systemNotificationsEnabled,
+      localeCode: effectiveLanguageCode,
     );
     if (savedReminder.isTracking) {
       await _refreshTrackingAccess(startTrackingWhenReady: true);
@@ -297,6 +319,7 @@ class AppController extends ChangeNotifier {
         await _backgroundTracking.sync(
           reminders: _reminders,
           alarmEnabled: systemNotificationsEnabled,
+          localeCode: effectiveLanguageCode,
         );
         notifyListeners();
       });
@@ -307,9 +330,47 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> setUseGoogleSans(bool value) async {
-    await _repository.saveUseGoogleSans(value);
-    _useGoogleSans = value;
+  Future<void> setLocale(Locale? value) async {
+    final languageCode = value?.languageCode;
+    if (languageCode != null && languageCode != 'en' && languageCode != 'ar') {
+      return;
+    }
+    await _repository.saveLocaleCode(languageCode);
+    _locale = value;
+    _l10n = await loadAppLocalizations(effectiveLanguageCode);
+    await AppLocaleService.setApplicationLocale(languageCode);
+    await _notificationService.updateLocalization(
+      NotificationContent.fromLocalizations(_l10n),
+    );
+    await _backgroundTracking.sync(
+      reminders: _reminders,
+      alarmEnabled: systemNotificationsEnabled,
+      localeCode: effectiveLanguageCode,
+    );
+    _arrivalNotificationSignature = null;
+    await _syncArrivalAlert();
+    notifyListeners();
+  }
+
+  Future<void> setUseSystemFont(bool value) async {
+    await _repository.saveUseSystemFont(value);
+    _useSystemFont = value;
+    notifyListeners();
+  }
+
+  Future<void> refreshSystemLocale() async {
+    if (_locale != null || _isDisposed) return;
+    _l10n = await loadAppLocalizations(effectiveLanguageCode);
+    await _notificationService.updateLocalization(
+      NotificationContent.fromLocalizations(_l10n),
+    );
+    await _backgroundTracking.sync(
+      reminders: _reminders,
+      alarmEnabled: systemNotificationsEnabled,
+      localeCode: effectiveLanguageCode,
+    );
+    _arrivalNotificationSignature = null;
+    await _syncArrivalAlert();
     notifyListeners();
   }
 
@@ -350,6 +411,7 @@ class AppController extends ChangeNotifier {
     await _backgroundTracking.sync(
       reminders: _reminders,
       alarmEnabled: systemNotificationsEnabled,
+      localeCode: effectiveLanguageCode,
     );
     if (!value) {
       _arrivalNotificationSignature = null;
@@ -385,6 +447,7 @@ class AppController extends ChangeNotifier {
       await _backgroundTracking.start(
         reminders: _reminders,
         alarmEnabled: systemNotificationsEnabled,
+        localeCode: effectiveLanguageCode,
       );
     }
     notifyListeners();
@@ -413,6 +476,7 @@ class AppController extends ChangeNotifier {
     await _backgroundTracking.sync(
       reminders: _reminders,
       alarmEnabled: systemNotificationsEnabled,
+      localeCode: effectiveLanguageCode,
     );
     notifyListeners();
   });
@@ -468,7 +532,7 @@ class AppController extends ChangeNotifier {
       await _notificationService.dismissArrival();
     }
     await _notificationService.showArrival(
-      title: 'You have arrived',
+      title: _l10n.arrivalNotificationTitle,
       body: arrived.map((item) => item.title).join(', '),
       isAlarm: isAlarm,
       isVibration: arrived.any((item) => item.isVibration),
@@ -482,6 +546,7 @@ class AppController extends ChangeNotifier {
         await _backgroundTracking.start(
           reminders: _reminders,
           alarmEnabled: systemNotificationsEnabled,
+          localeCode: effectiveLanguageCode,
         );
       } else {
         await _backgroundTracking.stop();
@@ -495,6 +560,7 @@ class AppController extends ChangeNotifier {
     await _backgroundTracking.sync(
       reminders: _reminders,
       alarmEnabled: systemNotificationsEnabled,
+      localeCode: effectiveLanguageCode,
     );
     await _backgroundTracking.stop();
   }
@@ -510,17 +576,17 @@ class AppController extends ChangeNotifier {
     }
     switch (await _locationService.accessStatus(background: false)) {
       case LocationAccessStatus.serviceDisabled:
-        _locationError = 'Device location is turned off.';
+        _locationError = _l10n.deviceLocationDisabledError;
         _permissionRecoveryRequired = true;
         await _pauseTrackingForPermissionPage();
         return;
       case LocationAccessStatus.permissionDenied:
-        _locationError = 'Location access is required for active reminders.';
+        _locationError = _l10n.activeRemindersLocationRequiredError;
         _permissionRecoveryRequired = true;
         await _pauseTrackingForPermissionPage();
         return;
       case LocationAccessStatus.settingsRequired:
-        _locationError = 'Enable location access for active reminders.';
+        _locationError = _l10n.enableActiveRemindersLocationError;
         _permissionRecoveryRequired = true;
         await _pauseTrackingForPermissionPage();
         return;

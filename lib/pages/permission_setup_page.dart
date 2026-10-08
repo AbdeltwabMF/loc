@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/power_service.dart';
+import 'package:loc/l10n/l10n.dart';
 import 'package:loc/themes/tokens.dart';
 import 'package:provider/provider.dart';
 
@@ -143,7 +144,7 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
-                      'Loc',
+                      context.l10n.appName,
                       style: Theme.of(context).textTheme.headlineLarge,
                     ),
                   ],
@@ -154,16 +155,16 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                   children: [
                     Text(
                       widget.initialSetup
-                          ? 'Set up permissions'
-                          : 'Location access needed',
+                          ? context.l10n.permissionSetupTitle
+                          : context.l10n.locationAccessNeededTitle,
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       widget.initialSetup
-                          ? 'Loc needs the following permissions'
-                          : 'Loc needs to detect when you arrive',
+                          ? context.l10n.permissionSetupDescription
+                          : context.l10n.locationRecoveryDescription,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),
@@ -172,34 +173,36 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                 ),
                 const SizedBox(height: AppSpacing.group),
                 Text(
-                  'Required',
+                  context.l10n.requiredPermissionsHeading,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _PermissionCard(
                   icon: Icons.location_on_outlined,
-                  title: 'Location',
-                  description: 'To detect when you arrive at your destination',
+                  title: context.l10n.locationPermissionTitle,
+                  description: context.l10n.locationPermissionDescription,
                   granted: locationReady,
                   actionLabel: switch (_locationStatus) {
-                    LocationAccessStatus.serviceDisabled => 'Turn on',
-                    LocationAccessStatus.settingsRequired => 'Open settings',
-                    _ => 'Allow',
+                    LocationAccessStatus.serviceDisabled =>
+                      context.l10n.turnOnAction,
+                    LocationAccessStatus.settingsRequired =>
+                      context.l10n.openSettingsAction,
+                    _ => context.l10n.allowAction,
                   },
                   onPressed: _busy || locationReady ? null : _requestLocation,
                 ),
                 const SizedBox(height: AppSpacing.group),
                 Text(
-                  'Optional',
+                  context.l10n.optionalPermissionsHeading,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 _PermissionCard(
                   icon: Icons.notifications_active_outlined,
-                  title: 'Notifications',
-                  description: 'To notify you when you arrive',
+                  title: context.l10n.notificationsPermissionTitle,
+                  description: context.l10n.notificationsPermissionDescription,
                   granted: controller.systemNotificationsEnabled,
-                  actionLabel: 'Allow',
+                  actionLabel: context.l10n.allowAction,
                   onPressed: _busy || controller.systemNotificationsEnabled
                       ? null
                       : _requestNotifications,
@@ -207,14 +210,14 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                 const SizedBox(height: AppSpacing.sm),
                 _PermissionCard(
                   icon: Icons.screen_lock_portrait_rounded,
-                  title: 'Screen-off tracking',
+                  title: context.l10n.screenOffTracking,
                   description: _showBackgroundSettingsHelp
-                      ? 'In Permissions > Location, select "Allow all the time"'
-                      : 'To keep reminders active when your screen is off',
+                      ? context.l10n.backgroundLocationSettingsInstruction
+                      : context.l10n.screenOffTrackingPermissionDescription,
                   granted: controller.backgroundTrackingEnabled,
                   actionLabel: _showBackgroundSettingsHelp
-                      ? 'Open settings'
-                      : 'Allow',
+                      ? context.l10n.openSettingsAction
+                      : context.l10n.allowAction,
                   onPressed: _busy || controller.backgroundTrackingEnabled
                       ? null
                       : _showBackgroundSettingsHelp
@@ -224,10 +227,10 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                 const SizedBox(height: AppSpacing.sm),
                 _PermissionCard(
                   icon: Icons.battery_saver_outlined,
-                  title: 'Battery access',
-                  description: 'To keep active reminders running reliably',
+                  title: context.l10n.batteryAccessTitle,
+                  description: context.l10n.batteryAccessDescription,
                   granted: _batteryExempt == true,
-                  actionLabel: 'Allow',
+                  actionLabel: context.l10n.allowAction,
                   onPressed: _busy || _batteryExempt != false
                       ? null
                       : _requestBatteryExemption,
@@ -236,13 +239,15 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                 FilledButton(
                   onPressed: locationReady && !_busy ? _continue : null,
                   child: Text(
-                    widget.initialSetup ? 'Continue' : 'Resume reminders',
+                    widget.initialSetup
+                        ? context.l10n.continueAction
+                        : context.l10n.resumeRemindersAction,
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.sm),
                   child: Text(
-                    'You can change optional permissions later in Settings',
+                    context.l10n.optionalPermissionsSettingsNote,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: colors.onSurfaceVariant,

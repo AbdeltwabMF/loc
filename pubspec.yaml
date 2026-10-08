@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   flutter_compass: ^0.8.1
   flutter_map: ^8.3.2
@@ -40,6 +42,7 @@ dependency_overrides:
       path: geolocator_android
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/icons/app_icon.png
@@ -48,11 +51,19 @@ flutter:
       fonts:
         - asset: assets/fonts/GoogleSans-Regular.ttf
           weight: 400
-        - asset: assets/fonts/GoogleSans-Italic.ttf
-          style: italic
         - asset: assets/fonts/GoogleSans-Medium.ttf
           weight: 500
         - asset: assets/fonts/GoogleSans-SemiBold.ttf
           weight: 600
         - asset: assets/fonts/GoogleSans-Bold.ttf
+          weight: 700
+    - family: BalooBhaijaan2
+      fonts:
+        - asset: assets/fonts/BalooBhaijaan2-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/BalooBhaijaan2-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/BalooBhaijaan2-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/BalooBhaijaan2-Bold.ttf
           weight: 700

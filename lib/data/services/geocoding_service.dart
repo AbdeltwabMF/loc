@@ -35,14 +35,14 @@ class GeocodingService {
     'User-Agent': _appMetadata.androidUserAgent,
   };
 
-  Future<Place> reverse(Point point) async {
+  Future<Place> reverse(Point point, {String languageCode = 'en'}) async {
     final uri = Uri.https(_host, '/reverse', {
       'format': 'jsonv2',
       'lat': point.latitude.toString(),
       'lon': point.longitude.toString(),
       'zoom': '16',
       'addressdetails': '1',
-      'accept-language': 'en',
+      'accept-language': languageCode == 'ar' ? 'ar' : 'en',
     });
     final json = await _get(uri);
     if (json is! Map<String, dynamic> ||

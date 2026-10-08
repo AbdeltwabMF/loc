@@ -9,6 +9,7 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/services/geocoding_service.dart';
 import 'package:loc/data/services/location_service.dart';
+import 'package:loc/l10n/l10n.dart';
 import 'package:loc/themes/tokens.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -67,10 +68,10 @@ class _MapPickerPageState extends State<MapPickerPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Choose destination'),
+            Text(context.l10n.chooseDestinationTitle),
             const SizedBox(height: 2),
             Text(
-              'Pan and zoom the map under the pin',
+              context.l10n.mapPickerInstructions,
               style: theme.textTheme.bodySmall,
             ),
           ],
@@ -93,7 +94,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Map tiles are unavailable. You can still choose a location.',
+                        context.l10n.mapTilesUnavailableMessage,
                         style: theme.textTheme.bodySmall,
                       ),
                     ),
@@ -161,8 +162,8 @@ class _MapPickerPageState extends State<MapPickerPage> {
                     ],
                   ),
                 ),
-                Positioned(
-                  left: 16,
+                PositionedDirectional(
+                  start: 16,
                   bottom: 0,
                   child: SafeArea(
                     child: Material(
@@ -180,7 +181,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Center(
                             child: Text(
-                              '© OpenStreetMap contributors',
+                              context.l10n.openStreetMapAttribution,
                               style: theme.textTheme.labelSmall,
                             ),
                           ),
@@ -215,10 +216,10 @@ class _MapPickerPageState extends State<MapPickerPage> {
                       children: [
                         const Spacer(),
                         Align(
-                          alignment: Alignment.centerRight,
+                          alignment: AlignmentDirectional.centerEnd,
                           child: FloatingActionButton.small(
                             heroTag: 'my-location',
-                            tooltip: 'My location',
+                            tooltip: context.l10n.myLocationTooltip,
                             onPressed: _moveToCurrent,
                             child: const Icon(Icons.my_location_rounded),
                           ),
@@ -252,7 +253,9 @@ class _MapPickerPageState extends State<MapPickerPage> {
                         )
                       : const Icon(Icons.check_rounded),
                   label: Text(
-                    _selecting ? 'Finding address…' : 'Use this location',
+                    _selecting
+                        ? context.l10n.findingAddress
+                        : context.l10n.useThisLocationAction,
                   ),
                 ),
               ),
@@ -284,6 +287,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
       return;
     }
     if (!mounted) return;
+    final l10n = context.l10n;
 
     if (status == LocationAccessStatus.serviceDisabled) {
       await state.openLocationSettings();
@@ -292,14 +296,14 @@ class _MapPickerPageState extends State<MapPickerPage> {
 
     final action = switch (status) {
       LocationAccessStatus.permissionDenied => await _showLocationDialog(
-        title: 'Allow location access',
-        message: 'Loc needs your permission to center the map where you are.',
-        actionLabel: 'Allow',
+        title: l10n.allowLocationAccessTitle,
+        message: l10n.mapLocationPermissionMessage,
+        actionLabel: l10n.allowAction,
       ),
       LocationAccessStatus.settingsRequired => await _showLocationDialog(
-        title: 'Allow location access',
-        message: 'Enable location permission for Loc in Android settings.',
-        actionLabel: 'Open settings',
+        title: l10n.allowLocationAccessTitle,
+        message: l10n.enableLocationInAndroidSettingsMessage,
+        actionLabel: l10n.openSettingsAction,
       ),
       LocationAccessStatus.ready => false,
       LocationAccessStatus.serviceDisabled => false,
@@ -333,7 +337,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Not now'),
+                child: Text(context.l10n.notNowAction),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
@@ -353,7 +357,10 @@ class _MapPickerPageState extends State<MapPickerPage> {
     );
     Place place;
     try {
-      place = await _geocoding.reverse(point);
+      place = await _geocoding.reverse(
+        point,
+        languageCode: Localizations.localeOf(context).languageCode,
+      );
     } on Object {
       place = Place(position: point);
     }
@@ -363,6 +370,6 @@ class _MapPickerPageState extends State<MapPickerPage> {
   void _showError(Object error) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(error.toString())));
+    ).showSnackBar(SnackBar(content: Text(context.l10n.locationUnknownError)));
   }
 }

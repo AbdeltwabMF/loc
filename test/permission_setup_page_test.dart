@@ -9,6 +9,7 @@ import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 import 'package:loc/data/services/power_service.dart';
+import 'package:loc/l10n/app_localizations_en.dart';
 import 'package:loc/pages/permission_setup_page.dart';
 import 'package:loc/themes/theme_data.dart';
 import 'package:provider/provider.dart';
@@ -78,7 +79,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Location access needed'), findsOneWidget);
+    expect(
+      find.text(AppLocalizationsEn().locationAccessNeededTitle),
+      findsOneWidget,
+    );
     expect(find.text('Location'), findsOneWidget);
     expect(find.text('Optional'), findsOneWidget);
     expect(find.text('Notifications'), findsOneWidget);
@@ -227,6 +231,7 @@ class _FakeRepository implements AppRepository {
   bool trackingSetupSeen = false;
   bool backgroundTrackingEnabled = false;
   bool alarmEnabled = true;
+  String? localeCode;
 
   @override
   Future<void> deleteReminder(String id) async {}
@@ -247,7 +252,10 @@ class _FakeRepository implements AppRepository {
   String loadThemeMode() => 'system';
 
   @override
-  bool loadUseGoogleSans() => true;
+  String? loadLocaleCode() => localeCode;
+
+  @override
+  bool loadUseSystemFont() => false;
 
   @override
   Future<void> saveAlarmEnabled(bool value) async {
@@ -266,12 +274,17 @@ class _FakeRepository implements AppRepository {
   Future<void> saveThemeMode(String value) async {}
 
   @override
+  Future<void> saveLocaleCode(String? value) async {
+    localeCode = value;
+  }
+
+  @override
   Future<void> saveTrackingSetupSeen(bool value) async {
     trackingSetupSeen = value;
   }
 
   @override
-  Future<void> saveUseGoogleSans(bool value) async {}
+  Future<void> saveUseSystemFont(bool value) async {}
 }
 
 class _FakeNotificationService implements NotificationService {
@@ -283,7 +296,10 @@ class _FakeNotificationService implements NotificationService {
   Future<void> dismissArrival() async {}
 
   @override
-  Future<void> initialize() async {}
+  Future<void> initialize({NotificationContent? content}) async {}
+
+  @override
+  Future<void> updateLocalization(NotificationContent content) async {}
 
   @override
   Future<bool> isPermissionGranted() async => permissionGranted;

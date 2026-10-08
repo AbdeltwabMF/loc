@@ -468,8 +468,8 @@ void main() {
     expect(harness.reminder.isPinned, isFalse);
   });
 
-  test('loads and updates the Google Sans preference', () async {
-    final repository = _FakeRepository([]).._useGoogleSans = true;
+  test('loads and updates the system font preference', () async {
+    final repository = _FakeRepository([]).._useSystemFont = true;
     final location = _FakeLocationService(_pointAtMeters(200));
     final controller = AppController(
       repository: repository,
@@ -482,11 +482,11 @@ void main() {
     });
 
     await controller.initialize();
-    expect(controller.useGoogleSans, isTrue);
+    expect(controller.useSystemFont, isTrue);
 
-    await controller.setUseGoogleSans(false);
-    expect(controller.useGoogleSans, isFalse);
-    expect(repository._useGoogleSans, isFalse);
+    await controller.setUseSystemFont(false);
+    expect(controller.useSystemFont, isFalse);
+    expect(repository._useSystemFont, isFalse);
   });
 
   test('persists completion of the tracking setup prompt', () async {
@@ -667,6 +667,7 @@ class _FakeBackgroundTracking implements BackgroundTrackingControl {
   Future<void> start({
     required List<Reminder> reminders,
     required bool alarmEnabled,
+    required String localeCode,
   }) async {
     starts++;
     snapshots.add(List.of(reminders));
@@ -681,6 +682,7 @@ class _FakeBackgroundTracking implements BackgroundTrackingControl {
   Future<void> sync({
     required List<Reminder> reminders,
     required bool alarmEnabled,
+    required String localeCode,
   }) async {
     snapshots.add(List.of(reminders));
   }
@@ -695,7 +697,8 @@ class _FakeRepository implements AppRepository {
   bool _alarmEnabled = true;
   bool _backgroundTrackingEnabled = false;
   bool _trackingSetupSeen = true;
-  bool _useGoogleSans = false;
+  bool _useSystemFont = false;
+  String? _localeCode;
   int saveFailuresRemaining = 0;
 
   @override
@@ -710,7 +713,7 @@ class _FakeRepository implements AppRepository {
   bool loadBackgroundTrackingEnabled() => _backgroundTrackingEnabled;
 
   @override
-  bool loadUseGoogleSans() => _useGoogleSans;
+  bool loadUseSystemFont() => _useSystemFont;
 
   @override
   bool loadTrackingSetupSeen() => _trackingSetupSeen;
@@ -720,6 +723,9 @@ class _FakeRepository implements AppRepository {
 
   @override
   String loadThemeMode() => _themeMode;
+
+  @override
+  String? loadLocaleCode() => _localeCode;
 
   @override
   Future<void> saveAlarmEnabled(bool value) async {
@@ -746,8 +752,13 @@ class _FakeRepository implements AppRepository {
   }
 
   @override
-  Future<void> saveUseGoogleSans(bool value) async {
-    _useGoogleSans = value;
+  Future<void> saveLocaleCode(String? value) async {
+    _localeCode = value;
+  }
+
+  @override
+  Future<void> saveUseSystemFont(bool value) async {
+    _useSystemFont = value;
   }
 
   @override
@@ -830,7 +841,10 @@ class _FakeNotificationService implements NotificationService {
   }
 
   @override
-  Future<void> initialize() async {}
+  Future<void> initialize({NotificationContent? content}) async {}
+
+  @override
+  Future<void> updateLocalization(NotificationContent content) async {}
 
   @override
   Future<bool> isPermissionGranted() async => permissionGranted;

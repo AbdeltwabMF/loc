@@ -8,6 +8,7 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/compass_service.dart';
+import 'package:loc/l10n/l10n.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
 import 'package:loc/place_presentation.dart';
 import 'package:loc/themes/tokens.dart';
@@ -204,7 +205,12 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
     child: Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.page, 4, 8, 4),
+          padding: const EdgeInsetsDirectional.fromSTEB(
+            AppSpacing.page,
+            4,
+            8,
+            4,
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),
             child: Row(
@@ -213,13 +219,13 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
                   child: Semantics(
                     header: true,
                     child: Text(
-                      'Reminders',
+                      context.l10n.remindersTitle,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                   ),
                 ),
                 PopupMenuButton<_ReminderMenuAction>(
-                  tooltip: 'More options',
+                  tooltip: context.l10n.moreOptionsTooltip,
                   icon: const Icon(Icons.more_vert_rounded),
                   constraints: const BoxConstraints(
                     minWidth: 180,
@@ -233,13 +239,13 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
                       onPrivacyPolicyPressed(),
                     _ReminderMenuAction.about => onAboutPressed(),
                   },
-                  itemBuilder: (context) => const [
+                  itemBuilder: (context) => [
                     PopupMenuItem(
                       value: _ReminderMenuAction.settings,
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: _MenuItem(
                         icon: Icons.settings_outlined,
-                        label: 'Settings',
+                        label: context.l10n.settingsTitle,
                       ),
                     ),
                     PopupMenuItem(
@@ -247,7 +253,7 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: _MenuItem(
                         icon: Icons.code_rounded,
-                        label: 'Source code',
+                        label: context.l10n.sourceCode,
                       ),
                     ),
                     PopupMenuItem(
@@ -255,7 +261,7 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: _MenuItem(
                         icon: Icons.privacy_tip_outlined,
-                        label: 'Privacy policy',
+                        label: context.l10n.privacyPolicy,
                       ),
                     ),
                     PopupMenuItem(
@@ -263,7 +269,7 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: _MenuItem(
                         icon: Icons.info_outline_rounded,
-                        label: 'About',
+                        label: context.l10n.aboutApp,
                       ),
                     ),
                   ],
@@ -281,9 +287,9 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
           ),
           child: TextField(
             onChanged: onQueryChanged,
-            decoration: const InputDecoration(
-              hintText: 'Search reminders',
-              prefixIcon: Icon(Icons.search_rounded),
+            decoration: InputDecoration(
+              hintText: context.l10n.searchRemindersHint,
+              prefixIcon: const Icon(Icons.search_rounded),
             ),
           ),
         ),
@@ -301,7 +307,7 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
               final filter = ReminderFilter.values[index];
               return FilterChip(
                 selected: selectedFilter == filter,
-                label: Text(_filterLabel(filter)),
+                label: Text(_filterLabel(context, filter)),
                 showCheckmark: false,
                 onSelected: (_) => onFilterSelected(filter),
               );
@@ -321,13 +327,14 @@ class _ReminderHeaderDelegate extends SliverPersistentHeaderDelegate {
       onPrivacyPolicyPressed != oldDelegate.onPrivacyPolicyPressed ||
       onAboutPressed != oldDelegate.onAboutPressed;
 
-  static String _filterLabel(ReminderFilter filter) => switch (filter) {
-    ReminderFilter.all => 'All',
-    ReminderFilter.pinned => 'Pinned',
-    ReminderFilter.active => 'Active',
-    ReminderFilter.arrived => 'Triggered',
-    ReminderFilter.paused => 'Paused',
-  };
+  static String _filterLabel(BuildContext context, ReminderFilter filter) =>
+      switch (filter) {
+        ReminderFilter.all => context.l10n.filterAll,
+        ReminderFilter.pinned => context.l10n.filterPinned,
+        ReminderFilter.active => context.l10n.filterActive,
+        ReminderFilter.arrived => context.l10n.filterTriggered,
+        ReminderFilter.paused => context.l10n.filterPaused,
+      };
 }
 
 class _MenuItem extends StatelessWidget {
@@ -405,8 +412,14 @@ class _ReminderCard extends StatelessWidget {
             alignedBackgroundColor: colors.primary,
           );
     final rawPlaceLabel = reminder.place.displayLabel;
+    final localizedPlaceLabel = rawPlaceLabel == Place.droppedPinLabel
+        ? context.l10n.droppedPinLabel
+        : rawPlaceLabel;
     final placeLabel = rawPlaceLabel == Place.droppedPinLabel
-        ? '$rawPlaceLabel · ${reminder.place.coordinateLabel}'
+        ? context.l10n.placeWithCoordinates(
+            localizedPlaceLabel,
+            reminder.place.coordinateLabel,
+          )
         : rawPlaceLabel;
 
     return Card(
@@ -431,11 +444,11 @@ class _ReminderCard extends StatelessWidget {
                     children: [
                       marker,
                       if (reminder.isPinned)
-                        Positioned(
+                        PositionedDirectional(
                           top: -8,
-                          right: -8,
+                          end: -8,
                           child: Semantics(
-                            label: 'Pinned reminder',
+                            label: context.l10n.pinnedReminderSemanticLabel,
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
@@ -470,9 +483,11 @@ class _ReminderCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           distance == null
-                              ? '${reminder.place.radius ?? Place.defaultRadius} m alert distance'
-                              : '${_distanceLabel(distance)} · '
-                                    '${_bearingLabel(bearing!)} '
+                              ? context.l10n.alertDistanceMeters(
+                                  reminder.place.radius ?? Place.defaultRadius,
+                                )
+                              : '${_distanceLabel(context, distance)} · '
+                                    '${_bearingLabel(context, bearing!)} '
                                     '${bearing.round() % 360}°',
                           style: theme.textTheme.bodySmall,
                           maxLines: 2,
@@ -490,7 +505,7 @@ class _ReminderCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              'Triggered',
+                              context.l10n.reminderStatusTriggered,
                               style: theme.textTheme.labelSmall?.copyWith(
                                 color: colors.onSecondaryContainer,
                                 fontSize: 11,
@@ -504,8 +519,8 @@ class _ReminderCard extends StatelessWidget {
                   ),
                   Semantics(
                     label: reminder.isTracking
-                        ? 'Tracking enabled'
-                        : 'Tracking paused',
+                        ? context.l10n.trackingEnabledSemanticLabel
+                        : context.l10n.trackingPausedSemanticLabel,
                     child: CompactSwitch(
                       value: reminder.isTracking,
                       onChanged: (value) async {
@@ -555,13 +570,15 @@ class _ReminderCard extends StatelessWidget {
                     : Icons.push_pin_rounded,
               ),
               title: Text(
-                reminder.isPinned ? 'Unpin reminder' : 'Pin reminder',
+                reminder.isPinned
+                    ? context.l10n.unpinReminder
+                    : context.l10n.pinReminder,
               ),
               onTap: () => Navigator.pop(context, _ReminderAction.pin),
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline_rounded),
-              title: const Text('Delete reminder'),
+              title: Text(context.l10n.deleteReminder),
               onTap: () => Navigator.pop(context, _ReminderAction.delete),
             ),
           ],
@@ -580,19 +597,19 @@ class _ReminderCard extends StatelessWidget {
             context: context,
             builder: (context) => AlertDialog(
               scrollable: true,
-              title: const Text('Delete this reminder?'),
-              content: const Text('This cannot be undone.'),
+              title: Text(context.l10n.deleteReminderConfirmationTitle),
+              content: Text(context.l10n.actionCannotBeUndone),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel'),
+                  child: Text(context.l10n.cancel),
                 ),
                 TextButton(
                   style: TextButton.styleFrom(
                     foregroundColor: Theme.of(context).colorScheme.error,
                   ),
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Delete'),
+                  child: Text(context.l10n.delete),
                 ),
               ],
             ),
@@ -604,12 +621,22 @@ class _ReminderCard extends StatelessWidget {
     }
   }
 
-  static String _distanceLabel(int meters) => meters < 1000
-      ? '$meters m away'
-      : '${(meters / 1000).toStringAsFixed(1)} km away';
+  static String _distanceLabel(BuildContext context, int meters) =>
+      meters < 1000
+      ? context.l10n.distanceMetersAway(meters)
+      : context.l10n.distanceKilometersAway((meters / 1000).toStringAsFixed(1));
 
-  static String _bearingLabel(double bearing) {
-    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  static String _bearingLabel(BuildContext context, double bearing) {
+    final directions = [
+      context.l10n.directionNorthShort,
+      context.l10n.directionNorthEastShort,
+      context.l10n.directionEastShort,
+      context.l10n.directionSouthEastShort,
+      context.l10n.directionSouthShort,
+      context.l10n.directionSouthWestShort,
+      context.l10n.directionWestShort,
+      context.l10n.directionNorthWestShort,
+    ];
     return directions[((bearing + 22.5) ~/ 45) % directions.length];
   }
 }
@@ -641,10 +668,10 @@ class _Compass extends StatelessWidget {
         final foreground = aligned ? alignedColor : color;
         return Semantics(
           label: heading == null
-              ? 'Destination bearing ${bearing.round() % 360} degrees'
+              ? context.l10n.destinationBearingDegrees(bearing.round() % 360)
               : aligned
-              ? 'Destination straight ahead'
-              : _relativeDirectionLabel(direction),
+              ? context.l10n.destinationStraightAhead
+              : _relativeDirectionLabel(context, direction),
           child: AnimatedContainer(
             width: 46,
             height: 46,
@@ -667,7 +694,7 @@ class _Compass extends StatelessWidget {
                     top: heading == null ? 0 : 3,
                     child: heading == null
                         ? Text(
-                            'N',
+                            context.l10n.directionNorthShort,
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: foreground,
@@ -704,13 +731,16 @@ class _Compass extends StatelessWidget {
     );
   }
 
-  static String _relativeDirectionLabel(double direction) {
+  static String _relativeDirectionLabel(
+    BuildContext context,
+    double direction,
+  ) {
     final rounded = direction.round() % 360;
-    if (rounded == 0) return 'Destination straight ahead';
+    if (rounded == 0) return context.l10n.destinationStraightAhead;
     if (rounded <= 180) {
-      return 'Destination $rounded degrees to the right';
+      return context.l10n.destinationDegreesRight(rounded);
     }
-    return 'Destination ${360 - rounded} degrees to the left';
+    return context.l10n.destinationDegreesLeft(360 - rounded);
   }
 }
 
@@ -733,7 +763,9 @@ class _EmptyReminders extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            hasAny ? 'No matching reminders' : 'Your next stop starts here',
+            hasAny
+                ? context.l10n.noMatchingReminders
+                : context.l10n.emptyRemindersMessage,
             style: Theme.of(context).textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
@@ -746,5 +778,5 @@ class _EmptyReminders extends StatelessWidget {
 void _showError(BuildContext context, Object error) {
   ScaffoldMessenger.of(
     context,
-  ).showSnackBar(SnackBar(content: Text(error.toString())));
+  ).showSnackBar(SnackBar(content: Text(context.l10n.genericError)));
 }

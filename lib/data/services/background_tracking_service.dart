@@ -10,6 +10,8 @@ import 'package:loc/data/models/place.dart';
 import 'package:loc/data/models/point.dart';
 import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/notification_service.dart';
+import 'package:loc/l10n/app_localizations.dart';
+import 'package:loc/l10n/l10n.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Notification used by the background foreground-service. It must stay
@@ -25,6 +27,7 @@ abstract class BackgroundTrackingControl {
   Future<void> start({
     required List<Reminder> reminders,
     required bool alarmEnabled,
+    required String localeCode,
   });
 
   Future<void> stop();
@@ -32,6 +35,7 @@ abstract class BackgroundTrackingControl {
   Future<void> sync({
     required List<Reminder> reminders,
     required bool alarmEnabled,
+    required String localeCode,
   });
 }
 
@@ -40,6 +44,7 @@ class NoopBackgroundTrackingControl implements BackgroundTrackingControl {
   Future<void> start({
     required List<Reminder> reminders,
     required bool alarmEnabled,
+    String localeCode = 'en',
   }) async {}
 
   @override
@@ -49,6 +54,7 @@ class NoopBackgroundTrackingControl implements BackgroundTrackingControl {
   Future<void> sync({
     required List<Reminder> reminders,
     required bool alarmEnabled,
+    String localeCode = 'en',
   }) async {}
 }
 
@@ -62,11 +68,12 @@ class FlutterBackgroundTrackingControl implements BackgroundTrackingControl {
   Future<void> start({
     required List<Reminder> reminders,
     required bool alarmEnabled,
+    required String localeCode,
   }) async {
     try {
-      await _persistSnapshot(reminders, alarmEnabled);
+      await _persistSnapshot(reminders, alarmEnabled, localeCode);
       if (await _service.isRunning()) {
-        _sendSnapshot(reminders, alarmEnabled);
+        _sendSnapshot(reminders, alarmEnabled, localeCode);
         return;
       }
       final ready = _service
@@ -75,7 +82,7 @@ class FlutterBackgroundTrackingControl implements BackgroundTrackingControl {
           .timeout(const Duration(seconds: 5), onTimeout: () => null);
       await _service.startService();
       await ready;
-      _sendSnapshot(reminders, alarmEnabled);
+      _sendSnapshot(reminders, alarmEnabled, localeCode);
     } on Object {
       // Tracking still works in the foreground UI isolate; the background
       // service is a best-effort upgrade for screen-off tracking.
@@ -95,30 +102,40 @@ class FlutterBackgroundTrackingControl implements BackgroundTrackingControl {
   Future<void> sync({
     required List<Reminder> reminders,
     required bool alarmEnabled,
+    required String localeCode,
   }) async {
     try {
-      await _persistSnapshot(reminders, alarmEnabled);
+      await _persistSnapshot(reminders, alarmEnabled, localeCode);
       if (await _service.isRunning()) {
-        _sendSnapshot(reminders, alarmEnabled);
+        _sendSnapshot(reminders, alarmEnabled, localeCode);
       }
     } on Object {
       // Ignore: the persisted snapshot is read when the service restarts.
     }
   }
 
-  void _sendSnapshot(List<Reminder> reminders, bool alarmEnabled) {
+  void _sendSnapshot(
+    List<Reminder> reminders,
+    bool alarmEnabled,
+    String localeCode,
+  ) {
     _service.invoke('sync', {
       'alarmEnabled': alarmEnabled,
+      'localeCode': localeCode,
       'reminders': reminders.map(_reminderToJson).toList(growable: false),
     });
   }
 
-  Future<void> _persistSnapshot(List<Reminder> reminders, bool alarmEnabled) =>
-      _writeSnapshot(
-        SharedPreferencesAsync(),
-        reminders: reminders,
-        alarmEnabled: alarmEnabled,
-      );
+  Future<void> _persistSnapshot(
+    List<Reminder> reminders,
+    bool alarmEnabled,
+    String localeCode,
+  ) => _writeSnapshot(
+    SharedPreferencesAsync(),
+    reminders: reminders,
+    alarmEnabled: alarmEnabled,
+    localeCode: localeCode,
+  );
 }
 
 /// Applies arrival state written after the UI isolate was destroyed.
@@ -146,6 +163,8 @@ Future<void> reconcileBackgroundTracking(AppRepository repository) async {
 
 /// Must be called from `main()` (UI isolate) before `runApp`.
 Future<void> initializeBackgroundTracking() async {
+  final snapshot = await _readSnapshot(SharedPreferencesAsync());
+  final l10n = await loadAppLocalizations(snapshot?.localeCode);
   final service = FlutterBackgroundService();
   await service.configure(
     iosConfiguration: IosConfiguration(autoStart: false),
@@ -154,8 +173,8 @@ Future<void> initializeBackgroundTracking() async {
       autoStart: false,
       autoStartOnBoot: false,
       isForegroundMode: true,
-      initialNotificationTitle: 'Loc is watching your route',
-      initialNotificationContent: 'Active arrival reminders are being checked.',
+      initialNotificationTitle: l10n.backgroundTrackingNotificationTitle,
+      initialNotificationContent: l10n.backgroundTrackingNotificationBody,
       // ignore: avoid_redundant_argument_values
       foregroundServiceNotificationId: backgroundServiceNotificationId,
       foregroundServiceTypes: [AndroidForegroundType.location],
@@ -171,13 +190,15 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
   final preferences = SharedPreferencesAsync();
   final initialSnapshot = await _readSnapshot(preferences);
+  var l10n = await loadAppLocalizations(initialSnapshot?.localeCode);
+  final notificationContent = NotificationContent.fromLocalizations(l10n);
   final notifications = FlutterLocalNotificationsPlugin();
   await notifications.initialize(
     settings: const InitializationSettings(
       android: AndroidInitializationSettings('app_icon'),
     ),
   );
-  await NotificationService.createAlarmChannel(notifications);
+  await NotificationService.createChannels(notifications, notificationContent);
 
   // A stale service may briefly be restored by an older installation.
   if (initialSnapshot == null ||
@@ -193,6 +214,7 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
 
   var reminders = initialSnapshot.reminders;
   var alarmEnabled = initialSnapshot.alarmEnabled;
+  var localeCode = initialSnapshot.localeCode;
   Point? previous;
   String? signature;
   StreamSubscription<Position>? subscription;
@@ -227,10 +249,11 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
         preferences,
         reminders: reminders,
         alarmEnabled: alarmEnabled,
+        localeCode: localeCode,
       );
     }
     previous = point;
-    await _syncAlert(reminders, alarmEnabled, notifications, (value) {
+    await _syncAlert(reminders, alarmEnabled, notifications, l10n, (value) {
       signature = value;
     }, signature);
   }
@@ -261,10 +284,20 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
       }
       final enabled = data['alarmEnabled'];
       if (enabled is bool) alarmEnabled = enabled;
+      final locale = data['localeCode'];
+      if (locale is String) {
+        localeCode = locale;
+        l10n = await loadAppLocalizations(localeCode);
+        await NotificationService.createChannels(
+          notifications,
+          NotificationContent.fromLocalizations(l10n),
+        );
+      }
       await _writeSnapshot(
         preferences,
         reminders: reminders,
         alarmEnabled: alarmEnabled,
+        localeCode: localeCode,
       );
     }
     if (!reminders.any((item) => item.isTracking)) {
@@ -273,7 +306,7 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
       await subscription?.cancel();
       await _stop(service);
     } else {
-      await _syncAlert(reminders, alarmEnabled, notifications, (value) {
+      await _syncAlert(reminders, alarmEnabled, notifications, l10n, (value) {
         signature = value;
       }, signature);
     }
@@ -296,6 +329,7 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
       preferences,
       reminders: reminders,
       alarmEnabled: alarmEnabled,
+      localeCode: localeCode,
     );
     signature = null;
     await notifications.cancel(id: NotificationService.arrivalNotificationId);
@@ -309,6 +343,7 @@ Future<void> _syncAlert(
   List<Reminder> reminders,
   bool alarmEnabled,
   FlutterLocalNotificationsPlugin notifications,
+  AppLocalizations l10n,
   void Function(String?) setSignature,
   String? signature,
 ) async {
@@ -338,11 +373,12 @@ Future<void> _syncAlert(
   }
   await notifications.show(
     id: NotificationService.arrivalNotificationId,
-    title: 'You have arrived',
+    title: l10n.arrivalNotificationTitle,
     body: arrived.map((item) => item.title).join(', '),
     notificationDetails: NotificationService.arrivalDetails(
       isAlarm: isAlarm,
       isVibration: isVibration,
+      content: NotificationContent.fromLocalizations(l10n),
     ),
   );
   setSignature(next);
@@ -386,17 +422,18 @@ Future<void> _writeSnapshot(
   SharedPreferencesAsync preferences, {
   required List<Reminder> reminders,
   required bool alarmEnabled,
+  required String localeCode,
 }) => preferences.setString(
   _trackingSnapshotKey,
   jsonEncode({
     'alarmEnabled': alarmEnabled,
+    'localeCode': localeCode,
     'reminders': reminders.map(_reminderToJson).toList(growable: false),
   }),
 );
 
-Future<({List<Reminder> reminders, bool alarmEnabled})?> _readSnapshot(
-  SharedPreferencesAsync preferences,
-) async {
+Future<({List<Reminder> reminders, bool alarmEnabled, String localeCode})?>
+_readSnapshot(SharedPreferencesAsync preferences) async {
   try {
     final encoded = await preferences.getString(_trackingSnapshotKey);
     if (encoded == null) return null;
@@ -404,6 +441,7 @@ Future<({List<Reminder> reminders, bool alarmEnabled})?> _readSnapshot(
     if (value is! Map<String, dynamic>) return null;
     final reminders = value['reminders'];
     final alarmEnabled = value['alarmEnabled'];
+    final localeCode = value['localeCode'];
     if (reminders is! List || alarmEnabled is! bool) return null;
     return (
       reminders: reminders
@@ -411,6 +449,7 @@ Future<({List<Reminder> reminders, bool alarmEnabled})?> _readSnapshot(
           .map(_reminderFromJson)
           .toList(),
       alarmEnabled: alarmEnabled,
+      localeCode: localeCode == 'ar' ? 'ar' : 'en',
     );
   } on Object {
     return null;

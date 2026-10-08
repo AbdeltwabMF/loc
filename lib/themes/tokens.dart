@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 /// App-level typography tokens used by the shared themes.
 abstract final class AppTypography {
   static const String googleSans = 'GoogleSans';
+  static const String balooBhaijaan2 = 'BalooBhaijaan2';
+
+  static String? bundledFamilyFor(String languageCode) =>
+      switch (languageCode) {
+        'en' => googleSans,
+        'ar' => balooBhaijaan2,
+        _ => null,
+      };
 }
 
 /// App-level spacing tokens based on a 4dp grid.
