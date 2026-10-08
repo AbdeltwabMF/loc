@@ -8,8 +8,6 @@ import 'package:loc/data/models/point.dart';
 enum ReminderAlertStyle { brief, vibration, alarm }
 
 class Reminder {
-  static const arrivalExitBufferMeters = 10.0;
-
   final String id;
   final String title;
   final Place place;
@@ -90,8 +88,7 @@ class Reminder {
       remainderDistance(current) <= (place.radius ?? Place.defaultRadius);
 
   bool hasExited(Point current) =>
-      remainderDistance(current) >
-      (place.radius ?? Place.defaultRadius) + arrivalExitBufferMeters;
+      remainderDistance(current) > (place.radius ?? Place.defaultRadius);
 
   bool pathIntersectsArrivalZone(Point from, Point to) {
     const earthRadius = 6371000.0;

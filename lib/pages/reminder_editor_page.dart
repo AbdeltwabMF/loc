@@ -528,7 +528,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                   const SizedBox(height: 12),
                   Semantics(
                     checked: hideGuidance,
-                    label: "Don't show this again",
+                    label: "Don't show again",
                     onTap: () =>
                         setDialogState(() => hideGuidance = !hideGuidance),
                     child: ExcludeSemantics(
@@ -556,7 +556,7 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    "Don't show this again",
+                                    "Don't show again",
                                     style: Theme.of(
                                       context,
                                     ).textTheme.bodyMedium,

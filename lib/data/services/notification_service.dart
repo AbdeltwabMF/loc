@@ -6,6 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationService {
   static const arrivalNotificationId = 4107;
+  static const alarmChannelId = 'arrival_alarms_v3';
+  static const _alarmChannelName = 'Arrival alarms';
+  static const _alarmChannelDescription =
+      'Repeating alarms for destinations that must wake you.';
+  static const _alarmSound = UriAndroidNotificationSound(
+    'content://settings/system/alarm_alert',
+  );
   static const _androidFlagInsistent = 4;
   static const MethodChannel _settingsChannel = MethodChannel(
     'xyz.abdeltwab.loc/settings',
@@ -21,6 +28,26 @@ class NotificationService {
         android: AndroidInitializationSettings('app_icon'),
       ),
     );
+    await createAlarmChannel(_plugin);
+  }
+
+  static Future<void> createAlarmChannel(
+    FlutterLocalNotificationsPlugin plugin,
+  ) async {
+    await plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            alarmChannelId,
+            _alarmChannelName,
+            description: _alarmChannelDescription,
+            importance: Importance.max,
+            sound: _alarmSound,
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+          ),
+        );
   }
 
   Future<bool> requestPermission() async {
@@ -81,17 +108,14 @@ class NotificationService {
   }) => NotificationDetails(
     android: isAlarm
         ? AndroidNotificationDetails(
-            'arrival_alarms_v2',
-            'Arrival alarms',
-            channelDescription:
-                'Repeating alarms for destinations that must wake you.',
+            alarmChannelId,
+            _alarmChannelName,
+            channelDescription: _alarmChannelDescription,
             importance: Importance.max,
             priority: Priority.max,
             category: AndroidNotificationCategory.alarm,
             audioAttributesUsage: AudioAttributesUsage.alarm,
-            sound: UriAndroidNotificationSound(
-              'content://settings/system/alarm_alert',
-            ),
+            sound: _alarmSound,
             ongoing: true,
             autoCancel: false,
             additionalFlags: Int32List.fromList([_androidFlagInsistent]),

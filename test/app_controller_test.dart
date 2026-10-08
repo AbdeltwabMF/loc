@@ -13,27 +13,6 @@ import 'package:loc/data/services/notification_service.dart';
 void main() {
   group('AppController arrival lifecycle', () {
     test(
-      'clears arrival beyond the exit buffer without stopping tracking',
-      () async {
-        final harness = await _Harness.create([_reminder()]);
-        addTearDown(harness.dispose);
-
-        harness.location.emit(_pointAtMeters(50));
-        await _waitFor(() => harness.reminder.isArrived);
-
-        await harness.emitAndWait(_pointAtMeters(105));
-        expect(harness.reminder.isArrived, isTrue);
-
-        harness.location.emit(_pointAtMeters(115));
-        await _waitFor(() => !harness.reminder.isArrived);
-
-        expect(harness.reminder.isAcknowledged, isFalse);
-        expect(harness.controller.isTrackingLocation, isTrue);
-        expect(harness.notifications.current, isNull);
-      },
-    );
-
-    test(
       'dismisses one visit and alerts again after exit and re-entry',
       () async {
         final harness = await _Harness.create([
@@ -49,7 +28,7 @@ void main() {
         expect(harness.reminder.isAcknowledged, isTrue);
         expect(harness.controller.isTrackingLocation, isTrue);
 
-        harness.location.emit(_pointAtMeters(130));
+        harness.location.emit(_pointAtMeters(105));
         await _waitFor(() => !harness.reminder.isArrived);
         harness.location.emit(_pointAtMeters(50));
         await _waitFor(() => harness.notifications.shown.length == 2);
@@ -75,6 +54,16 @@ void main() {
         expect(harness.notifications.shown.last.isAlarm, isTrue);
       },
     );
+
+    test('clears an existing notification before posting an alarm', () async {
+      final harness = await _Harness.create([
+        _reminder(isArrived: true, isAlarm: true),
+      ], initialMeters: 50);
+      addTearDown(harness.dispose);
+
+      expect(harness.notifications.shown, hasLength(1));
+      expect(harness.notifications.dismissals, 1);
+    });
 
     test('editing preserves the current acknowledged visit', () async {
       final harness = await _Harness.create([_reminder()]);
@@ -832,9 +821,11 @@ class _FakeNotificationService implements NotificationService {
   bool permissionGranted;
   bool requestResult;
   int showFailuresRemaining = 0;
+  int dismissals = 0;
 
   @override
   Future<void> dismissArrival() async {
+    dismissals++;
     current = null;
   }
 

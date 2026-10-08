@@ -49,7 +49,7 @@ void main() {
     expect(find.text('Choose the destination'), findsOneWidget);
     expect(find.text('Tap Share'), findsOneWidget);
     expect(find.text('Select Loc'), findsOneWidget);
-    expect(find.text("Don't show this again"), findsOneWidget);
+    expect(find.text("Don't show again"), findsOneWidget);
     expect(find.text('Open map'), findsOneWidget);
     // Numbered steps replace the old decorative connector lines/icons.
     expect(find.text('1'), findsOneWidget);
@@ -76,7 +76,7 @@ void main() {
       'assets/icons/app_icon.png',
     );
     final theme = Theme.of(tester.element(dialog)).dialogTheme;
-    final optOutLabel = tester.widget<Text>(find.text("Don't show this again"));
+    final optOutLabel = tester.widget<Text>(find.text("Don't show again"));
     expect(theme.titleTextStyle?.fontSize, 24);
     expect(theme.titleTextStyle?.fontWeight, FontWeight.w400);
     expect(optOutLabel.style?.fontSize, 14);
@@ -97,7 +97,7 @@ void main() {
 
     await tester.tap(find.text('Other map'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text("Don't show this again"));
+    await tester.tap(find.text("Don't show again"));
     await tester.tap(find.text('Open map'));
     await tester.pumpAndSettle();
 

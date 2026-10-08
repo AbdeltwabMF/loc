@@ -26,7 +26,9 @@ abstract class BackgroundTrackingControl {
     required List<Reminder> reminders,
     required bool alarmEnabled,
   });
+
   Future<void> stop();
+
   Future<void> sync({
     required List<Reminder> reminders,
     required bool alarmEnabled,
@@ -175,6 +177,7 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
       android: AndroidInitializationSettings('app_icon'),
     ),
   );
+  await NotificationService.createAlarmChannel(notifications);
 
   // A stale service may briefly be restored by an older installation.
   if (initialSnapshot == null ||
@@ -209,12 +212,10 @@ Future<void> trackingServiceEntry(ServiceInstance service) async {
       final reminder = reminders[index];
       if (!reminder.isTracking) continue;
       final entered =
-          _hasArrived(reminder, point) ||
+          reminder.hasArrived(point) ||
           (previous != null &&
               reminder.pathIntersectsArrivalZone(previous!, point));
-      final arrived = reminder.isArrived
-          ? !_hasExited(reminder, point)
-          : entered;
+      final arrived = reminder.isArrived ? !reminder.hasExited(point) : entered;
       final resetAck = !arrived && reminder.isAcknowledged;
       if (arrived == reminder.isArrived && !resetAck) continue;
       final updated = reminder.copy(
@@ -332,7 +333,7 @@ Future<void> _syncAlert(
   if (await android?.areNotificationsEnabled() == false) return;
   final isAlarm = arrived.any((item) => item.isAlarm);
   final isVibration = arrived.any((item) => item.isVibration);
-  if (signature != null) {
+  if (signature != null || isAlarm) {
     await notifications.cancel(id: NotificationService.arrivalNotificationId);
   }
   await notifications.show(
@@ -346,23 +347,6 @@ Future<void> _syncAlert(
   );
   setSignature(next);
 }
-
-double _distanceMeters(Reminder reminder, Point current) =>
-    Geolocator.distanceBetween(
-      current.latitude,
-      current.longitude,
-      reminder.place.position.latitude,
-      reminder.place.position.longitude,
-    );
-
-bool _hasArrived(Reminder reminder, Point current) =>
-    _distanceMeters(reminder, current) <=
-    (reminder.place.radius ?? Place.defaultRadius);
-
-bool _hasExited(Reminder reminder, Point current) =>
-    _distanceMeters(reminder, current) >
-    (reminder.place.radius ?? Place.defaultRadius) +
-        Reminder.arrivalExitBufferMeters;
 
 Map<String, dynamic> _reminderToJson(Reminder reminder) => {
   'id': reminder.id,
