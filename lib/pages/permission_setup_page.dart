@@ -50,7 +50,7 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
 
   Future<void> _refresh() async {
     final controller = context.read<AppController>();
-    await controller.refreshAttention();
+    await controller.refreshTrackingState();
     if (_showBackgroundSettingsHelp &&
         controller.backgroundLocationAllowed &&
         !controller.backgroundTrackingEnabled) {
@@ -179,8 +179,7 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                 _PermissionCard(
                   icon: Icons.location_on_outlined,
                   title: 'Location',
-                  description:
-                      'Allows Loc to detect when you arrive at your destination',
+                  description: 'To detect when you arrive at your destination',
                   granted: locationReady,
                   actionLabel: switch (_locationStatus) {
                     LocationAccessStatus.serviceDisabled => 'Turn on',
@@ -198,7 +197,7 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                 _PermissionCard(
                   icon: Icons.notifications_active_outlined,
                   title: 'Notifications',
-                  description: 'Allows Loc to notify you when you arrive',
+                  description: 'To notify you when you arrive',
                   granted: controller.systemNotificationsEnabled,
                   actionLabel: 'Allow',
                   onPressed: _busy || controller.systemNotificationsEnabled
@@ -211,7 +210,7 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                   title: 'Screen-off tracking',
                   description: _showBackgroundSettingsHelp
                       ? 'In Permissions > Location, select "Allow all the time"'
-                      : 'Allows Loc to keep reminders active when your screen is off',
+                      : 'To keep reminders active when your screen is off',
                   granted: controller.backgroundTrackingEnabled,
                   actionLabel: _showBackgroundSettingsHelp
                       ? 'Open settings'
@@ -226,8 +225,7 @@ class _PermissionSetupPageState extends State<PermissionSetupPage>
                 _PermissionCard(
                   icon: Icons.battery_saver_outlined,
                   title: 'Battery access',
-                  description:
-                      'Allows Loc to keep active reminders running reliably',
+                  description: 'To keep active reminders running reliably',
                   granted: _batteryExempt == true,
                   actionLabel: 'Allow',
                   onPressed: _busy || _batteryExempt != false
