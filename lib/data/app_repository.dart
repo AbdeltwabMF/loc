@@ -20,6 +20,11 @@ class AppRepository {
     return value is String ? value.toLowerCase() : 'system';
   }
 
+  String? loadLocaleCode() {
+    final value = _preferences.get('localeCode');
+    return value == 'en' || value == 'ar' ? value as String : null;
+  }
+
   bool loadAlarmEnabled() {
     final value = _preferences.get('alarmEnabled', defaultValue: true);
     return value is bool ? value : true;
@@ -33,9 +38,12 @@ class AppRepository {
     return value is bool ? value : false;
   }
 
-  bool loadUseGoogleSans() {
-    final value = _preferences.get('useGoogleSans', defaultValue: true);
-    return value is bool ? value : true;
+  bool loadUseSystemFont() {
+    final value = _preferences.get('useSystemFont');
+    if (value is bool) return value;
+
+    final legacyValue = _preferences.get('useGoogleSans');
+    return legacyValue is bool ? !legacyValue : false;
   }
 
   bool loadTrackingSetupSeen() {
@@ -46,14 +54,20 @@ class AppRepository {
   Future<void> saveThemeMode(String value) =>
       _preferences.put('themeMode', value);
 
+  Future<void> saveLocaleCode(String? value) => value == null
+      ? _preferences.delete('localeCode')
+      : _preferences.put('localeCode', value);
+
   Future<void> saveAlarmEnabled(bool value) =>
       _preferences.put('alarmEnabled', value);
 
   Future<void> saveBackgroundTrackingEnabled(bool value) =>
       _preferences.put('backgroundTrackingEnabled', value);
 
-  Future<void> saveUseGoogleSans(bool value) =>
-      _preferences.put('useGoogleSans', value);
+  Future<void> saveUseSystemFont(bool value) async {
+    await _preferences.put('useSystemFont', value);
+    await _preferences.delete('useGoogleSans');
+  }
 
   Future<void> saveTrackingSetupSeen(bool value) =>
       _preferences.put('trackingSetupSeen', value);

@@ -60,12 +60,39 @@ void main() {
     expect(repository.loadBackgroundTrackingEnabled(), isTrue);
   });
 
-  test('persists the Google Sans preference', () async {
-    expect(repository.loadUseGoogleSans(), isTrue);
+  test('persists the system font preference', () async {
+    expect(repository.loadUseSystemFont(), isFalse);
 
-    await repository.saveUseGoogleSans(false);
+    await repository.saveUseSystemFont(true);
 
-    expect(repository.loadUseGoogleSans(), isFalse);
+    expect(repository.loadUseSystemFont(), isTrue);
+  });
+
+  test('migrates the legacy Google Sans preference', () async {
+    await preferences.put('useGoogleSans', true);
+    expect(repository.loadUseSystemFont(), isFalse);
+
+    await preferences.put('useGoogleSans', false);
+    expect(repository.loadUseSystemFont(), isTrue);
+
+    await repository.saveUseSystemFont(false);
+    expect(preferences.containsKey('useGoogleSans'), isFalse);
+  });
+
+  test('persists and clears a supported locale', () async {
+    expect(repository.loadLocaleCode(), isNull);
+
+    await repository.saveLocaleCode('ar');
+    expect(repository.loadLocaleCode(), 'ar');
+
+    await repository.saveLocaleCode(null);
+    expect(repository.loadLocaleCode(), isNull);
+  });
+
+  test('ignores unsupported persisted locales', () async {
+    await preferences.put('localeCode', 'fr');
+
+    expect(repository.loadLocaleCode(), isNull);
   });
 
   test('persists that the tracking setup prompt was handled', () async {

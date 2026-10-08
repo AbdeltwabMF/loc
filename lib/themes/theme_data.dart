@@ -222,11 +222,39 @@ abstract final class AppTheme {
     fontFamily: AppTypography.googleSans,
   );
 
-  static ThemeData light({required bool useGoogleSans}) =>
-      useGoogleSans ? _googleSansThemeLight : themeLight;
+  static final _balooBhaijaan2ThemeLight = _build(
+    themeLight.colorScheme,
+    fontFamily: AppTypography.balooBhaijaan2,
+  );
 
-  static ThemeData dark({required bool useGoogleSans}) =>
-      useGoogleSans ? _googleSansThemeDark : themeDark;
+  static final _balooBhaijaan2ThemeDark = _build(
+    themeDark.colorScheme,
+    fontFamily: AppTypography.balooBhaijaan2,
+  );
+
+  static ThemeData light({
+    required bool useSystemFont,
+    String languageCode = 'en',
+  }) {
+    if (useSystemFont) return themeLight;
+    return switch (AppTypography.bundledFamilyFor(languageCode)) {
+      AppTypography.googleSans => _googleSansThemeLight,
+      AppTypography.balooBhaijaan2 => _balooBhaijaan2ThemeLight,
+      _ => themeLight,
+    };
+  }
+
+  static ThemeData dark({
+    required bool useSystemFont,
+    String languageCode = 'en',
+  }) {
+    if (useSystemFont) return themeDark;
+    return switch (AppTypography.bundledFamilyFor(languageCode)) {
+      AppTypography.googleSans => _googleSansThemeDark,
+      AppTypography.balooBhaijaan2 => _balooBhaijaan2ThemeDark,
+      _ => themeDark,
+    };
+  }
 
   static ThemeData _build(ColorScheme colors, {String? fontFamily}) {
     final border = OutlineInputBorder(

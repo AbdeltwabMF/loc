@@ -227,6 +227,7 @@ class _FakeRepository implements AppRepository {
   bool trackingSetupSeen = false;
   bool backgroundTrackingEnabled = false;
   bool alarmEnabled = true;
+  String? localeCode;
 
   @override
   Future<void> deleteReminder(String id) async {}
@@ -247,7 +248,10 @@ class _FakeRepository implements AppRepository {
   String loadThemeMode() => 'system';
 
   @override
-  bool loadUseGoogleSans() => true;
+  String? loadLocaleCode() => localeCode;
+
+  @override
+  bool loadUseSystemFont() => false;
 
   @override
   Future<void> saveAlarmEnabled(bool value) async {
@@ -266,12 +270,17 @@ class _FakeRepository implements AppRepository {
   Future<void> saveThemeMode(String value) async {}
 
   @override
+  Future<void> saveLocaleCode(String? value) async {
+    localeCode = value;
+  }
+
+  @override
   Future<void> saveTrackingSetupSeen(bool value) async {
     trackingSetupSeen = value;
   }
 
   @override
-  Future<void> saveUseGoogleSans(bool value) async {}
+  Future<void> saveUseSystemFont(bool value) async {}
 }
 
 class _FakeNotificationService implements NotificationService {
@@ -283,7 +292,10 @@ class _FakeNotificationService implements NotificationService {
   Future<void> dismissArrival() async {}
 
   @override
-  Future<void> initialize() async {}
+  Future<void> initialize({NotificationContent? content}) async {}
+
+  @override
+  Future<void> updateLocalization(NotificationContent content) async {}
 
   @override
   Future<bool> isPermissionGranted() async => permissionGranted;

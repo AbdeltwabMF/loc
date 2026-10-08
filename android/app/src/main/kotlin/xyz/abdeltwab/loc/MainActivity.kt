@@ -2,6 +2,9 @@ package xyz.abdeltwab.loc
 
 import android.content.Intent
 import android.net.Uri
+import android.app.LocaleManager
+import android.os.Build
+import android.os.LocaleList
 import android.os.PowerManager
 import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
@@ -57,6 +60,41 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "openNotificationSettings" -> {
                     openNotificationSettings()
+                    result.success(null)
+                }
+
+                else -> result.notImplemented()
+            }
+        }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "xyz.abdeltwab.loc/locale",
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getApplicationLocale" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val locales = getSystemService(LocaleManager::class.java).applicationLocales
+                        result.success(
+                            mapOf(
+                                "supported" to true,
+                                "languageCode" to locales.takeUnless { it.isEmpty }?.get(0)?.language,
+                            )
+                        )
+                    } else {
+                        result.success(mapOf("supported" to false))
+                    }
+                }
+
+                "setApplicationLocale" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val languageCode = call.arguments as? String
+                        val locales = if (languageCode == null) {
+                            LocaleList.getEmptyLocaleList()
+                        } else {
+                            LocaleList.forLanguageTags(languageCode)
+                        }
+                        getSystemService(LocaleManager::class.java).applicationLocales = locales
+                    }
                     result.success(null)
                 }
 

@@ -4,7 +4,7 @@ import 'package:loc/themes/tokens.dart';
 
 void main() {
   test('Google Sans theme applies the family to text and components', () {
-    final theme = AppTheme.light(useGoogleSans: true);
+    final theme = AppTheme.light(useSystemFont: false);
 
     expect(theme.textTheme.bodyMedium?.fontFamily, AppTypography.googleSans);
     expect(
@@ -22,7 +22,7 @@ void main() {
   });
 
   test('system theme does not apply Google Sans', () {
-    final theme = AppTheme.light(useGoogleSans: false);
+    final theme = AppTheme.light(useSystemFont: true);
 
     expect(
       theme.textTheme.bodyMedium?.fontFamily,
@@ -31,6 +31,28 @@ void main() {
     expect(
       theme.appBarTheme.titleTextStyle?.fontFamily,
       isNot(AppTypography.googleSans),
+    );
+  });
+
+  test('Arabic custom theme uses Baloo Bhaijaan 2', () {
+    final theme = AppTheme.light(useSystemFont: false, languageCode: 'ar');
+
+    expect(
+      theme.textTheme.bodyMedium?.fontFamily,
+      AppTypography.balooBhaijaan2,
+    );
+    expect(
+      theme.appBarTheme.titleTextStyle?.fontFamily,
+      AppTypography.balooBhaijaan2,
+    );
+  });
+
+  test('unknown languages fall back to the system font', () {
+    final theme = AppTheme.light(useSystemFont: false, languageCode: 'fr');
+
+    expect(
+      theme.textTheme.bodyMedium?.fontFamily,
+      isNot(anyOf(AppTypography.googleSans, AppTypography.balooBhaijaan2)),
     );
   });
 }

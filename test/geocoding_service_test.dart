@@ -60,6 +60,34 @@ void main() {
     service.dispose();
   });
 
+  test('requests Arabic place names for the Arabic locale', () async {
+    late http.Request captured;
+    final service = GeocodingService(
+      appMetadata: _appMetadata,
+      client: MockClient((request) async {
+        captured = request;
+        return http.Response.bytes(
+          utf8.encode(
+            jsonEncode({
+              'lat': '30.0444',
+              'lon': '31.2357',
+              'display_name': 'القاهرة، مصر',
+            }),
+          ),
+          200,
+        );
+      }),
+    );
+
+    await service.reverse(
+      Point(latitude: 30.0444, longitude: 31.2357),
+      languageCode: 'ar',
+    );
+
+    expect(captured.url.queryParameters['accept-language'], 'ar');
+    service.dispose();
+  });
+
   test('explains that network filters can block reverse geocoding', () async {
     final service = GeocodingService(
       appMetadata: _appMetadata,

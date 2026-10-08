@@ -5,6 +5,7 @@ import 'package:loc/app/app_controller.dart';
 import 'package:loc/app/app_metadata.dart';
 import 'package:loc/data/models/place.dart';
 import 'package:loc/data/services/geo_uri_service.dart';
+import 'package:loc/l10n/l10n.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
 import 'package:loc/pages/reminders_page.dart';
 import 'package:loc/pages/settings_page.dart';
@@ -62,12 +63,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return Scaffold(
       body: SafeArea(
         child: RemindersPage(
-          onSettingsPressed: () => Navigator.of(context).push<void>(
-            MaterialPageRoute(builder: (_) => const SettingsPage()),
-          ),
-          onSourceCodePressed: () => unawaited(
-            _openExternal('https://github.com/AbdeltwabMF/loc'),
-          ),
+          onSettingsPressed: () => Navigator.of(
+            context,
+          ).push<void>(MaterialPageRoute(builder: (_) => const SettingsPage())),
+          onSourceCodePressed: () =>
+              unawaited(_openExternal('https://github.com/AbdeltwabMF/loc')),
           onPrivacyPolicyPressed: () => unawaited(
             _openExternal('https://loc.abdeltwab.xyz/privacy.html'),
           ),
@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         onPressed: () => Navigator.of(context).push<void>(
           MaterialPageRoute(builder: (_) => const ReminderEditorPage()),
         ),
-        tooltip: 'New reminder',
+        tooltip: context.l10n.newReminderTooltip,
         backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add_location_alt_rounded),
       ),
@@ -96,24 +96,24 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       // The message below also covers platform launch failures.
     }
     if (!opened && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open that link.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenError)));
     }
   }
 
   void _showAbout() {
     showAboutDialog(
       context: context,
-      applicationName: 'Loc',
+      applicationName: context.l10n.appName,
       applicationVersion: AppMetadata.current.displayVersion,
       applicationIcon: Image.asset(
         'assets/icons/app_icon.png',
         width: 48,
         height: 48,
-        semanticLabel: 'Loc icon',
+        semanticLabel: context.l10n.appIconSemanticLabel,
       ),
-      applicationLegalese: 'Licensed under GPL-3.0',
+      applicationLegalese: context.l10n.licenseGpl3,
     );
   }
 }

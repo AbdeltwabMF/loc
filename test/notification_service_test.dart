@@ -14,10 +14,7 @@ void main() {
     expect(android.priority, Priority.max);
     expect(android.category, AndroidNotificationCategory.alarm);
     expect(android.audioAttributesUsage, AudioAttributesUsage.alarm);
-    expect(
-      android.sound?.sound,
-      'content://settings/system/alarm_alert',
-    );
+    expect(android.sound?.sound, 'content://settings/system/alarm_alert');
     expect(android.ongoing, isTrue);
     expect(android.autoCancel, isFalse);
     expect(android.additionalFlags, contains(4));
