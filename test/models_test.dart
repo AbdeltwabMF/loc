@@ -65,7 +65,7 @@ void main() {
       );
     });
 
-    test('uses an exit buffer after arrival', () {
+    test('exits immediately outside the configured radius', () {
       final reminder = Reminder(
         id: 'id',
         title: 'Station',
@@ -75,11 +75,11 @@ void main() {
       );
 
       expect(
-        reminder.hasExited(Point(latitude: 105 / 111320, longitude: 0)),
+        reminder.hasExited(Point(latitude: 95 / 111320, longitude: 0)),
         isFalse,
       );
       expect(
-        reminder.hasExited(Point(latitude: 115 / 111320, longitude: 0)),
+        reminder.hasExited(Point(latitude: 105 / 111320, longitude: 0)),
         isTrue,
       );
     });
