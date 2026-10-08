@@ -9,6 +9,7 @@ import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 import 'package:loc/data/services/power_service.dart';
+import 'package:loc/l10n/app_localizations_en.dart';
 import 'package:loc/pages/permission_setup_page.dart';
 import 'package:loc/themes/theme_data.dart';
 import 'package:provider/provider.dart';
@@ -78,7 +79,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Location access needed'), findsOneWidget);
+    expect(
+      find.text(AppLocalizationsEn().locationAccessNeededTitle),
+      findsOneWidget,
+    );
     expect(find.text('Location'), findsOneWidget);
     expect(find.text('Optional'), findsOneWidget);
     expect(find.text('Notifications'), findsOneWidget);
