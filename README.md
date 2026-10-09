@@ -40,10 +40,10 @@
 
 ## Features
 
-- **Multiple Location Reminders:** Set and manage multiple reminders for different places independently.
-- **Smart Background Tracking:** Detects your arrival even when your screen is off, or you're moving at high speeds.
-- **Flexible Arrival Alerts:** Choose notifications, vibrations, or repeating alarms, with customizable arrival distances.
-- **Easy Location Selection:** Pick locations from maps, shared locations, or GPS coordinates.
+- **Multiple Location Reminders:** Set and manage reminders for different places independently.
+- **Smart Background Tracking:** Detect arrivals even with the screen off or at high speeds.
+- **Flexible Arrival Alerts:** Choose an alert type and adjust the arrival distances.
+- **Easy Location Selection:** Pick locations using maps, shared locations, or GPS coordinates.
 
 ## Development
 
