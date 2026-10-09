@@ -40,13 +40,10 @@
 
 ## Features
 
-- Multiple independently enabled reminders
-- Background tracking while reminders are active
-- Notification, vibration, or repeating alarm for each reminder
-- Arrival radius from 20 m to 50 km
-- High-speed crossing detection between GPS updates
-- Built-in and external map selection, shared locations, and manual coordinates
-- Pinned reminders for quick access
+- **Multiple Location Reminders:** Set and manage multiple reminders for different places independently.
+- **Smart Background Tracking:** Detects your arrival even when your screen is off, or you're moving at high speeds.
+- **Flexible Arrival Alerts:** Choose notifications, vibrations, or repeating alarms, with customizable arrival distances.
+- **Easy Location Selection:** Pick locations from maps, shared locations, or GPS coordinates.
 
 ## Development
 
@@ -56,11 +53,15 @@ Platform 36, then run:
 ```shell
 flutter doctor -v
 flutter pub get
-flutter gen-l10n
-dart format lib test
 flutter analyze
 flutter test
 flutter run
+```
+
+Ensure the code is formated using:
+
+```shell
+dart format lib test
 ```
 
 ## Build
