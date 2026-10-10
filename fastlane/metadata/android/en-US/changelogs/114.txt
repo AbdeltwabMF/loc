@@ -1,0 +1,7 @@
+Loc 2.5.1
+
+- Added Arabic localization and language selection
+- Added locale-aware fonts
+- Added guided setup for location, notification, and background tracking permissions
+- Fixed arrival alarm playback after re-enabling reminders
+- Improved repeating alarm reliability
