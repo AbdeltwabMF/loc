@@ -73,7 +73,7 @@ flutter build apk --debug
 
 **Release build**
 ```shell
-flutter build apk --release --split-per-abi --obfuscate --split-debug-info=build/debug-info
+flutter build apk --release --split-per-abi
 ```
 
 ## License
