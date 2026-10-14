@@ -11,6 +11,14 @@
 </h4>
 
 <div align="center">
+  <a href="https://apt.izzysoft.de/fdroid/index/apk/xyz.abdeltwab.loc">
+    <img
+      src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png"
+      alt="Get it on IzzyOnDroid"
+      height="80"
+    >
+  </a>
+
   <a href="https://github.com/AbdeltwabMF/loc/releases">
     <img
       src="https://github.com/machiav3lli/oandbackupx/blob/034b226cea5c1b30eb4f6a6f313e4dadcbb0ece4/badge_github.png"
