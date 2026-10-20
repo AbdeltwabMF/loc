@@ -1,6 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:loc/themes/tokens.dart';
 
+/// A segmented control that preserves readable labels on narrow screens and
+/// with enlarged system text.
+class AdaptiveSegmentedButton<T> extends StatelessWidget {
+  const AdaptiveSegmentedButton({
+    required this.segmentsBuilder,
+    required this.selected,
+    required this.onSelectionChanged,
+    this.selectedIcon = const Icon(Icons.check_rounded, size: 18),
+    super.key,
+  });
+
+  final List<ButtonSegment<T>> Function(bool showIcons) segmentsBuilder;
+  final Set<T> selected;
+  final ValueChanged<Set<T>> onSelectionChanged;
+  final Widget selectedIcon;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final scaledLabelSize = MediaQuery.textScalerOf(context).scale(14);
+      final vertical = constraints.maxWidth < 260 || scaledLabelSize > 18;
+      final showIcons =
+          !vertical && constraints.maxWidth >= 400 && scaledLabelSize <= 15;
+      final segments = segmentsBuilder(showIcons);
+      final control = SegmentedButton<T>(
+        direction: vertical ? Axis.vertical : Axis.horizontal,
+        expandedInsets: EdgeInsets.zero,
+        segments: segments,
+        selected: selected,
+        selectedIcon: selectedIcon,
+        showSelectedIcon: showIcons,
+        onSelectionChanged: onSelectionChanged,
+      );
+      if (!vertical) return control;
+
+      final segmentHeight = scaledLabelSize + 28 < 48
+          ? 48.0
+          : scaledLabelSize + 28;
+      return SizedBox(height: segmentHeight * segments.length, child: control);
+    },
+  );
+}
+
 /// Standard section card using the app's card shape and spacing tokens.
 class AppSectionCard extends StatelessWidget {
   const AppSectionCard({

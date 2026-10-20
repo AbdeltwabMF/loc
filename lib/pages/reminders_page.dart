@@ -120,7 +120,8 @@ class _RemindersPageState extends State<RemindersPage>
       math.max(48.0, textScaler.scale(24) * 32 / 24 + 8) +
           math.max(48.0, textScaler.scale(16) * 1.5 + 28) +
           16 +
-          math.max(48.0, textScaler.scale(14) * 1.4 + 24),
+          math.max(48.0, textScaler.scale(14) * 1.4 + 24) +
+          math.max(0, textScaler.scale(16) - 16) * 6,
     );
 
     return CustomScrollView(
@@ -421,6 +422,24 @@ class _ReminderCard extends StatelessWidget {
             reminder.place.coordinateLabel,
           )
         : rawPlaceLabel;
+    final mediaQuery = MediaQuery.of(context);
+    final stackTrackingSwitch =
+        mediaQuery.size.width < 360 || mediaQuery.textScaler.scale(14) > 18;
+    final trackingSwitch = Semantics(
+      label: reminder.isTracking
+          ? context.l10n.trackingEnabledSemanticLabel
+          : context.l10n.trackingPausedSemanticLabel,
+      child: CompactSwitch(
+        value: reminder.isTracking,
+        onChanged: (value) async {
+          try {
+            await state.setReminderTracking(reminder, value);
+          } on Object catch (error) {
+            if (context.mounted) _showError(context, error);
+          }
+        },
+      ),
+    );
 
     return Card(
       child: InkWell(
@@ -517,23 +536,14 @@ class _ReminderCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Semantics(
-                    label: reminder.isTracking
-                        ? context.l10n.trackingEnabledSemanticLabel
-                        : context.l10n.trackingPausedSemanticLabel,
-                    child: CompactSwitch(
-                      value: reminder.isTracking,
-                      onChanged: (value) async {
-                        try {
-                          await state.setReminderTracking(reminder, value);
-                        } on Object catch (error) {
-                          if (context.mounted) _showError(context, error);
-                        }
-                      },
-                    ),
-                  ),
+                  if (!stackTrackingSwitch) trackingSwitch,
                 ],
               ),
+              if (stackTrackingSwitch)
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: trackingSwitch,
+                ),
               const SizedBox(height: AppSpacing.compact),
               Row(
                 children: [

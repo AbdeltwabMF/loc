@@ -8,6 +8,7 @@ import 'package:loc/app/app_metadata.dart';
 import 'package:loc/data/app_repository.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
+import 'package:loc/l10n/app_localizations.dart';
 import 'package:loc/pages/home.dart';
 import 'package:loc/themes/theme_data.dart';
 import 'package:provider/provider.dart';
@@ -115,5 +116,36 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(LicensePage), findsOneWidget);
+  });
+
+  testWidgets('fits the reminders screen at narrow width with large text', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 700);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: controller,
+        child: MaterialApp(
+          locale: const Locale('pt'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          theme: AppTheme.themeLight,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: const HomePage(),
+        ),
+      ),
+    );
+
+    expect(find.text('Lembretes'), findsOneWidget);
+    expect(find.text('Pesquisar lembretes'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

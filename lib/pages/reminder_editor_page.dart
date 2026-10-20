@@ -110,8 +110,6 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final radiusIndex = _radiusIndex;
-    final compactAlertSegments =
-        MediaQuery.textScalerOf(context).scale(16) >= 24;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -142,18 +140,19 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
+                  Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 10,
+                    runSpacing: AppSpacing.sm,
                     children: [
-                      Flexible(
-                        child: Text(
-                          context.l10n.notifyWithinLabel,
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                        ),
+                      Text(
+                        context.l10n.notifyWithinLabel,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
-                      const SizedBox(width: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -199,34 +198,31 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
                     ],
                   ),
                   const Divider(height: AppSpacing.group),
-                  SegmentedButton<ReminderAlertStyle>(
-                    expandedInsets: EdgeInsets.zero,
-                    segments: [
+                  AdaptiveSegmentedButton<ReminderAlertStyle>(
+                    segmentsBuilder: (showIcons) => [
                       ButtonSegment(
                         value: ReminderAlertStyle.brief,
-                        icon: compactAlertSegments
-                            ? null
-                            : const Icon(Icons.volume_up_outlined),
+                        icon: showIcons
+                            ? const Icon(Icons.volume_up_outlined)
+                            : null,
                         label: Text(context.l10n.alertStyleSound),
                       ),
                       ButtonSegment(
                         value: ReminderAlertStyle.vibration,
-                        icon: compactAlertSegments
-                            ? null
-                            : const Icon(Icons.vibration_rounded),
+                        icon: showIcons
+                            ? const Icon(Icons.vibration_rounded)
+                            : null,
                         label: Text(context.l10n.alertStyleVibrate),
                       ),
                       ButtonSegment(
                         value: ReminderAlertStyle.alarm,
-                        icon: compactAlertSegments
-                            ? null
-                            : const Icon(Icons.alarm_rounded),
+                        icon: showIcons
+                            ? const Icon(Icons.alarm_rounded)
+                            : null,
                         label: Text(context.l10n.alertStyleAlarm),
                       ),
                     ],
                     selected: {_alertStyle},
-                    selectedIcon: const Icon(Icons.check_rounded, size: 18),
-                    showSelectedIcon: !compactAlertSegments,
                     onSelectionChanged: (value) =>
                         setState(() => _alertStyle = value.single),
                   ),
@@ -291,7 +287,9 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
   Widget _buildDestination(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final place = _selectedPlace;
-    final stackActions = MediaQuery.textScalerOf(context).scale(16) >= 24;
+    final mediaQuery = MediaQuery.of(context);
+    final stackActions =
+        mediaQuery.size.width < 380 || mediaQuery.textScaler.scale(14) > 18;
     final secondaryStyle = OutlinedButton.styleFrom(
       minimumSize: const Size.fromHeight(AppControlHeights.control),
       side: BorderSide(color: colors.outlineVariant),
@@ -405,27 +403,46 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
           ),
         if (_showCoordinates) ...[
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _coordinateField(
+          if (stackActions)
+            Column(
+              children: [
+                _coordinateField(
                   _latitude,
                   context.l10n.latitudeLabel,
                   -90,
                   90,
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _coordinateField(
+                const SizedBox(height: 10),
+                _coordinateField(
                   _longitude,
                   context.l10n.longitudeLabel,
                   -180,
                   180,
                 ),
-              ),
-            ],
-          ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: _coordinateField(
+                    _latitude,
+                    context.l10n.latitudeLabel,
+                    -90,
+                    90,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _coordinateField(
+                    _longitude,
+                    context.l10n.longitudeLabel,
+                    -180,
+                    180,
+                  ),
+                ),
+              ],
+            ),
         ],
         if (_destinationError != null)
           Padding(

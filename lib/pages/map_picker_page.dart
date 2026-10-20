@@ -81,28 +81,31 @@ class _MapPickerPageState extends State<MapPickerPage> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final textScaler = MediaQuery.textScalerOf(context);
-    final toolbarHeight =
-        (textScaler.scale(22) * 1.3 + textScaler.scale(12) * 16 / 12 + 18)
-            .clamp(72.0, 144.0);
+    final toolbarHeight = (textScaler.scale(22) * 1.3 + 20).clamp(56.0, 112.0);
 
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: toolbarHeight,
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(context.l10n.chooseDestinationTitle),
-            const SizedBox(height: 2),
-            Text(
-              context.l10n.mapPickerInstructions,
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
-        ),
+        title: Text(context.l10n.chooseDestinationTitle),
       ),
       body: Column(
         children: [
+          Material(
+            color: colors.surfaceContainerLow,
+            child: SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.page,
+                  vertical: AppSpacing.compact,
+                ),
+                child: Text(
+                  context.l10n.mapPickerInstructions,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            ),
+          ),
           if (_tilesFailed)
             Material(
               color: colors.surfaceContainerHigh,
