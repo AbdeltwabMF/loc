@@ -1,0 +1,4 @@
+Loc 2.6.2
+
+- Fixed reminders to display saved addresses, falling back to coordinates when unavailable
+- Improved layouts for narrow screens and large text sizes
