@@ -5,8 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:loc/app/app_controller.dart';
 import 'package:loc/data/app_repository.dart';
+import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
+import 'package:loc/l10n/app_localizations.dart';
 import 'package:loc/pages/reminder_editor_page.dart';
 import 'package:loc/themes/theme_data.dart';
 import 'package:provider/provider.dart';
@@ -124,14 +126,61 @@ void main() {
     );
     expect(find.text('Alarm settings'), findsNothing);
   });
+
+  testWidgets('adapts long labels to a narrow screen with large text', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 700);
+    addTearDown(tester.view.reset);
+
+    await _pumpEditor(
+      tester,
+      controller,
+      locale: const Locale('pt'),
+      textScaler: const TextScaler.linear(1.5),
+    );
+
+    final otherMapButton = find.ancestor(
+      of: find.text('Outro mapa'),
+      matching: find.byType(OutlinedButton),
+    );
+    final coordinatesButton = find.ancestor(
+      of: find.text('Coordenadas'),
+      matching: find.byType(OutlinedButton),
+    );
+    expect(
+      tester.getTopLeft(coordinatesButton).dy,
+      greaterThan(tester.getTopLeft(otherMapButton).dy),
+    );
+
+    final alertStyles = tester.widget<SegmentedButton<ReminderAlertStyle>>(
+      find.byType(SegmentedButton<ReminderAlertStyle>),
+    );
+    expect(alertStyles.direction, Axis.vertical);
+    expect(find.text('Vibração'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
-Future<void> _pumpEditor(WidgetTester tester, AppController controller) async {
+Future<void> _pumpEditor(
+  WidgetTester tester,
+  AppController controller, {
+  Locale locale = const Locale('en'),
+  TextScaler textScaler = TextScaler.noScaling,
+}) async {
   await tester.pumpWidget(
     ChangeNotifierProvider.value(
       value: controller,
       child: MaterialApp(
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         theme: AppTheme.themeLight,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+          child: child!,
+        ),
         home: const ReminderEditorPage(),
       ),
     ),

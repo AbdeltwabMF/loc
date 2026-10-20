@@ -131,7 +131,6 @@ class _SettingsPageState extends State<SettingsPage>
 
   @override
   Widget build(BuildContext context) {
-    final compactAppearance = MediaQuery.textScalerOf(context).scale(16) >= 24;
     final settings = context
         .select<
           AppController,
@@ -217,28 +216,24 @@ class _SettingsPageState extends State<SettingsPage>
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: AppSpacing.sm),
-          SegmentedButton<ThemeMode>(
-            segments: [
+          AdaptiveSegmentedButton<ThemeMode>(
+            segmentsBuilder: (showIcons) => [
               ButtonSegment(
                 value: ThemeMode.system,
                 label: Text(context.l10n.themeSystem),
-                icon: compactAppearance
-                    ? null
-                    : const Icon(Icons.brightness_auto_rounded),
+                icon: showIcons
+                    ? const Icon(Icons.brightness_auto_rounded)
+                    : null,
               ),
               ButtonSegment(
                 value: ThemeMode.light,
                 label: Text(context.l10n.themeLight),
-                icon: compactAppearance
-                    ? null
-                    : const Icon(Icons.light_mode_outlined),
+                icon: showIcons ? const Icon(Icons.light_mode_outlined) : null,
               ),
               ButtonSegment(
                 value: ThemeMode.dark,
                 label: Text(context.l10n.themeDark),
-                icon: compactAppearance
-                    ? null
-                    : const Icon(Icons.dark_mode_outlined),
+                icon: showIcons ? const Icon(Icons.dark_mode_outlined) : null,
               ),
             ],
             selected: {settings.theme},
@@ -362,12 +357,54 @@ class _SettingsSwitchTile extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    leading: Icon(icon),
-    title: Text(title),
-    subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-    trailing: CompactSwitch(value: value, onChanged: onChanged),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-    onTap: () => onChanged(!value),
-  );
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final stackControl =
+        mediaQuery.size.width < 360 || mediaQuery.textScaler.scale(14) > 18;
+    if (!stackControl) {
+      return ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: CompactSwitch(value: value, onChanged: onChanged),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+        onTap: () => onChanged(!value),
+      );
+    }
+
+    return InkWell(
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.card,
+          vertical: AppSpacing.compact,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.sm),
+                  child: Icon(icon),
+                ),
+                const SizedBox(width: AppSpacing.card),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [Text(title), Text(subtitle)],
+                  ),
+                ),
+              ],
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: CompactSwitch(value: value, onChanged: onChanged),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

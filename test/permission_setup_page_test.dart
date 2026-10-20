@@ -9,8 +9,10 @@ import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/location_service.dart';
 import 'package:loc/data/services/notification_service.dart';
 import 'package:loc/data/services/power_service.dart';
+import 'package:loc/l10n/app_localizations.dart';
 import 'package:loc/l10n/app_localizations_en.dart';
 import 'package:loc/pages/permission_setup_page.dart';
+import 'package:loc/pages/settings_page.dart';
 import 'package:loc/themes/theme_data.dart';
 import 'package:provider/provider.dart';
 
@@ -63,6 +65,78 @@ void main() {
     await tester.pump();
 
     expect(repository.trackingSetupSeen, isTrue);
+  });
+
+  testWidgets('permission cards adapt to narrow screens and large text', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 700);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: controller,
+        child: MaterialApp(
+          locale: const Locale('pt'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          theme: AppTheme.themeLight,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: PermissionSetupPage(
+            initialSetup: true,
+            powerService: _FakePowerService(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Configurar permissões'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('settings adapt to narrow screens and large text', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 700);
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider.value(
+        value: controller,
+        child: MaterialApp(
+          locale: const Locale('pt'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          theme: AppTheme.themeLight,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: child!,
+          ),
+          home: const SettingsPage(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Aparência'), 300);
+    await tester.pumpAndSettle();
+
+    final themes = tester.widget<SegmentedButton<ThemeMode>>(
+      find.byType(SegmentedButton<ThemeMode>),
+    );
+    expect(themes.direction, Axis.vertical);
+    expect(find.text('Configurações'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('active-reminder recovery presents the full permission list', (

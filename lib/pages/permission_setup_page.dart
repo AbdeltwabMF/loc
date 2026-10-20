@@ -283,36 +283,64 @@ class _PermissionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final mediaQuery = MediaQuery.of(context);
+    final stackAction =
+        mediaQuery.size.width < 360 || mediaQuery.textScaler.scale(14) > 18;
+    final details = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: colors.primary),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (granted) ...[
+          const SizedBox(width: AppSpacing.sm),
+          Icon(Icons.check_circle_rounded, color: colors.primary),
+        ],
+      ],
+    );
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.card),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: colors.primary),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: stackAction && !granted
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 2),
-                  Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
+                  details,
+                  const SizedBox(height: AppSpacing.sm),
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: TextButton(
+                      onPressed: onPressed,
+                      child: Text(actionLabel),
                     ),
                   ),
                 ],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: details),
+                  if (!granted) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    TextButton(onPressed: onPressed, child: Text(actionLabel)),
+                  ],
+                ],
               ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            granted
-                ? Icon(Icons.check_circle_rounded, color: colors.primary)
-                : TextButton(onPressed: onPressed, child: Text(actionLabel)),
-          ],
-        ),
       ),
     );
   }
