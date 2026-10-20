@@ -85,6 +85,9 @@ void main() {
     await repository.saveLocaleCode('ar');
     expect(repository.loadLocaleCode(), 'ar');
 
+    await repository.saveLocaleCode('pt');
+    expect(repository.loadLocaleCode(), 'pt');
+
     await repository.saveLocaleCode(null);
     expect(repository.loadLocaleCode(), isNull);
   });

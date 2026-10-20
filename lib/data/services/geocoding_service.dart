@@ -42,7 +42,11 @@ class GeocodingService {
       'lon': point.longitude.toString(),
       'zoom': '16',
       'addressdetails': '1',
-      'accept-language': languageCode == 'ar' ? 'ar' : 'en',
+      'accept-language': switch (languageCode) {
+        'ar' => 'ar',
+        'pt' => 'pt-BR',
+        _ => 'en',
+      },
     });
     final json = await _get(uri);
     if (json is! Map<String, dynamic> ||

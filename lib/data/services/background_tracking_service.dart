@@ -449,7 +449,11 @@ _readSnapshot(SharedPreferencesAsync preferences) async {
           .map(_reminderFromJson)
           .toList(),
       alarmEnabled: alarmEnabled,
-      localeCode: localeCode == 'ar' ? 'ar' : 'en',
+      localeCode: switch (localeCode) {
+        'ar' => 'ar',
+        'pt' => 'pt',
+        _ => 'en',
+      },
     );
   } on Object {
     return null;

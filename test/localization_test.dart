@@ -29,4 +29,19 @@ void main() {
     expect(direction, TextDirection.rtl);
     expect(find.text('الإعدادات'), findsOneWidget);
   });
+
+  testWidgets('Brazilian Portuguese locale supplies translated content', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('pt', 'BR'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        home: Builder(builder: (context) => Text(context.l10n.settingsTitle)),
+      ),
+    );
+
+    expect(find.text('Configurações'), findsOneWidget);
+  });
 }

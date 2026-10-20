@@ -241,6 +241,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get languageArabic => 'العربية';
 
   @override
+  String get languagePortuguese => 'Português (Brasil)';
+
+  @override
   String get newReminderTitle => 'تذكير جديد';
 
   @override

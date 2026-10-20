@@ -1,0 +1,5 @@
+Loc 2.6.0
+
+- Added Brazilian Portuguese translation and language selection
+- Improved the destination map to open at your current location when available
+- Replaced the hard-coded Cairo location with a neutral world view when your location is unavailable
