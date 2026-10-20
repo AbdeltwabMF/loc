@@ -24,12 +24,17 @@ class MapPickerPage extends StatefulWidget {
 }
 
 class _MapPickerPageState extends State<MapPickerPage> {
+  static const _fallbackCenter = LatLng(20, 0);
+
   final _map = MapController();
   final _geocoding = GeocodingService();
   final _tileProvider = NetworkTileProvider(
     headers: {'User-Agent': AppMetadata.current.mapUserAgent},
   );
   late LatLng _center;
+  late double _initialZoom;
+  bool _requestedInitialLocation = false;
+  bool _userMovedMap = false;
   bool _selecting = false;
   bool _tilesFailed = false;
   bool _tileLoaded = false;
@@ -40,9 +45,28 @@ class _MapPickerPageState extends State<MapPickerPage> {
     super.initState();
     final initial = widget.initialPlace?.position;
     _center = LatLng(
-      initial?.latitude ?? 30.0444,
-      initial?.longitude ?? 31.2357,
+      initial?.latitude ?? _fallbackCenter.latitude,
+      initial?.longitude ?? _fallbackCenter.longitude,
     );
+    _initialZoom = initial == null ? 2 : 14;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.initialPlace != null || _requestedInitialLocation) return;
+    _requestedInitialLocation = true;
+
+    final cached = context.read<AppController>().currentPosition;
+    if (cached != null) {
+      _center = LatLng(cached.latitude, cached.longitude);
+      _initialZoom = 16;
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_moveToInitialLocation());
+    });
   }
 
   @override
@@ -111,12 +135,13 @@ class _MapPickerPageState extends State<MapPickerPage> {
                     mapController: _map,
                     options: MapOptions(
                       initialCenter: _center,
-                      initialZoom: 14,
+                      initialZoom: _initialZoom,
                       minZoom: 2,
                       maxZoom: 19,
                       backgroundColor: colors.surfaceContainerHighest,
                       onPositionChanged: (camera, hasGesture) {
                         _center = camera.center;
+                        if (hasGesture) _userMovedMap = true;
                       },
                     ),
                     children: [
@@ -274,6 +299,23 @@ class _MapPickerPageState extends State<MapPickerPage> {
       _map.move(_center, 16);
     } on Object catch (error) {
       if (mounted) await _showLocationAction(error);
+    }
+  }
+
+  Future<void> _moveToInitialLocation() async {
+    final controller = context.read<AppController>();
+    try {
+      if (await controller.locationAccessStatus() !=
+          LocationAccessStatus.ready) {
+        return;
+      }
+      final point = await controller.getCurrentPosition();
+      if (!mounted || _userMovedMap) return;
+      _center = LatLng(point.latitude, point.longitude);
+      _map.move(_center, 16);
+    } on Object {
+      // Keep the neutral world view when location is unavailable. The explicit
+      // location button still provides permission and settings guidance.
     }
   }
 
