@@ -53,7 +53,11 @@ class AppController extends ChangeNotifier {
     final code =
         _locale?.languageCode ??
         PlatformDispatcher.instance.locale.languageCode;
-    return code == 'ar' ? 'ar' : 'en';
+    return switch (code) {
+      'ar' => 'ar',
+      'pt' => 'pt',
+      _ => 'en',
+    };
   }
 
   bool get useSystemFont => _useSystemFont;
@@ -332,7 +336,10 @@ class AppController extends ChangeNotifier {
 
   Future<void> setLocale(Locale? value) async {
     final languageCode = value?.languageCode;
-    if (languageCode != null && languageCode != 'en' && languageCode != 'ar') {
+    if (languageCode != null &&
+        languageCode != 'en' &&
+        languageCode != 'ar' &&
+        languageCode != 'pt') {
       return;
     }
     await _repository.saveLocaleCode(languageCode);

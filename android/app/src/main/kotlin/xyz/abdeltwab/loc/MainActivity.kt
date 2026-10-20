@@ -91,7 +91,9 @@ class MainActivity : FlutterActivity() {
                         val locales = if (languageCode == null) {
                             LocaleList.getEmptyLocaleList()
                         } else {
-                            LocaleList.forLanguageTags(languageCode)
+                            LocaleList.forLanguageTags(
+                                if (languageCode == "pt") "pt-BR" else languageCode
+                            )
                         }
                         getSystemService(LocaleManager::class.java).applicationLocales = locales
                     }

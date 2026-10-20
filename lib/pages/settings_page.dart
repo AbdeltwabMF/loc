@@ -302,6 +302,11 @@ class _LanguageMenu extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(context.l10n.languageArabic),
         ),
+        PopupMenuItem(
+          value: 'pt',
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(context.l10n.languagePortuguese),
+        ),
       ],
       child: ListTile(
         leading: const Icon(Icons.language_rounded),
@@ -309,6 +314,7 @@ class _LanguageMenu extends StatelessWidget {
         subtitle: Text(switch (selected) {
           'en' => context.l10n.languageEnglish,
           'ar' => context.l10n.languageArabic,
+          'pt' => context.l10n.languagePortuguese,
           _ => context.l10n.languageSystem,
         }),
         trailing: const Icon(Icons.arrow_drop_down_rounded),

@@ -8,6 +8,7 @@ abstract final class AppTypography {
   static String? bundledFamilyFor(String languageCode) =>
       switch (languageCode) {
         'en' => googleSans,
+        'pt' => googleSans,
         'ar' => balooBhaijaan2,
         _ => null,
       };

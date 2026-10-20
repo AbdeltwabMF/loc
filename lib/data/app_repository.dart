@@ -22,7 +22,9 @@ class AppRepository {
 
   String? loadLocaleCode() {
     final value = _preferences.get('localeCode');
-    return value == 'en' || value == 'ar' ? value as String : null;
+    return value == 'en' || value == 'ar' || value == 'pt'
+        ? value as String
+        : null;
   }
 
   bool loadAlarmEnabled() {
