@@ -5,6 +5,21 @@ import 'package:loc/data/models/reminder.dart';
 import 'package:loc/data/services/compass_service.dart';
 
 void main() {
+  group('Point precision', () {
+    test('matches coordinates rounded for editor input', () {
+      final geocoded = Point(latitude: 37.3618496, longitude: -121.8977196);
+      final displayed = Point(latitude: 37.361850, longitude: -121.897720);
+
+      expect(geocoded.matchesAtPrecision(displayed), isTrue);
+      expect(
+        geocoded.matchesAtPrecision(
+          Point(latitude: 37.361851, longitude: -121.897720),
+        ),
+        isFalse,
+      );
+    });
+  });
+
   group('Place identity', () {
     test('uses coordinates rather than object identity', () {
       final first = Place(position: Point(latitude: 10, longitude: 20));

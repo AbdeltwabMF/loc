@@ -11,6 +11,12 @@ class Point {
     longitude: double.parse(json['lon'] as String),
   );
 
+  bool matchesAtPrecision(Point other, {int fractionDigits = 6}) =>
+      latitude.toStringAsFixed(fractionDigits) ==
+          other.latitude.toStringAsFixed(fractionDigits) &&
+      longitude.toStringAsFixed(fractionDigits) ==
+          other.longitude.toStringAsFixed(fractionDigits);
+
   @override
   bool operator ==(Object other) =>
       other is Point &&

@@ -699,12 +699,13 @@ class _ReminderEditorPageState extends State<ReminderEditorPage> {
     final state = context.read<AppController>();
     setState(() => _saving = true);
     final point = Point(latitude: latitude, longitude: longitude);
+    final selectedPosition = _selectedPlace?.position;
+    final matchesSelectedPlace =
+        selectedPosition != null && selectedPosition.matchesAtPrecision(point);
     final place = Place(
       position: point,
       radius: _radius.round(),
-      displayName: _selectedPlace?.position == point
-          ? _selectedPlace?.displayName
-          : null,
+      displayName: matchesSelectedPlace ? _selectedPlace?.displayName : null,
     );
     final existing = widget.reminder;
     final reminder = Reminder(
