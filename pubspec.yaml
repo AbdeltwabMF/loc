@@ -2,7 +2,7 @@ name: loc
 description: Free and open-source location-based reminder for Android
 publish_to: 'none'
 
-version: 2.6.2+116
+version: 2.6.3+117
 
 environment:
   sdk: '>=3.12.0 <4.0.0'

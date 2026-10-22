@@ -39,11 +39,11 @@
 ## Preview
 
 <p align="center">
-  <img src="assets/screenshots/map-picker.png" width="30%">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="30%">
   &nbsp;
-  <img src="assets/screenshots/reminder-editor.png" width="30%">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4.png" width="30%">
   &nbsp;
-  <img src="assets/screenshots/reminders.png" width="30%">
+  <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="30%">
 </p>
 
 ## Features

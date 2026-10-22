@@ -191,7 +191,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
                   ),
                 ),
                 PositionedDirectional(
-                  start: 16,
+                  start: 0,
                   bottom: 0,
                   child: SafeArea(
                     child: Material(
