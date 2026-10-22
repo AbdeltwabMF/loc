@@ -15,3 +15,21 @@ Future<AppLocalizations> loadAppLocalizations(String? languageCode) {
   );
   return AppLocalizations.delegate.load(locale);
 }
+
+Locale resolveAppLocale(
+  List<Locale>? preferredLocales,
+  Iterable<Locale> supportedLocales,
+) {
+  for (final preferredLocale in preferredLocales ?? const <Locale>[]) {
+    for (final supportedLocale in supportedLocales) {
+      if (supportedLocale.languageCode == preferredLocale.languageCode) {
+        return supportedLocale;
+      }
+    }
+  }
+
+  return supportedLocales.firstWhere(
+    (locale) => locale.languageCode == 'en',
+    orElse: () => const Locale('en'),
+  );
+}

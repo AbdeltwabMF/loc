@@ -1,0 +1,3 @@
+Loc 2.6.3
+
+- Fixed new installations using the wrong language when the device language is unsupported

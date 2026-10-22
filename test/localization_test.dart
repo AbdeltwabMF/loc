@@ -44,4 +44,12 @@ void main() {
 
     expect(find.text('Configurações'), findsOneWidget);
   });
+
+  test('unsupported device locale falls back to English', () {
+    final locale = resolveAppLocale(const [
+      Locale('de'),
+    ], AppLocalizations.supportedLocales);
+
+    expect(locale, const Locale('en'));
+  });
 }

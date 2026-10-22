@@ -110,6 +110,7 @@ class _LocAppState extends State<LocApp> with WidgetsBindingObserver {
             locale: state.locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
+            localeListResolutionCallback: resolveAppLocale,
             theme: AppTheme.light(
               useSystemFont: state.useSystemFont,
               languageCode: state.effectiveLanguageCode,
